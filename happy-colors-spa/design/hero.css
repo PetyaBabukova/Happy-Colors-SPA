@@ -1,0 +1,51 @@
+.hero-section {
+    display: flex;
+    gap: 4em;
+    min-height: 60vh;
+    margin-bottom: 5em;
+}
+
+.left-hero-section {
+    background-image: url('./woman-wrappes-presents-craft-paper-gifts-tied-with-white-red-threads-with-toy-train-as-decor.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    flex: 1 0 60%;
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    padding: 2em;
+}
+
+.hero-small-image-container {
+    max-width: 25%;
+    border: 10px solid #fff1cd;
+    border-radius: 0.5em;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.hero-small-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.right-hero-section{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1 0 30%;
+    gap: 2em;
+}
+
+.right-hero-section h1 {
+    max-width: 12ch;
+    text-align: center;
+}
+
+.right-hero-section h5{
+    max-width: 35ch;
+    text-align: center;
+
+}

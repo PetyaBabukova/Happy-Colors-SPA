@@ -1,0 +1,98 @@
+body {
+    max-width: 1920px;
+    margin: 0 auto;
+    border: 1px;
+}
+
+header {
+
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #fff1cd;
+    padding: 1.5em 3em;
+}
+
+nav{
+    display: flex;
+    gap: 5em;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.main-nav-list{
+    display: flex;
+    padding: 0;
+}
+
+.main-nav-list li{
+    list-style: none;
+    margin: 0 2rem;
+    font-size: 1.5rem;
+    font-weight: normal;
+}
+
+.fa-cart-shopping{
+    font-size: 2rem;
+    color: #4bd0ae;
+    margin-left: 1.5rem;
+    cursor: pointer;
+}
+
+.main-nav-list li a, .fa-cart-shopping{
+    text-decoration: none;
+    color: #4bd0ae;
+}
+
+.main-nav-list li a:hover, .fa-cart-shopping:hover{
+    color: #003427;
+    text-decoration: underline;
+}
+
+/* Скриваш подменюто по подразбиране */
+.sub-nav-list {
+    display: none;
+    position: absolute;
+    background-color: #fff1cd;
+    padding: 1rem;
+    list-style: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    z-index: 10;
+  }
+
+  .sub-nav-list li {
+    margin: 0.6rem 0;
+    font-size: 1.2rem;
+  }
+  
+  /* Показваш подменюто при hover върху родителския <li> */
+  .has-submenu:hover .sub-nav-list {
+    display: block;
+  }
+  
+  /* За да се позиционира правилно */
+  .has-submenu {
+    position: relative;
+  }
+
+  footer{
+    background-color: #003427;
+    color: #fff1cd;
+    padding: 2em 3em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5em;
+    margin-top: 2em;
+
+  }
+
+  footer p{
+    font-size: 1.2rem;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+  }
+  
