@@ -1,0 +1,58 @@
+.heroSection {
+    display: flex;
+    flex-direction: row wrap;
+    max-height: 100vh;
+    gap: 4em;
+}
+
+.heroImageContainer {
+    flex: 1 0 35%;
+}
+
+.heroImageContainer img {
+    width: 100%;
+    height: auto;
+}
+
+.rightHeroSection {
+    flex: 1 1 65%;
+    padding: 2em 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2em;
+}
+
+.heroText h1,
+.heroText h2,
+.heroText h6 {
+    margin: 0 0 0.1em 0;
+    padding: 0;
+}
+
+.hiroLinks {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5em;
+    margin-top: 20px;
+}
+
+.hiroLinks a {
+    text-decoration: none;
+    border-radius: 5px;
+    background-color: #fff;
+    transition: all 0.3s ease-in-out;
+    border: 1px solid #4BD0AE;
+    padding: 1em;
+}
+
+.hiroLinks h6:hover {
+    color: #003427;
+    font-weight: 400;
+}
+
+.heroLinkImageContainer {
+    flex: 1 0 25%;
+    max-height: 200px;
+    overflow: hidden;
+}
