@@ -2,7 +2,7 @@
     display: flex;
     gap: 4em;
     min-height: 60vh;
-    margin-bottom: 5em;
+    margin-bottom: 8em;
 }
 
 .left-hero-section {
@@ -13,13 +13,13 @@
     flex: 1 0 60%;
     display: flex;
     flex-direction: column;
-    gap: 2em;
-    padding: 2em;
+    gap: 4em;
+    padding: 5em;
 }
 
 .hero-small-image-container {
     max-width: 25%;
-    border: 10px solid #fff1cd;
+    border: 10px solid var(--light-yellow);
     border-radius: 0.5em;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -42,10 +42,12 @@
 .right-hero-section h1 {
     max-width: 12ch;
     text-align: center;
+    /* color: var(--dark-orange); */
 }
 
-.right-hero-section h5{
+.right-hero-section p{
     max-width: 35ch;
     text-align: center;
-
+    font-size: 1.4rem;
+    color: var(--light-green);
 }

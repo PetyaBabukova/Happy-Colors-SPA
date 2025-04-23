@@ -1,7 +1,10 @@
+@import url('./colors.css');
+
 body {
     max-width: 1920px;
     margin: 0 auto;
     border: 1px;
+    background-color: var(--light-yellow);
 }
 
 header {
@@ -9,7 +12,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    background-color: #fff1cd;
+    background-color: var(--light-yellow);
     padding: 1.5em 3em;
 }
 
@@ -42,11 +45,11 @@ nav{
 
 .main-nav-list li a, .fa-cart-shopping{
     text-decoration: none;
-    color: #4bd0ae;
+    color: var(--light-green);;
 }
 
 .main-nav-list li a:hover, .fa-cart-shopping:hover{
-    color: #003427;
+    color: var(--dark-orange);;
     text-decoration: underline;
 }
 
@@ -54,7 +57,8 @@ nav{
 .sub-nav-list {
     display: none;
     position: absolute;
-    background-color: #fff1cd;
+    /* background-color: #fff1cd; */
+    background-color: white;
     padding: 1rem;
     list-style: none;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -77,15 +81,33 @@ nav{
     position: relative;
   }
 
+  .breadcrumb {
+    padding: 0.6em;
+}
+
+.breadcrumb p{
+    padding: 0;
+    margin: 0;
+    font-size: 1.1rem;
+    color:var(--light-green);
+    display: inline-block;
+    border-top: 1px solid var(--light-green);
+    border-bottom: 1px solid var(--light-green);
+    }
+    
+    main{
+      margin: 4em auto;
+    }
+
   footer{
-    background-color: #003427;
-    color: #fff1cd;
+    /* background-color:var(--dark-green);; */
+    border-top: 1px solid var(--light-green);;
+    color: var(--dark-green);
     padding: 2em 3em;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 5em;
-    margin-top: 2em;
 
   }
 
