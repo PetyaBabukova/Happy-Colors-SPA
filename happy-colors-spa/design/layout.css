@@ -36,6 +36,46 @@ nav{
     font-weight: normal;
 }
 
+.search-form{
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-input{
+    padding: 0.3em 0.8em;
+    border: 1px solid var(--light-green);
+    border-radius: 0.5em;
+    font-size: 1.2rem;
+    color: var(--light-green);
+    background-color: var(--light-yellow);
+}
+
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.8px var(--light-green);
+  }
+
+.search-button{
+    padding: 0.3em 0.8em;
+    border: 1px solid var(--light-green);
+    border-radius: 0.5em;
+    font-size: 1.2rem;
+    color: var(--light-green);
+    background-color: var(--light-yellow);
+    cursor: pointer;
+}
+
+.search-button:hover{
+    background-color: var(--dark-orange);
+    border: 1px solid var(--dark-orange);
+    color: var(--light-yellow);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform: scale(1.05);
+}
+
 .fa-cart-shopping{
     font-size: 2rem;
     color: #4bd0ae;
