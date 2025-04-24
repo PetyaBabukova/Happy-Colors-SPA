@@ -1,8 +1,15 @@
-:root{
-    /* --light-yellow: #fff1cd; */
+:root {
     --light-yellow: #fbf1d9;
+    --light-yellow-transparent: rgba(251, 241, 217, 0.7);
+
     --light-green: #4bd0ae;
-    --dark-green: #003427;
+    --light-green-transparent: rgba(75, 208, 174, 0.7);
+
     --light-orange: #FFD1A0;
+    --light-orange-transparent: rgba(255, 209, 160, 0.7);
+
+    --white-transparent: rgba(255, 255, 255, 0.7);
+
+    --dark-green: #01664d;
     --dark-orange: #FF6F61;
 }

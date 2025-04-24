@@ -157,4 +157,40 @@ nav{
     margin: 0;
     padding: 0;
   }
+
+  @media screen and (max-width: 768px) {
+    header {
+        padding: 1em 2em;
+    }
+
+    nav{
+        flex-direction: column;
+        gap: 2em;
+    }
+
+    .main-nav-list{
+        flex-direction: column;
+        gap: 1em;
+    }
+
+    .main-nav-list li{
+        margin: 0;
+    }
+
+    .search-form{
+        flex-direction: column;
+        gap: 1em;
+    }
+
+    .search-input, .search-button{
+        width: 100%;
+    }
+
+    footer{
+        flex-direction: column;
+        align-items: center;
+        gap: 2em;
+    }
+    
+  }
   
