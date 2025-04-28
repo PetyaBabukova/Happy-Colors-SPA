@@ -63,8 +63,7 @@
   }
 
 .shopping-category a:hover {
-    background-color: var(--light-orange);
-    border: 1px solid var(--light-orange);
+    background-color: var(--light-green-transparent);
 }
 
 .shopping-category p {
