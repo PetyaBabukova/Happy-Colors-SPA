@@ -15,10 +15,83 @@
     gap: 2em;
 }
 
-.product-describtion-continer p{
+.review-container{
+    display: flex;
+    gap: 1em;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fa-star{
+    color: var(--dark-green);
+    font-size: 1.5em;
+}
+
+.review-counter{
+    margin: 0;
+    padding: 0;
+}
+
+.review-link{
+    text-decoration: none;
+    color: var(--dark-green);
+    font-size: 1.2em;
+}
+
+.product-description-body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-details-body-tabs-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    text-transform: uppercase;
+    margin: 0 0 2em 0;
+    padding: 0;
+
+}
+
+
+
+.product-details-body-tabs-container a{
+    background-color: var(--light-green);
+    padding: 0.5em 1.2em;
+    text-decoration: none;
+    color: var(--light-yellow);
+    /* color: var(--dark-green); */
+}
+
+.product-details-body-tabs-container a:hover, .product-details-body-tabs-container a:active{
+    background-color: var(--light-green-transparent);
+    color: var(--dark-green);
+}
+
+.product-description-body p{
     max-width: 50%;
     font-size: 1.2em;
 }
+
+a.put-in-cart-link{
+    text-decoration: none;
+        color: var(--dark-green);
+        font-size: 1.2em;
+        font-weight: bold;
+        padding: 0.3em 0.8em;
+        /* background-color: var(--light-green); */
+        border: 1px solid var(--dark-green);
+        border-radius: 0.5em;
+        transition: all 0.3s ease-in-out;
+    }
+    
+    a.put-in-cart-link:hover{
+        background-color: var(--light-green);
+        color: white;
+    }
 
 .product-details-images-container{
     flex: 0 1 40%;
@@ -41,22 +114,19 @@
 }
 
 .connected-products-image-container{
-    flex: 0 1 25%
+    flex: 0 1 30%
 }
 
-a.put-in-cart-link{
-text-decoration: none;
-    color: var(--light-green);
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0.3em 0.8em;
-    /* background-color: var(--light-green); */
-    border: 1px solid var(--light-green);
-    border-radius: 0.5em;
-    transition: all 0.3s ease-in-out;
+.similar-products-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1em;
 }
 
-a.put-in-cart-link:hover{
-    background-color: var(--light-green);
-    color: white;
+.similar-products-heading{
+    width: 100%;
+    margin: 0;
 }
+

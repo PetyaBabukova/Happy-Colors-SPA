@@ -18,20 +18,24 @@
 
   nav{
       display: flex;
-      gap: 3em;
+      /* gap: 3em; */
       justify-content: space-between;
       align-items: center;
 
   }
 
-  .main-nav-list{
-      display: flex;
-      padding: 0;
-  }
+  .main-nav-list {
+    display: flex;
+    padding: 0;
+    flex-wrap: nowrap;       /* Забранява пренасяне */
+    white-space: nowrap;     /* Текстът не се пренася */
+    overflow: hidden;        /* Скрива скролерите */
+}
+
 
   .main-nav-list li{
       list-style: none;
-      margin: 0 2em;
+      margin: 0 1em;
       font-size: 1.2rem;
       font-weight: normal;
   }
