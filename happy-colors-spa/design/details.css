@@ -113,8 +113,15 @@ a.put-in-cart-link{
     width: 100%;
 }
 
-.connected-products-image-container{
-    flex: 0 1 30%
+.connected-products-container{
+    flex: 0 1 30%;
+    border: 1px solid var(--dark-green);
+    /* border-radius: 0.5em; */
+    padding: 0.5em;
+}
+
+.connected-products-container:hover{
+    background-color: var(--light-green-transparent);
 }
 
 .similar-products-container{
@@ -128,5 +135,9 @@ a.put-in-cart-link{
 .similar-products-heading{
     width: 100%;
     margin: 0;
+}
+
+.connected-product-link{
+    text-decoration: none;
 }
 

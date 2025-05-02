@@ -11,9 +11,8 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      /* background-color: var(--light-yellow); */
-      background-color: white;
-      padding: 1.5em 3em;
+      background-color: var(--lighter-green);
+      padding: 0.5em 3em;
   }
 
   nav{
@@ -145,8 +144,8 @@
       }
 
     footer{
-      /* background-color:var(--dark-green);; */
-      border-top: 1px solid var(--light-green);;
+      background-color:var(--lighter-green);
+      /* border-top: 1px solid var(--dark-green); */
       color: var(--dark-green);
       padding: 2em 3em;
       display: flex;

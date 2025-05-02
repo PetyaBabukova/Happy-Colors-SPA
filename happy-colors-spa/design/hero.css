@@ -21,8 +21,9 @@
 }
 
 .hero-small-image-container {
+    display: flex;
     max-width: 25%;
-    border: 10px solid white;
+    border: 10px solid var(--lighter-green);
     /* border: 10px solid var(--light-yellow); */
     border-radius: 0.5em;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -68,9 +69,11 @@
     color: var(--dark-green);
     padding: 0;
     margin: 0;
-    background: var(--white-transparent);
+    background: var(--lighter-green);
     padding: 0.3em 0.5em;
     border-radius: 0.3em; 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
+
 
 
     
