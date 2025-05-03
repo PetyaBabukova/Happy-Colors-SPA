@@ -1,0 +1,118 @@
+.mainNav{
+    display: flex;
+    /* gap: 3em; */
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.mainNavList {
+  display: flex;
+  padding: 0;
+  flex-wrap: nowrap;       /* Забранява пренасяне */
+  white-space: nowrap;     /* Текстът не се пренася */
+  overflow: hidden;        /* Скрива скролерите */
+}
+
+
+.mainNavList li{
+    list-style: none;
+    margin: 0 1em;
+    font-size: 1.2rem;
+    font-weight: normal;
+}
+
+.searchForm{
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    justify-content: center;
+}
+
+.searchInput{
+    padding: 0.3em 0.8em;
+    border: 1px solid var(--dark-green);
+    border-radius: 0.5em;
+    font-size: 1.2rem;
+    color: var(--dark-green);
+    background-color: white;
+}
+
+.searchInput:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.8px var(--dark-green);
+  }
+
+.searchBtn{
+    padding: 0.3em 0.8em;
+    border: 1px solid var(--dark-green);
+    border-radius: 0.5em;
+    font-size: 1.2rem;
+    color: var(--dark-green);
+    background-color: white;
+    /* background-color: var(--light-yellow); */
+    cursor: pointer;
+}
+
+.searchBtn:hover{
+    background-color: var(--dark-orange);
+    border: 1px solid var(--dark-orange);
+    color: white;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform: scale(1.05);
+}
+
+.basketGreen:hover{
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform: scale(1.2);}
+
+.mainNavList li a{
+    text-decoration: none;
+    color: var(--dark-green);;
+}
+
+.mainNavList li a:hover{
+    color: var(--dark-orange);;
+}
+
+.subNavList {
+    display: none;
+    position: absolute;
+    /* background-color: #fff1cd; */
+    background-color: white;
+    padding: 1rem;
+    list-style: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    z-index: 10;
+  }
+
+  .subNavList li {
+    margin: 0.6rem 0;
+    font-size: 1.2rem;
+  }
+  
+  /* Показваш подменюто при hover върху родителския <li> */
+  .hasSubmenu:hover .subNavList {
+    display: block;
+  }
+  
+  /* За да се позиционира правилно */
+  .hasSubmenu {
+    position: relative;
+  }
+
+  .breadcrumb {
+    padding: 0.6em;
+}
+
+.breadcrumb p{
+    padding: 0;
+    margin: 0;
+    font-size: 1.1rem;
+    color:var(--light-green);
+    display: inline-block;
+    border-top: 1px solid var(--light-green);
+    border-bottom: 1px solid var(--light-green);
+    }
