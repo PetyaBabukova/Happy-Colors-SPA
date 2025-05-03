@@ -1,18 +1,31 @@
-import React from 'react'
+'use client'
+import React, { useState } from 'react'
 import styles from './header.module.css'
 import Link from 'next/link';
 
 export default function Header() {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
     return (
-        <header>
+        <header className='header'>
             <nav className={styles.mainNav}>
+                {/* Лого */}
                 <Link href="/">
                     <div className={styles.logoContainer}>
                         <img src="/logo_64pxH.svg" alt="logo" />
                     </div>
                 </Link>
 
-                <ul className={styles.mainNavList}>
+                {/* Hamburger бутон за мобилни */}
+                <button
+                    className={styles.hamburgerBtn}
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                    <img src="/hamburger.svg" alt="Меню" />
+                </button>
+
+                {/* Главно меню */}
+                <ul className={`${styles.mainNavList} ${mobileMenuOpen ? styles.showMenu : ''}`}>
                     <li><Link href="/">Начало</Link></li>
 
                     <li className={styles.hasSubmenu}>
@@ -25,15 +38,13 @@ export default function Header() {
                         </ul>
                     </li>
 
-
                     <li><Link href="/aboutus">За мен</Link></li>
                     <li><Link href="/blog">Блог</Link></li>
                     <li><Link href="/partners">За партньори</Link></li>
                     <li><Link href="/contacts">Контакти</Link></li>
                 </ul>
 
-
-
+                {/* Търсачка */}
                 <form action="" className={styles.searchForm} method="get">
                     <input type="text" placeholder="Търсене" className={styles.searchInput} />
                     <button type="submit" className={styles.searchBtn}>
@@ -41,6 +52,7 @@ export default function Header() {
                     </button>
                 </form>
 
+                {/* Количка */}
                 <Link href="/cart">
                     <img className={styles.basketGreen} src='/basket_green.svg' alt="Количка" />
                 </Link>

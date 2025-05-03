@@ -2,23 +2,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .mainNavList {
     display: flex;
-    align-items: center; /* нов ред за центриране по вертикала */
+    align-items: center;
     padding: 0;
     flex-wrap: nowrap;
     white-space: nowrap;
-  }
-  
+}
 
 .mainNavList li {
     list-style: none;
     margin: 0 1em;
     font-size: 1.2rem;
     font-weight: normal;
-    position: relative; /* Нужно за позициониране на подменюто */
+    position: relative;
 }
 
 .mainNavList li a {
@@ -40,10 +40,6 @@
 .menuItem:hover {
     color: var(--dark-orange);
 }
-
-/* .hasSubmenu {
-    position: relative;
-} */
 
 .subNavList {
     display: none;
@@ -125,4 +121,95 @@
     display: inline-block;
     border-top: 1px solid var(--light-green);
     border-bottom: 1px solid var(--light-green);
+}
+
+/* -------------------- МОБИЛНИ СТИЛОВЕ -------------------- */
+@media (max-width: 768px) {
+
+
+    .mainNav {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .headerTop {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logoContainer img {
+        flex: 0 1 70%;
+    }
+
+    .hamburgerBtn {
+        max-width: 15%;
+        display: block;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .hamburgerBtn img {
+        height: 24px;
+    }
+
+    
+    .searchForm {
+        justify-content: flex-start;
+        align-items: center;
+        display: flex;
+        flex: 1;
+    }
+
+    .searchInput {
+        font-size: 1rem;
+        padding: 0.3em 0.6em;
+    }
+
+    .searchBtn {
+        padding: 0.3em 0.6em;
+    }
+
+    .searchBtn img {
+        height: 20px;
+        width: 20px;
+    }
+
+    .basketGreen {
+        height: 28px;
+    }
+
+    .mainNavList {
+        display: none;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+
+    .showMenu {
+        display: flex !important;
+    }
+
+    .subNavList {
+        position: static;
+        margin-left: 1rem;
+        background: none;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .subNavList li {
+        font-size: 1rem;
+    }
+}
+
+/* Скрива hamburger на десктоп */
+@media (min-width: 769px) {
+    .hamburgerBtn {
+        display: none;
+    }
 }
