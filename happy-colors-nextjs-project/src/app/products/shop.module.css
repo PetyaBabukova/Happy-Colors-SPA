@@ -1,0 +1,54 @@
+.shopPage{
+    background-image: url('/background.jpg');
+    margin: 0 auto;
+    display: flex;
+    align-items: space-between;
+    justify-content: space-between;
+    gap:2em;
+    flex-wrap: wrap;
+}
+
+.shopPageTitle{
+    width: 100%;
+    margin-bottom: 0;
+    
+}
+
+.filters{
+    margin: 0 auto;
+    flex: 0 1 15%;
+    justify-content: center;
+    align-items: center;
+    padding: 1em;
+    border-right: 1px, solid var(--light-green );
+    background-color: var(--lighter-green );
+    min-height: 100vh;
+}
+
+.categories{
+    flex: 0 1 80%;
+    padding: 1em;
+    padding-top: 0;
+}
+
+.productList{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2em;
+    margin: 2em 0;
+
+}
+
+.product{
+    flex: 1 1 22%;
+    padding: 1em;
+    border: 1px solid var(--light-green );
+    border-radius: 0.5em;
+}
+
+.product:hover{
+    background-color: var(--lighter-green);
+    color: var(--dark-green);
+}

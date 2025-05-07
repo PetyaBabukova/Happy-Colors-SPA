@@ -24,12 +24,12 @@
   margin: 0;
 }
 
-*, *::before, *::after{
-  box-sizing: inherit;
-}
-
 html{
   box-sizing: border-box;
+}
+
+*, *::before, *::after{
+  box-sizing: inherit;
 }
 
 body {
@@ -59,7 +59,7 @@ h4 { font-size: 1.8em; }
 h5 { font-size: 1.4em; }
 h6 { font-size: 1.2em; }
 
-p, ul, ol {
+ul, ol {
   padding-bottom: 1.5em;
   color: var(--dark-green);
 }
@@ -93,7 +93,7 @@ a:hover {
 }
 
 main {
-  margin: 4em auto;
+  margin: 1.5em auto;
 }
 
 footer {

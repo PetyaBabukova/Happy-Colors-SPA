@@ -29,12 +29,13 @@ export default function Header() {
                     <li><Link href="/">Начало</Link></li>
 
                     <li className={styles.hasSubmenu}>
-                        <Link className={styles.menuItem} href="#">Магазин</Link>
+                        <Link className={styles.menuItem} href="/products">Магазин</Link>
                         <ul className={styles.subNavList}>
-                            <li><Link href="/toys">Животинки</Link></li>
-                            <li><Link href="/dolls">Кукли</Link></li>
-                            <li><Link href="/scarves-and-hats">Шалове</Link></li>
-                            <li><Link href="/bags">Чанти</Link></li>
+                            <li><Link href="/products/all">Всички</Link></li>
+                            <li><Link href="/products/toys">Животинки и играчки</Link></li>
+                            <li><Link href="/products/dolls">Кукли с аксесоари</Link></li>
+                            <li><Link href="/products/scarves-and-hats">Шалове и шапки</Link></li>
+                            <li><Link href="/products/bags">Чанти и раници</Link></li>
                         </ul>
                     </li>
 

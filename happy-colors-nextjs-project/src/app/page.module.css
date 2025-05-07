@@ -1,0 +1,240 @@
+.heroSection {
+	max-width: 100vw;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 1em;
+	margin-bottom: 0;
+}
+
+.leftHiroSection {
+	background-image: url('/woman-wrappes-presents-craft-paper-gifts-tied-with-white-red-threads-with-toy-train-as-decor.jpg');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	flex: 0 1 75%;
+	display: flex;
+	flex-direction: column;
+	gap: 4em;
+	padding: 5em;
+}
+
+.heroSmallImageContainer {
+	display: flex;
+	max-width: 25%;
+	border: 10px solid var(--lighter-green);
+	border-radius: 0.5em;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.heroSmallImageContainer :global(img) {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.rightHiroSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1 0 20%;
+	gap: 2em;
+}
+
+.rightHiroSection h1 {
+	max-width: 12ch;
+	text-align: center;
+}
+
+.rightHiroSection p {
+	max-width: 35ch;
+	text-align: center;
+	font-size: 1.4rem;
+}
+
+.hiroAccent {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 4em;
+	color: var(--dark-green);
+}
+
+.hiroAccent h2 {
+	font-weight: bold;
+	color: var(--dark-green);
+	margin: 0;
+	background: var(--lighter-green);
+	padding: 0.3em 0.5em;
+	border-radius: 0.3em;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.hiroShopLink {
+	text-decoration: none;
+	padding: 0.3rem 0.8rem;
+	background: var(--light-orange-transparent);
+	border-radius: 0.5em;
+	color: var(--dark-orange);
+	font-weight: lighter;
+	font-size: 3em;
+	transition: all 0.3s ease-in-out;
+}
+
+.hiroShopLink:hover {
+	background: var(--dark-orange);
+	color: var(--light-orange);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.breadcrumb {
+	padding: 0.6em;
+}
+
+.breadcrumb p {
+	margin: 0;
+}
+
+.shoppingCategories {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2em;
+}
+
+.shoppingCategory {
+	flex: 0 1 23%;
+}
+
+.shoppingCategory a {
+	text-decoration: none;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+	align-items: center;
+	border: 1px solid var(--light-green);
+	border-radius: 0.5em;
+	padding: 1.2em;
+}
+
+.shoppingCategory a:hover {
+	background-color: var(--light-green-transparent);
+}
+
+.shoppingCategoryImageContainer {
+	flex: 1 0 300px;
+	min-width: 100%;
+	border-radius: 0.5em;
+	overflow: hidden;
+	max-width: 15%;
+}
+
+.shoppingCategoryImageContainer :global(img) {
+	width: 100%;
+	height: auto;
+}
+
+.categoryDescription {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.shoppingCategory h3 {
+	font-weight: normal;
+}
+
+.shoppingCategory p {
+	font-size: 1.4rem;
+	font-weight: normal;
+	color: #003427;
+}
+
+/* ---- MOBILE ---- */
+@media screen and (max-width: 768px) {
+	.heroSection {
+		flex-direction: column;
+		gap: 2em;
+		margin-bottom: 2em;
+	}
+
+	.heroSection::after {
+		content: '';
+		display: block;
+		width: 50%;
+		height: 1px;
+		background-color: var(--dark-orange);
+		margin: 1em auto 0;
+	  }
+
+	.leftHiroSection {
+		min-height: 40vh;
+		padding: 2em;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.rightHiroSection {
+		flex: 1 0 100%;
+		gap: 1em;
+	}
+
+	.rightHiroSection h1,
+	.rightHiroSection p {
+		max-width: 100%;
+	}
+
+	.heroSmallImageContainer {
+		border: 5px solid var(--light-yellow);
+		min-width: 40%;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.hiroAccent {
+		gap: 2em;
+	}
+
+	.hiroAccent h2 {
+		font-size: 1.6em;
+		max-width: 40ch;
+	}
+
+	.shoppingCategories {
+		flex-direction: column;
+	}
+
+	.shoppingCategoryy {
+		flex: 1 0 100%;
+	}
+
+	.shoppingCategoryImageContainer {
+		max-width: 100%;
+	}
+	
+	.shoppingCategory a{
+
+		border: none;
+		border-radius: none;
+	}
+
+	.shoppingCategory::after {
+		content: '';
+		display: block;
+		width: 50%;
+		height: 1px;
+		background-color: var(--light-green);
+		margin: 1em auto 0;
+	  }
+
+	  .breadcrumb{
+		display: none	;
+	  }
+
+	  .hiroShopLink{
+		font-size: 2em;
+	  }
+
+}
