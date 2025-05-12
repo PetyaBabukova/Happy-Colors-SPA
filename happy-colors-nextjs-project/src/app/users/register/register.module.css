@@ -1,0 +1,35 @@
+.registerFormContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 40%;
+    margin: 4em auto;
+    color: var(--dark-green);
+    border-radius: 0.5em;
+    /* border: 1px solid var(--dark-green); */
+    box-shadow: 0 0 0.4em var(--dark-green);
+    padding: 4em;
+}
+
+.registerFormContainer legend {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.registerForm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.registerForm label {
+    font-size: 1.2rem;
+}
+
+.registerForm input {
+    padding: 0.5rem;
+    border: 1px solid var(--dark-green);
+    border-radius: 5px;
+    font-size: 1rem;
+    margin-bottom: 0.5em;
+}
