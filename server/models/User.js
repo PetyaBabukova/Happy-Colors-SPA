@@ -1,36 +1,36 @@
 import mongoose from 'mongoose';
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
+import validator from 'validator';
 
 const userSchema = new mongoose.Schema({
-
-    username: {
-        type: String,
-        required: [true, "Username is required!"],
-        minLength: [3, "The username is too short!"],
-        maxLength: [30, "The username is too long!"],
-        // match: [/^[\p{L}0-9\s\-\., - – |!?%$&@„“‘’(){}\[\]:;\/\\_=\+\*#^~`]+$/u, "The username contains invalid characters!"],  
-    },
-
-    password: {
-        type: String,
-        required: [true, "Password is required!"],
-        minLength: [3, "The password is too short!"]
-    },
-
-    email: {
-        type: String,
-        required: [true, "Email is required!"],
-        // match: [/^[\p{L}0-9\s\-\., - – |!?%$&@„“‘’(){}\[\]:;\/\\_=\+\*#^~`]+$/u, "The email contains invalid characters!"],  
-    },
-
-    
+  username: {
+    type: String,
+    required: [true, "Username is required!"],
+    trim: true,
+    minLength: [3, "The username is too short!"],
+    maxLength: [30, "The username is too long!"],
+  },
+  email: {
+    type: String,
+    required: [true, "Email is required!"],
+    trim: true,
+    lowercase: true,
+    validate: {
+      validator: validator.isEmail,
+      message: "Invalid email address!"
+    }
+  },
+  password: {
+    type: String,
+    required: [true, "Password is required!"],
+  }
 });
 
 userSchema.pre('save', async function () {
-    const hash = await bcrypt.hash(this.password, 10);
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+});
 
-    this.password = hash;
-})
-
-const User = mongoose.model('Product', userSchema);
+const User = mongoose.model('User', userSchema);
 export default User;

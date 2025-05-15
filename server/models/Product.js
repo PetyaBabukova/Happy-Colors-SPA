@@ -27,6 +27,14 @@ const productSchema = new mongoose.Schema({
         required: [true, "Category is required!"],
     },
 
+    feedback: [
+        {
+            name: String, 
+            comment: String, 
+            rating: Number
+        }
+    ],
+
 });
 
 const Product = mongoose.model('Product', productSchema);

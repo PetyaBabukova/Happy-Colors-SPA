@@ -1,0 +1,9 @@
+import express from 'express';
+import userController from './controllers/userController.js';
+// В бъдеще може да добавим и други контролери
+
+const router = express.Router();
+
+router.use('/users', userController);
+
+export default router;

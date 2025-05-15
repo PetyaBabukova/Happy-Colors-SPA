@@ -1,25 +1,66 @@
-import React from 'react'
+'use client';
+import React, { useState } from 'react';
 import styles from './register.module.css';
+import { onRegisterSubmit } from '../../managers/userManager';
+import MessageBox from '@/components/ui/MessageBox';
 
 export default function Register() {
-    return (
-        <div className={styles.registerFormContainer}>
-            <legend>Register</legend>
-            <form className={styles.registerForm} method="POST" action="/users/register">
-                <label for="username">Username</label>
-                <input type="text" name="username" id="username" placeholder='Username'/>
+  const [formValues, setFormValues] = useState({
+    username: '',
+    email: '',
+    password: '',
+    repeatPassword: '',
+  });
 
-                <label for="email">Email</label>
-                <input type="email" name="email" id="email" placeholder='Email'/>
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password" placeholder='Password'/>
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
 
-                <label for="repeatPassword">Repeat Password</label>
-                <input type="password" name="repeatPassword" id="repeatPassword" placeholder='Repeat Password'/>
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-                <button >Register</button>
-            </form>
-        </ div>
-    )
+    // Check for password mismatch
+    if (formValues.password !== formValues.repeatPassword) {
+      setError('Паролите не съвпадат!');
+      setSuccess(false);
+      return;
+    }
+
+    onRegisterSubmit(formValues, setSuccess, setError);
+  };
+
+  return (
+    <div className={styles.registerFormContainer}>
+      
+      {error && <MessageBox type="error" message={`Неуспешна регистрация: ${error}`} />}
+      {success && <MessageBox type="success" message="Регистрирахте се успешно" />}
+      <legend>Регистрация</legend>
+
+
+      <form className={styles.registerForm} onSubmit={handleSubmit}>
+        <label htmlFor="username">Username</label>
+        <input name="username" value={formValues.username} onChange={handleChange} />
+
+        <label htmlFor="email">Email</label>
+        <input name="email" value={formValues.email} onChange={handleChange} />
+
+        <label htmlFor="password">Password</label>
+        <input type="password" name="password" value={formValues.password} onChange={handleChange} />
+
+        <label htmlFor="repeatPassword">Repeat Password</label>
+        <input
+          type="password"
+          name="repeatPassword"
+          value={formValues.repeatPassword}
+          onChange={handleChange}
+        />
+
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  );
 }
