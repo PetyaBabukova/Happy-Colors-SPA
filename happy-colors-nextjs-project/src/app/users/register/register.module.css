@@ -35,3 +35,10 @@
     font-size: 1rem;
     margin-bottom: 0.5em;
 }
+
+.invalidField {
+    border-color: var(--dark-orange);
+    /* background-color: #fff8f1;  */
+    background-color: var(--lighter-orange);
+  }
+  

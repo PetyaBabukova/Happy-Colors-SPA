@@ -1,8 +1,9 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './register.module.css';
 import { onRegisterSubmit } from '../../managers/userManager';
 import MessageBox from '@/components/ui/MessageBox';
+import { handleChange, handleSubmit } from '@/helpers/userHelpers';
 
 export default function Register() {
   const [formValues, setFormValues] = useState({
@@ -14,53 +15,101 @@ export default function Register() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [invalidFields, setInvalidFields] = useState([]);
+  
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
-  };
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormValues((prev) => ({ ...prev, [name]: value }));
+//   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+  
+//     // Проверка за празни полета
+//     const emptyFields = Object.entries(formValues)
+//       .filter(([key, value]) => value.trim() === '')
+//       .map(([key]) => key);
+  
+//     if (emptyFields.length > 0) {
+//       setInvalidFields(emptyFields);
+//       setError('Моля попълнете всички задължителни полета!');
+//       setSuccess(false);
+//       return;
+//     }
+  
+//     // Проверка за несъвпадащи пароли
+//     if (formValues.password !== formValues.repeatPassword) {
+//       setInvalidFields(['password', 'repeatPassword']);
+//       setError('Паролите не съвпадат!');
+//       setSuccess(false);
+//       return;
+//     }
+  
+//     // Изчистване на грешните полета
+//     const cleanedValues = { ...formValues };
+//     invalidFields.forEach((field) => {
+//       cleanedValues[field] = '';
+//     });
+//     setFormValues(cleanedValues);
+  
+//     // Изпращане към сървъра
+//     onRegisterSubmit(formValues, setSuccess, setError, setInvalidFields);
+//   };
+  
 
-    // Check for password mismatch
-    if (formValues.password !== formValues.repeatPassword) {
-      setError('Паролите не съвпадат!');
-      setSuccess(false);
-      return;
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess(false);
+      }, 4000);
+
+      return () => clearTimeout(timer);
     }
-
-    onRegisterSubmit(formValues, setSuccess, setError);
-  };
+  }, [error, success]);
 
   return (
     <div className={styles.registerFormContainer}>
-      
       {error && <MessageBox type="error" message={`Неуспешна регистрация: ${error}`} />}
       {success && <MessageBox type="success" message="Регистрирахте се успешно" />}
       <legend>Регистрация</legend>
 
-
-      <form className={styles.registerForm} onSubmit={handleSubmit}>
+      <form className={styles.registerForm} onSubmit={(e) => 
+  handleSubmit(e, formValues, setFormValues, setSuccess, setError, setInvalidFields, onRegisterSubmit)
+}>
         <label htmlFor="username">Username</label>
-        <input 
-        name="username" 
-        value={formValues.username} 
-        onChange={handleChange}
-         />
+        <input
+          name="username"
+          value={formValues.username}
+          onChange={(e) => handleChange(e, setFormValues)}
+          className={invalidFields.includes('username') ? styles.invalidField : ''}
+        />
 
         <label htmlFor="email">Email</label>
-        <input name="email" value={formValues.email} onChange={handleChange} />
+        <input
+          name="email"
+          value={formValues.email}
+          onChange={(e) => handleChange(e, setFormValues)}
+          className={invalidFields.includes('email') ? styles.invalidField : ''}
+        />
 
         <label htmlFor="password">Password</label>
-        <input type="password" name="password" value={formValues.password} onChange={handleChange} />
+        <input
+          type="password"
+          name="password"
+          value={formValues.password}
+          onChange={(e) => handleChange(e, setFormValues)}
+          className={invalidFields.includes('password') ? styles.invalidField : ''}
+        />
 
         <label htmlFor="repeatPassword">Repeat Password</label>
         <input
           type="password"
           name="repeatPassword"
           value={formValues.repeatPassword}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, setFormValues)}
+          className={invalidFields.includes('repeatPassword') ? styles.invalidField : ''}
         />
 
         <button type="submit">Register</button>
