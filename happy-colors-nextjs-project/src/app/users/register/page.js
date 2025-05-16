@@ -16,47 +16,6 @@ export default function Register() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [invalidFields, setInvalidFields] = useState([]);
-  
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormValues((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-  
-//     // Проверка за празни полета
-//     const emptyFields = Object.entries(formValues)
-//       .filter(([key, value]) => value.trim() === '')
-//       .map(([key]) => key);
-  
-//     if (emptyFields.length > 0) {
-//       setInvalidFields(emptyFields);
-//       setError('Моля попълнете всички задължителни полета!');
-//       setSuccess(false);
-//       return;
-//     }
-  
-//     // Проверка за несъвпадащи пароли
-//     if (formValues.password !== formValues.repeatPassword) {
-//       setInvalidFields(['password', 'repeatPassword']);
-//       setError('Паролите не съвпадат!');
-//       setSuccess(false);
-//       return;
-//     }
-  
-//     // Изчистване на грешните полета
-//     const cleanedValues = { ...formValues };
-//     invalidFields.forEach((field) => {
-//       cleanedValues[field] = '';
-//     });
-//     setFormValues(cleanedValues);
-  
-//     // Изпращане към сървъра
-//     onRegisterSubmit(formValues, setSuccess, setError, setInvalidFields);
-//   };
-  
 
   useEffect(() => {
     if (error || success) {
