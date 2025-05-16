@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser } from '../services/userService.js';
+import { registerUser, loginUser } from '../services/userService.js';
 
 const router = express.Router();
 
@@ -29,8 +29,8 @@ router.post('/login', async (req, res) => {
       res.cookie('token', token, {
         httpOnly: true,
         sameSite: 'Lax',
-        secure: false, // в продукция – true с HTTPS
-        maxAge: 24 * 60 * 60 * 1000, // 1 ден
+        secure: false, // true в продукция
+        maxAge: 24 * 60 * 60 * 1000,
       });
   
       res.status(200).json(user);

@@ -16,7 +16,10 @@ mongoose.connect('mongodb://127.0.0.1:27017/happycolors')
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json()); //This is for 'Content-type: application/json!!!
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  }));
 app.use(routes);
 
 

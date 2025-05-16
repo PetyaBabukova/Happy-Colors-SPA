@@ -28,4 +28,27 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError, setInva
   };
   
 
+  export const onLoginSubmit = async (formValues, setSuccess, setError) => {
+    try {
+      const res = await fetch('http://localhost:3030/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(formValues),
+      });
+  
+      const result = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(result.message);
+      }
+  
+      setSuccess(true);
+      setError('');
+    } catch (err) {
+      console.error('Login error:', err.message);
+      setSuccess(false);
+      setError('Невалиден e-mail или парола');
+    }
+  };
   
