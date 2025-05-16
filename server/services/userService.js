@@ -5,7 +5,7 @@ import validator from 'validator';
 export async function registerUser({ username, email, password }) {
   const existing = await User.findOne({ email });
   if (existing) {
-    throw new Error('A user with this email already exists!');
+    throw new Error('Този потребител вече съществува!');
   }
 
   // ✅ ТУК проверяваме raw password, преди да го хешираме
@@ -19,7 +19,7 @@ export async function registerUser({ username, email, password }) {
 
   if (!isStrong) {
     throw new Error(
-      'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.'
+      'Паролата трябва да е поне 8 символа, да съдържа поне 1 малка буква, 1 главна буква, 1 число и 1 специален символ!'
     );
   }
 

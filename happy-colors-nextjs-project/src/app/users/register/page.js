@@ -43,7 +43,11 @@ export default function Register() {
 
       <form className={styles.registerForm} onSubmit={handleSubmit}>
         <label htmlFor="username">Username</label>
-        <input name="username" value={formValues.username} onChange={handleChange} />
+        <input 
+        name="username" 
+        value={formValues.username} 
+        onChange={handleChange}
+         />
 
         <label htmlFor="email">Email</label>
         <input name="email" value={formValues.email} onChange={handleChange} />

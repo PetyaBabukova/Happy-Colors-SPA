@@ -11,7 +11,7 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError) => {
     const result = await res.json();
 
     if (!res.ok) {
-      throw new Error(result.message || 'Регистрацията се провали');
+      throw new Error(result.message || 'Неуспешна регистрация!');
     }
 
     setSuccess(true);
