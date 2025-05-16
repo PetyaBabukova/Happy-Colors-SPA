@@ -21,6 +21,11 @@
     position: relative;
 }
 
+.userGreeting {
+    font-size: 1.2rem;
+    color: var(--dark-green);
+}
+
 .mainNavList li a {
     text-decoration: none;
     color: var(--dark-green);
@@ -86,7 +91,7 @@
 }
 
 .searchBtn {
-    padding: 0.3em 0.8em;
+    padding: 0.5em 0.8em;
     border: 1px solid var(--dark-green);
     border-radius: 0.5em;
     font-size: 1.2rem;
@@ -151,6 +156,7 @@
         border: none;
         padding: 0;
         cursor: pointer;
+        background-color: none;
     }
 
     .hamburgerBtn img {

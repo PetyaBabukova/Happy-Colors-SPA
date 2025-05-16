@@ -38,3 +38,33 @@ export async function registerUser({ username, email, password }) {
     email: user.email
   };
 }
+
+import jwt from 'jsonwebtoken';
+const JWT_SECRET = process.env.JWT_SECRET || 'secret'; // за тестове може да остане така
+
+export async function loginUser(email, password) {
+  const user = await User.findOne({ email });
+  if (!user) throw new Error('Invalid credentials');
+
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) throw new Error('Invalid credentials');
+
+  // 🟢 Създаване на токен
+  const token = jwt.sign(
+    { _id: user._id, username: user.username },
+    JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+
+  return {
+    token,
+    user: {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    }
+  };
+}
+
+
+

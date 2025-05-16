@@ -22,4 +22,22 @@ router.post('/register', async (req, res) => {
   
 });
 
+router.post('/login', async (req, res) => {
+    try {
+      const { token, user } = await loginUser(req.body.email, req.body.password);
+  
+      res.cookie('token', token, {
+        httpOnly: true,
+        sameSite: 'Lax',
+        secure: false, // в продукция – true с HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 1 ден
+      });
+  
+      res.status(200).json(user);
+    } catch (err) {
+      res.status(401).json({ message: 'Невалиден e-mail или парола' });
+    }
+  });
+  
+
 export default router;

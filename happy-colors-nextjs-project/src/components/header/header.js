@@ -49,9 +49,11 @@ export default function Header() {
                 <form action="" className={styles.searchForm} method="get">
                     <input type="text" placeholder="Търсене" className={styles.searchInput} />
                     <button type="submit" className={styles.searchBtn}>
-                        <img src='/search_icon_green.svg' alt="Търсене" />
+                        <img src='/search_icon_green.svg' alt="search icon" />
                     </button>
                 </form>
+
+                <p className={styles.userGreeting}> Здравей, Пешо</p>
 
                 {/* Количка */}
                 <Link href="/cart">
