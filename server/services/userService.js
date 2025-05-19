@@ -6,8 +6,7 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret'; // за тестове може да остане така
 
 export async function loginUser(email, password) {
-    console.log('📨 Получен email:', email);
-    console.log('📨 Получена парола:', password);
+    
   
     const user = await User.findOne({ email });
     if (!user) {
@@ -15,8 +14,7 @@ export async function loginUser(email, password) {
       throw new Error('Invalid credentials');
     }
   
-    console.log('✅ Намерен потребител:', user.email);
-    console.log('🔒 Хеширана парола от базата:', user.password);
+    
   
     const isValid = await bcrypt.compare(password, user.password);
     console.log('✅ bcrypt.compare резултат:', isValid);
@@ -32,7 +30,6 @@ export async function loginUser(email, password) {
       { expiresIn: '1d' }
     );
   
-    console.log('✅ Токен генериран успешно.');
   
     return {
       token,

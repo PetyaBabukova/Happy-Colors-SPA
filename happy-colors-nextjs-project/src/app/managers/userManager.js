@@ -52,3 +52,24 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError, setInva
     }
   };
   
+  export const onLogoutSubmit = async (setSuccess, setError) => {
+    try {
+      const res = await fetch('http://localhost:3030/users/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+  
+      if (!res.ok) {
+        throw new Error('Грешка при изход');
+      }
+  
+      setSuccess(true);
+      setError('');
+    } catch (err) {
+      console.error('Logout error:', err.message);
+      setSuccess(false);
+      setError('Неуспешен изход');
+    }
+  };
+  
+  

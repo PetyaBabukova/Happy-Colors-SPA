@@ -38,6 +38,17 @@ router.post('/login', async (req, res) => {
       res.status(401).json({ message: 'Невалиден e-mail или парола' });
     }
   });
+
+  router.post('/logout', (req, res) => {
+    res.clearCookie('token', {
+      httpOnly: true,
+      sameSite: 'Lax',
+      secure: false, // в продукция – true
+    });
+  
+    res.status(204).end(); // Няма съдържание, просто потвърждаваме
+  });
+  
   
 
 export default router;
