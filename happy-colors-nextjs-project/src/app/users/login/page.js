@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import styles from './login.module.css';
-import { onLoginSubmit } from '../../managers/userManager';
+import { onLoginSubmit } from '../../../managers/userManager';
 import MessageBox from '@/components/ui/MessageBox';
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { handleChange } from '@/helpers/userHelpers';
 

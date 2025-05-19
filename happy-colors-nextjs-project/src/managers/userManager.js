@@ -1,4 +1,4 @@
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '@/context/AuthContext';
 
 
 export const onRegisterSubmit = async (
@@ -84,7 +84,7 @@ export const onRegisterSubmit = async (
   
   
   
-  export const onLogoutSubmit = async (setSuccess, setError) => {
+  export const logoutUser = async (setUser, router, setError = () => {}) => {
     try {
       const res = await fetch('http://localhost:3030/users/logout', {
         method: 'POST',
@@ -95,13 +95,16 @@ export const onRegisterSubmit = async (
         throw new Error('Грешка при изход');
       }
   
-      setSuccess(true);
-      setError('');
+      if (typeof setUser === 'function') {
+        setUser(null); // 🧹 изчистваме потребителя от контекста
+      }
+  
+      router.push('/'); // 🔁 пренасочваме към началната страница
     } catch (err) {
       console.error('Logout error:', err.message);
-      setSuccess(false);
       setError('Неуспешен изход');
     }
   };
+  
   
   

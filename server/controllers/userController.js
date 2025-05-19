@@ -44,11 +44,15 @@ router.post('/login', async (req, res) => {
     res.clearCookie('token', {
       httpOnly: true,
       sameSite: 'Lax',
-      secure: false, // в продукция – true
+      secure: false,
+      path: '/', // 🔥 задължително
     });
   
-    res.status(204).end(); // Няма съдържание, просто потвърждаваме
+    res.status(204).end();
   });
+  
+  
+  
   
   
 

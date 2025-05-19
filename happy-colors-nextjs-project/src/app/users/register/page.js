@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import styles from './register.module.css';
-import { onRegisterSubmit } from '../../managers/userManager';
+import { onRegisterSubmit } from '../../../managers/userManager';
 import MessageBox from '@/components/ui/MessageBox';
 import { handleChange, handleSubmit } from '@/helpers/userHelpers';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Register() {
   const [formValues, setFormValues] = useState({

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import styles from './header.module.css';
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 export default function Header() {
@@ -51,7 +51,7 @@ export default function Header() {
 
         {user?.username ? (
           <p className={styles.userGreeting}>
-            Здравей, {user.username} | <Link href="/logout">Изход</Link>
+            Здравей, {user.username} | <Link href="/users/logout">Изход</Link>
           </p>
         ) : (
           <p className={styles.userGreeting}>
