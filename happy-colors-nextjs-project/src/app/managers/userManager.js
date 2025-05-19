@@ -1,4 +1,14 @@
-export const onRegisterSubmit = async (formValues, setSuccess, setError, setInvalidFields) => {
+import { useAuth } from '@/context/authContext';
+
+
+export const onRegisterSubmit = async (
+    formValues,
+    setSuccess,
+    setError,
+    setInvalidFields,
+    setUser,
+    router
+  ) => {
     try {
       const res = await fetch('http://localhost:3030/users/register', {
         method: 'POST',
@@ -9,13 +19,24 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError, setInva
       const result = await res.json();
   
       if (!res.ok) {
-        // Пример: backend връща { message: "...", field: "email" }
         throw result;
       }
   
       setSuccess(true);
       setError('');
       setInvalidFields([]);
+  
+      // ✅ Автоматичен login със същите данни
+      await onLoginSubmit(
+        { email: formValues.email, password: formValues.password },
+        () => {}, // не показваме допълнителен success
+        () => {}, // не показваме грешка тук
+        setUser
+      );
+  
+      // ✅ Пренасочване към /products
+      router.push('/products');
+  
     } catch (err) {
       setSuccess(false);
       setError(err.message || 'Възникна грешка.');
@@ -26,9 +47,8 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError, setInva
       }
     }
   };
-  
 
-  export const onLoginSubmit = async (formValues, setSuccess, setError) => {
+  export const onLoginSubmit = async (formValues, setSuccess, setError, setUser) => {
     try {
       const res = await fetch('http://localhost:3030/users/login', {
         method: 'POST',
@@ -43,6 +63,15 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError, setInva
         throw new Error(result.message);
       }
   
+      // 🔥 директно сетваш user
+      if (typeof setUser === 'function') {
+        setUser({
+          username: result.username,
+          _id: result._id,
+          email: result.email
+        });
+      }
+  
       setSuccess(true);
       setError('');
     } catch (err) {
@@ -51,6 +80,9 @@ export const onRegisterSubmit = async (formValues, setSuccess, setError, setInva
       setError('Невалиден e-mail или парола');
     }
   };
+  
+  
+  
   
   export const onLogoutSubmit = async (setSuccess, setError) => {
     try {

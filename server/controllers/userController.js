@@ -31,6 +31,7 @@ router.post('/login', async (req, res) => {
         sameSite: 'Lax',
         secure: false, // true в продукция
         maxAge: 24 * 60 * 60 * 1000,
+        path: '/', // <--- ДОБАВИ ТОВА
       });
   
       res.status(200).json(user);

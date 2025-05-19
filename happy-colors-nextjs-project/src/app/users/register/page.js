@@ -4,6 +4,8 @@ import styles from './register.module.css';
 import { onRegisterSubmit } from '../../managers/userManager';
 import MessageBox from '@/components/ui/MessageBox';
 import { handleChange, handleSubmit } from '@/helpers/userHelpers';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/authContext';
 
 export default function Register() {
   const [formValues, setFormValues] = useState({
@@ -16,6 +18,8 @@ export default function Register() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [invalidFields, setInvalidFields] = useState([]);
+  const router = useRouter();
+  const { setUser } = useAuth(); // ✅ това липсваше
 
   useEffect(() => {
     if (error || success) {
@@ -23,7 +27,6 @@ export default function Register() {
         setError('');
         setSuccess(false);
       }, 4000);
-
       return () => clearTimeout(timer);
     }
   }, [error, success]);
@@ -34,9 +37,21 @@ export default function Register() {
       {success && <MessageBox type="success" message="Регистрирахте се успешно" />}
       <legend>Регистрация</legend>
 
-      <form className={styles.registerForm} onSubmit={(e) => 
-  handleSubmit(e, formValues, setFormValues, setSuccess, setError, setInvalidFields, onRegisterSubmit)
-}>
+      <form
+        className={styles.registerForm}
+        onSubmit={(e) =>
+          handleSubmit(
+            e,
+            formValues,
+            setFormValues,
+            setSuccess,
+            setError,
+            setInvalidFields,
+            (values, setSuccess, setError, setInvalidFields) =>
+              onRegisterSubmit(values, setSuccess, setError, setInvalidFields, setUser, router)
+          )
+        }
+      >
         <label htmlFor="username">Username</label>
         <input
           name="username"

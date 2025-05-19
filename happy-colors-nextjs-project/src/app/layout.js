@@ -1,24 +1,20 @@
-import "./globals.css";
-import { AuthProvider } from '../context/authContext';
-
-import Header from "../components/header/header";
+import './globals.css';
+import Header from '@/components/header/header';
+import AuthWrapper from '../context/AuthWrapper';
 
 export const metadata = {
-  title: "Happy Colors",
-  description: "Онлайн магазин за ръчно изработени изделия",
+  title: 'Happy Colors',
+  description: 'Онлайн магазин за ръчно изработени изделия',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="bg">
       <body>
-        <AuthProvider>
+        <AuthWrapper>
           <Header />
           <main>{children}</main>
-          <footer>
-            <p>All rights reserved 2025</p>
-          </footer>
-        </AuthProvider>
+        </AuthWrapper>
       </body>
     </html>
   );
