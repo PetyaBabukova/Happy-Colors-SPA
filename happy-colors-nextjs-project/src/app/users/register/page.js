@@ -1,35 +1,33 @@
 'use client';
-import React, { useState, useEffect } from 'react';
 import styles from './register.module.css';
-import { onRegisterSubmit } from '../../../managers/userManager';
 import MessageBox from '@/components/ui/MessageBox';
-import { handleChange, handleSubmit } from '@/helpers/userHelpers';
+import { onRegisterSubmit } from '@/managers/userManager';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import useForm from '@/hooks/useForm';
+import { handleSubmit } from '@/utils/formSubmitHelper';
+import { passwordsMatchValidator } from '@/utils/formValidations';
 
 export default function Register() {
-  const [formValues, setFormValues] = useState({
+  const router = useRouter();
+  const { setUser } = useAuth();
+
+  const {
+    formValues,
+    setFormValues,
+    error,
+    setError,
+    success,
+    setSuccess,
+    invalidFields,
+    setInvalidFields,
+    handleChange
+  } = useForm({
     username: '',
     email: '',
     password: '',
     repeatPassword: '',
   });
-
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [invalidFields, setInvalidFields] = useState([]);
-  const router = useRouter();
-  const { setUser } = useAuth(); // ✅ това липсваше
-
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError('');
-        setSuccess(false);
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
 
   return (
     <div className={styles.registerFormContainer}>
@@ -48,7 +46,8 @@ export default function Register() {
             setError,
             setInvalidFields,
             (values, setSuccess, setError, setInvalidFields) =>
-              onRegisterSubmit(values, setSuccess, setError, setInvalidFields, setUser, router)
+              onRegisterSubmit(values, setSuccess, setError, setInvalidFields, setUser, router),
+            [passwordsMatchValidator]
           )
         }
       >
@@ -56,7 +55,7 @@ export default function Register() {
         <input
           name="username"
           value={formValues.username}
-          onChange={(e) => handleChange(e, setFormValues)}
+          onChange={handleChange}
           className={invalidFields.includes('username') ? styles.invalidField : ''}
         />
 
@@ -64,7 +63,7 @@ export default function Register() {
         <input
           name="email"
           value={formValues.email}
-          onChange={(e) => handleChange(e, setFormValues)}
+          onChange={handleChange}
           className={invalidFields.includes('email') ? styles.invalidField : ''}
         />
 
@@ -73,7 +72,7 @@ export default function Register() {
           type="password"
           name="password"
           value={formValues.password}
-          onChange={(e) => handleChange(e, setFormValues)}
+          onChange={handleChange}
           className={invalidFields.includes('password') ? styles.invalidField : ''}
         />
 
@@ -82,7 +81,7 @@ export default function Register() {
           type="password"
           name="repeatPassword"
           value={formValues.repeatPassword}
-          onChange={(e) => handleChange(e, setFormValues)}
+          onChange={handleChange}
           className={invalidFields.includes('repeatPassword') ? styles.invalidField : ''}
         />
 

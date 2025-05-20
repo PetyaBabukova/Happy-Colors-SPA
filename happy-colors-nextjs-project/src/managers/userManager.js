@@ -81,10 +81,7 @@ export const onRegisterSubmit = async (
     }
   };
   
-  
-  
-  
-  export const logoutUser = async (setUser, router, setError = () => {}) => {
+    export const logoutUser = async (setUser, router, setError = () => {}) => {
     try {
       const res = await fetch('http://localhost:3030/users/logout', {
         method: 'POST',
@@ -105,6 +102,4 @@ export const onRegisterSubmit = async (
       setError('Неуспешен изход');
     }
   };
-  
-  
   
