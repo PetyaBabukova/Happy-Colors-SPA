@@ -2,30 +2,30 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import routes from './routes.js';
 
-// Зареждаме .env променливи
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
 const app = express();
+const PORT = process.env.PORT || 3030;
 
 mongoose.connect('mongodb://127.0.0.1:27017/happycolors')
-    .then(() => console.log('DB Connected!'))
-    .catch(err => console.log(err));
+  .then(() => console.log('DB Connected!'))
+  .catch(err => console.log(err));
 
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
-app.use(express.json()); //This is for 'Content-type: application/json!!!
+app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-  }));
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
+
 app.use(routes);
 
-
 app.get('/', (req, res) => {
-    res.send('Restful service');
+  res.send('Restful service');
 });
 
-app.listen(3030, () => console.log("Restfull server is listening on port 3030..."));
-
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}...`));

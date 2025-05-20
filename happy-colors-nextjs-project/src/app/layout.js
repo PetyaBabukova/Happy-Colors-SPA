@@ -1,6 +1,7 @@
+// ✅ /src/app/layout.js
 import './globals.css';
 import Header from '@/components/header/header';
-import AuthWrapper from '../context/AuthWrapper';
+import AuthWrapper from '@/context/AuthWrapper';
 
 export const metadata = {
   title: 'Happy Colors',

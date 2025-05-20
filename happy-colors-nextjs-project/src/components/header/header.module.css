@@ -128,6 +128,14 @@
     border-bottom: 1px solid var(--light-green);
 }
 
+.userNav{
+    margin-top: 1em;
+    font-size: 1.2em;
+    display: flex;
+    gap: 2em;
+    align-items: center;
+}
+
 /* -------------------- МОБИЛНИ СТИЛОВЕ -------------------- */
 @media (max-width: 768px) {
 
