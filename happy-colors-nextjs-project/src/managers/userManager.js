@@ -2,51 +2,49 @@ import { useAuth } from '@/context/AuthContext';
 
 
 export const onRegisterSubmit = async (
-    formValues,
-    setSuccess,
-    setError,
-    setInvalidFields,
-    setUser,
-    router
-  ) => {
-    try {
-      const res = await fetch('http://localhost:3030/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formValues),
-      });
-  
-      const result = await res.json();
-  
-      if (!res.ok) {
-        throw result;
-      }
-  
-      setSuccess(true);
-      setError('');
-      setInvalidFields([]);
-  
-      // ✅ Автоматичен login със същите данни
-      await onLoginSubmit(
-        { email: formValues.email, password: formValues.password },
-        () => {}, // не показваме допълнителен success
-        () => {}, // не показваме грешка тук
-        setUser
-      );
-  
-      // ✅ Пренасочване към /products
-      router.push('/products');
-  
-    } catch (err) {
-      setSuccess(false);
-      setError(err.message || 'Възникна грешка.');
-      if (err.field) {
-        setInvalidFields([err.field]);
-      } else {
-        setInvalidFields([]);
-      }
+  formValues,
+  setSuccess,
+  setError,
+  setInvalidFields,
+  setUser
+) => {
+  try {
+    const res = await fetch('http://localhost:3030/users/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formValues),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw result;
     }
-  };
+
+    setError('');
+    setInvalidFields([]);
+
+    await onLoginSubmit(
+      { email: formValues.email, password: formValues.password },
+      () => {},
+      () => {},
+      setUser
+    );
+
+    // ✅ Сега вече всичко е готово – логваме, тогава success
+    setSuccess(true);
+
+  } catch (err) {
+    setSuccess(false);
+    setError(err.message || 'Възникна грешка.');
+    if (err.field) {
+      setInvalidFields([err.field]);
+    } else {
+      setInvalidFields([]);
+    }
+  }
+};
+
 
   export const onLoginSubmit = async (formValues, setSuccess, setError, setUser) => {
     try {

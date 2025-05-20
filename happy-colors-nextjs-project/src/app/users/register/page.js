@@ -1,5 +1,7 @@
 'use client';
 import styles from './register.module.css';
+import { useEffect } from 'react';
+
 import MessageBox from '@/components/ui/MessageBox';
 import { onRegisterSubmit } from '@/managers/userManager';
 import { useRouter } from 'next/navigation';
@@ -29,6 +31,12 @@ export default function Register() {
     repeatPassword: '',
   });
 
+  useEffect(() => {
+    if (success) {
+      router.push('/products');
+    }
+  }, [success, router]);
+
   return (
     <div className={styles.registerFormContainer}>
       {error && <MessageBox type="error" message={`Неуспешна регистрация: ${error}`} />}
@@ -46,7 +54,7 @@ export default function Register() {
             setError,
             setInvalidFields,
             (values, setSuccess, setError, setInvalidFields) =>
-              onRegisterSubmit(values, setSuccess, setError, setInvalidFields, setUser, router),
+              onRegisterSubmit(values, setSuccess, setError, setInvalidFields, setUser),
             [passwordsMatchValidator]
           )
         }

@@ -1,5 +1,6 @@
 'use client';
 import styles from './login.module.css';
+import { useEffect } from 'react'; // ако не е импортнат
 import MessageBox from '@/components/ui/MessageBox';
 import { onLoginSubmit } from '@/managers/userManager';
 import { useRouter } from 'next/navigation';
@@ -25,8 +26,11 @@ export default function Login() {
     await onLoginSubmit(formValues, setSuccess, setError, setUser);
   };
 
-  if (success) router.push('/products');
-
+  useEffect(() => {
+    if (success) {
+      router.push('/products');
+    }
+  }, [success, router]);
   return (
     <div className={styles.registerFormContainer}>
       {error && <MessageBox type="error" message="Невалиден e-mail или парола" />}

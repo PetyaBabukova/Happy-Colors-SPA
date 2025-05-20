@@ -35,6 +35,19 @@ const productSchema = new mongoose.Schema({
         }
     ],
 
+    connectedProducts: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product'
+        }
+    ],
+
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: [true, "Owner is required!"],
+    },
+
 });
 
 const Product = mongoose.model('Product', productSchema);
