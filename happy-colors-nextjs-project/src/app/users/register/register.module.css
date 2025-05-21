@@ -41,4 +41,13 @@
     /* background-color: #fff8f1;  */
     background-color: var(--lighter-orange);
   }
+
+   @media (max-width: 768px) {
+    .registerFormContainer {
+        max-width: 90%;
+        padding: 2em;
+        /* margin: 0; */
+    }
+    
+  }
   

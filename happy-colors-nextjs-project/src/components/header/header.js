@@ -73,8 +73,8 @@ export default function Header() {
       {user && (
         <ul className={styles.userNav}>
           <li><Link href="/products/create">Създай продукт</Link></li>
-          <li><Link href="/products/mine">Моите продукти</Link></li>
-          <li><Link href="/dashboard">Админ панел</Link></li>
+          {/* <li><Link href="/products/mine">Моите продукти</Link></li>
+          <li><Link href="/dashboard">Админ панел</Link></li> */}
         </ul>
       )}
     </>
