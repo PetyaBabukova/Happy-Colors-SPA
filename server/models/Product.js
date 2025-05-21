@@ -35,10 +35,10 @@ const productSchema = new mongoose.Schema({
         }
     ],
 
-    connectedProducts: [
+    accessories: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product'
+            ref: 'Accessory'
         }
     ],
 

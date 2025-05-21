@@ -43,7 +43,7 @@ export default function Home() {
 						ipsa placeat molestiae quibusdam voluptates ab explicabo alias tempora maxime
 						iusto veniam, dolores eligendi, nobis cum aspernatur cupiditate blanditiis.
 					</p>
-					<Link href="/shop" className={styles.hiroShopLink}>Магазин</Link>
+					<Link href="/products" className={styles.hiroShopLink}>Магазин</Link>
 				</div>
 
 				<div className={styles.breadcrumb}>

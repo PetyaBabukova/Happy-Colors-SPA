@@ -1,5 +1,5 @@
 import { useAuth } from '@/context/AuthContext';
-
+import baseURL from '@/config';
 
 export const onRegisterSubmit = async (
   formValues,
@@ -9,7 +9,7 @@ export const onRegisterSubmit = async (
   setUser
 ) => {
   try {
-    const res = await fetch('http://localhost:3030/users/register', {
+    const res = await fetch(`${baseURL}/users/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formValues),
@@ -31,9 +31,7 @@ export const onRegisterSubmit = async (
       setUser
     );
 
-    // ✅ Сега вече всичко е готово – логваме, тогава success
     setSuccess(true);
-
   } catch (err) {
     setSuccess(false);
     setError(err.message || 'Възникна грешка.');
@@ -45,59 +43,56 @@ export const onRegisterSubmit = async (
   }
 };
 
+export const onLoginSubmit = async (formValues, setSuccess, setError, setUser) => {
+  try {
+    const res = await fetch(`${baseURL}/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(formValues),
+    });
 
-  export const onLoginSubmit = async (formValues, setSuccess, setError, setUser) => {
-    try {
-      const res = await fetch('http://localhost:3030/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(formValues),
-      });
-  
-      const result = await res.json();
-  
-      if (!res.ok) {
-        throw new Error(result.message);
-      }
-  
-      // 🔥 директно сетваш user
-      if (typeof setUser === 'function') {
-        setUser({
-          username: result.username,
-          _id: result._id,
-          email: result.email
-        });
-      }
-  
-      setSuccess(true);
-      setError('');
-    } catch (err) {
-      console.error('Login error:', err.message);
-      setSuccess(false);
-      setError('Невалиден e-mail или парола');
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.message);
     }
-  };
-  
-    export const logoutUser = async (setUser, router, setError = () => {}) => {
-    try {
-      const res = await fetch('http://localhost:3030/users/logout', {
-        method: 'POST',
-        credentials: 'include',
+
+    if (typeof setUser === 'function') {
+      setUser({
+        username: result.username,
+        _id: result._id,
+        email: result.email,
       });
-  
-      if (!res.ok) {
-        throw new Error('Грешка при изход');
-      }
-  
-      if (typeof setUser === 'function') {
-        setUser(null); // 🧹 изчистваме потребителя от контекста
-      }
-  
-      router.push('/'); // 🔁 пренасочваме към началната страница
-    } catch (err) {
-      console.error('Logout error:', err.message);
-      setError('Неуспешен изход');
     }
-  };
-  
+
+    setSuccess(true);
+    setError('');
+  } catch (err) {
+    console.error('Login error:', err.message);
+    setSuccess(false);
+    setError('Невалиден e-mail или парола');
+  }
+};
+
+export const logoutUser = async (setUser, router, setError = () => {}) => {
+  try {
+    const res = await fetch(`${baseURL}/users/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      throw new Error('Грешка при изход');
+    }
+
+    if (typeof setUser === 'function') {
+      setUser(null);
+    }
+
+    router.push('/');
+  } catch (err) {
+    console.error('Logout error:', err.message);
+    setError('Неуспешен изход');
+  }
+};

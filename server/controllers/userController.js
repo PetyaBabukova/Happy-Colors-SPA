@@ -5,7 +5,25 @@ import { loginUser, registerUser } from '../services/userService.js';
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'secret';
 
-router.post('/register', async (req, res) => {
+// 🧾 Пътища
+const ROUTES = {
+  REGISTER: '/register',
+  LOGIN: '/login',
+  LOGOUT: '/logout',
+  ME: '/me',
+};
+
+// 🍪 Cookie настройки
+const COOKIE_NAME = 'token';
+const COOKIE_CONFIG = {
+  httpOnly: true,
+  sameSite: 'Lax',
+  secure: false, // 👉 Сложи true в продукция
+  path: '/',
+  maxAge: 24 * 60 * 60 * 1000, // 1 ден
+};
+
+router.post(ROUTES.REGISTER, async (req, res) => {
   try {
     const user = await registerUser(req.body);
     res.status(201).json(user);
@@ -19,37 +37,24 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post(ROUTES.LOGIN, async (req, res) => {
   try {
     const { token, user } = await loginUser(req.body.email, req.body.password);
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'Lax',
-      secure: false, // true в продукция
-      path: '/',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
+    res.cookie(COOKIE_NAME, token, COOKIE_CONFIG);
     res.status(200).json(user);
   } catch (err) {
     res.status(401).json({ message: 'Невалиден e-mail или парола' });
   }
 });
 
-router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    sameSite: 'Lax',
-    secure: false,
-    path: '/',
-  });
-
+router.post(ROUTES.LOGOUT, (req, res) => {
+  res.clearCookie(COOKIE_NAME, COOKIE_CONFIG);
   res.status(204).end();
 });
 
-router.get('/me', (req, res) => {
-  const token = req.cookies.token;
+router.get(ROUTES.ME, (req, res) => {
+  const token = req.cookies[COOKIE_NAME];
 
   if (!token) {
     return res.status(401).json({ message: 'No token' });

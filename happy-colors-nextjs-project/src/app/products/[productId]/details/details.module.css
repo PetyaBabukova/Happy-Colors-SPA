@@ -1,0 +1,135 @@
+.productDetails {
+  display: flex;
+  gap: 4em;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-image: url('./background.wpg');
+}
+
+.productDescriptionContainer {
+  flex: 1 0 30%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 2em;
+}
+
+.reviewContainer {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fa-star {
+  color: var(--yellow);
+  font-size: 1.5em;
+}
+
+.reviewCounter {
+  margin: 0;
+  padding: 0;
+}
+
+.reviewLink {
+  text-decoration: none;
+  color: var(--dark-green);
+  font-size: 1.2em;
+}
+
+.productDescriptionBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.productDetailsBodyTabsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  text-transform: uppercase;
+  margin: 0 0 2em 0;
+  padding: 0;
+}
+
+.productDetailsBodyTabsContainer a {
+  background-color: var(--light-green-transparent);
+  color: var(--dark-green);
+  padding: 0.5em 1.2em;
+  text-decoration: none;
+}
+
+.productDetailsBodyTabsContainer a:hover,
+.productDetailsBodyTabsContainer a:active {
+  background-color: var(--dark-green);
+  color: white;
+}
+
+.productDescriptionBody p {
+  max-width: 50%;
+  font-size: 1.2em;
+}
+
+.putInCartLink {
+  text-decoration: none;
+  color: var(--dark-green);
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 0.3em 0.8em;
+  border: 1px solid var(--dark-green);
+  border-radius: 0.5em;
+  transition: all 0.3s ease-in-out;
+}
+
+.putInCartLink:hover {
+  background-color: var(--light-green);
+  color: white;
+}
+
+.productDetailsImagesContainer {
+  flex: 0 1 40%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 3em;
+}
+
+.productDetailsImagesContainer img {
+  width: 100%;
+  border-radius: 0.5em;
+}
+
+.productDetailsMainImage {
+  width: 100%;
+}
+
+.connectedProductsContainer {
+  flex: 0 1 30%;
+  border: 1px solid var(--dark-green);
+  padding: 0.5em;
+}
+
+.connectedProductsContainer:hover {
+  background-color: var(--light-green-transparent);
+}
+
+.similarProductsContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.similarProductsHeading {
+  width: 100%;
+  margin: 0;
+}
+
+.connectedProductLink {
+  text-decoration: none;
+}
