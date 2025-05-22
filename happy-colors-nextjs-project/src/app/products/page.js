@@ -9,31 +9,7 @@ export default function Shop() {
 		<section className={styles.shopPage}>
 			<h1 className={styles.shopPageTitle}>Магазин</h1>
 
-			{/* <aside className={styles.filters}>
-				<h6>Категория</h6>
-				<ul>
-					<li>Item 1</li>
-					<li>Item 2</li>
-					<li>Item 3</li>
-					<li>Itemm 4</li>
-				</ul>
 
-				<h6>Модел</h6>
-				<ul>
-					<li>Item 1</li>
-					<li>Item 2</li>
-					<li>Item 3</li>
-					<li>Itemm 4</li>
-				</ul>
-
-				<h6>Критерий 3</h6>
-				<ul>
-					<li>Item 1</li>
-					<li>Item 2</li>
-					<li>Item 3</li>
-					<li>Itemm 4</li>
-				</ul>
-			</aside> */}
 
 			<section className={styles.categories}>
 				<article className={styles.shoppingCategory}>

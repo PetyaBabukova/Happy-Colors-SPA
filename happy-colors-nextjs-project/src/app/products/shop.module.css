@@ -1,7 +1,7 @@
 .shopPage{
-    background-image: url('/background.jpg');
     margin: 0 auto;
     display: flex;
+    flex-direction: column;
     align-items: space-between;
     justify-content: space-between;
     gap:2em;
@@ -11,7 +11,7 @@
 .shopPageTitle{
     width: 100%;
     margin-bottom: 0;
-    
+    text-align: center;
 }
 
 .filters{
