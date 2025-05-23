@@ -1,23 +1,40 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { createProduct, getAllProducts } from '../services/productsServices.js'; // Импорт на createProduct функцията
+import {
+  createProduct,
+  getAllProducts,
+  getProductById,
+} from '../services/productsServices.js';
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'secret';
 
+// 🟢 GET /products – всички продукти
 router.get('/', async (req, res) => {
   try {
-    const products = await getAllProducts(); // от services
+    const products = await getAllProducts();
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: 'Грешка при зареждане на продуктите' });
   }
 });
 
+// 🟢 GET /products/:productId – детайлен изглед
+router.get('/:productId', async (req, res) => {
+  try {
+    const product = await getProductById(req.params.productId);
 
+    if (!product) {
+      return res.status(404).json({ message: 'Продуктът не беше намерен' });
+    }
 
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(400).json({ message: 'Невалиден ID или грешка при заявката' });
+  }
+});
 
-// 🟢 POST /products – създаване на продукт
+// 🟢 POST /products – създаване на нов продукт
 router.post('/', async (req, res) => {
   const token = req.cookies?.token;
 

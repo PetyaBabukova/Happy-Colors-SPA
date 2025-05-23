@@ -22,7 +22,9 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductDetailsPage({ params }) {
-  const res = await fetch(`${baseURL}/products/${params.productId}`, {
+    const { productId } = params; 
+
+  const res = await fetch(`${baseURL}/products/${productId}`, {
     cache: 'no-store',
   });
 

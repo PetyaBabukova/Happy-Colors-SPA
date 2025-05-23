@@ -5,7 +5,7 @@ import styles from './shop.module.css';
 
 export default function ProductCard({ product }) {
     return (
-        <Link href={`/products/${product._id}/details`} className={styles.product}>
+        <Link href={`/products/${product._id}`} className={styles.product}>
             <div className={styles.productImageContainer}>
                 <img src={product.imageUrl} alt={product.title} />
             </div>
