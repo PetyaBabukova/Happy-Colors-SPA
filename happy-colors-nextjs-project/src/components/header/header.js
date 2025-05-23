@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import styles from './header.module.css';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -19,7 +20,7 @@ export default function Header() {
 				<nav className={styles.mainNav}>
 					<Link href="/">
 						<div className={styles.logoContainer}>
-							<img src="/logo_64pxH.svg" alt="logo" />
+							<Image src="/logo_64pxH.svg" alt="logo" width={256} heightht={256}></Image>
 						</div>
 					</Link>
 
@@ -28,7 +29,7 @@ export default function Header() {
 							className={`${styles.hamburgerBtn} ${mobileMenuOpen ? styles.hideHamburger : ''}`}
 							onClick={() => setMobileMenuOpen(true)}
 						>
-							<img src="/hamburger.svg" alt="Меню" />
+							<Image src="/hamburger.svg" alt="Меню" width={64} height={64} />
 						</button>
 					)}
 
@@ -57,7 +58,7 @@ export default function Header() {
 					<form className={styles.searchForm} method="get">
 						<input type="text" placeholder="Търсене" className={styles.searchInput} />
 						<button type="submit" className={styles.searchBtn}>
-							<img src="/search_icon_green.svg" alt="search icon" />
+							<Image src="/search_icon_green.svg" alt="search icon" width={16} height={16} />
 						</button>
 					</form>
 
@@ -72,7 +73,7 @@ export default function Header() {
 					)}
 
 					<Link href="/cart">
-						<img className={styles.basketGreen} src="/basket_green.svg" alt="Количка" />
+						<Image className={styles.basketGreen} src="/basket_green.svg" alt="Количка" width={32} height={32} />
 					</Link>
 				</nav>
 			</header>

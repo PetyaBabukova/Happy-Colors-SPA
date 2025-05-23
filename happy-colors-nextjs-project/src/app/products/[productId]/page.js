@@ -1,8 +1,10 @@
 import ProductDetails from './ProductDetails';
 import baseURL from '@/config';
 
-export async function generateMetadata({ params }) {
-  const res = await fetch(`${baseURL}/products/${params.productId}`, {
+export async function generateMetadata(props) {
+  const { productId } = props.params;
+
+  const res = await fetch(`${baseURL}/products/${productId}`, {
     cache: 'no-store',
   });
 
@@ -21,8 +23,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function ProductDetailsPage({ params }) {
-    const { productId } = params; 
+export default async function ProductDetailsPage(props) {
+  const { productId } = props.params;
 
   const res = await fetch(`${baseURL}/products/${productId}`, {
     cache: 'no-store',
