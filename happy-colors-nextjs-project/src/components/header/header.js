@@ -5,78 +5,85 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, loading } = useAuth();
+	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const [submenuOpen, setSubmenuOpen] = useState(false);
 
-  console.log('🧠 Header render – loading:', loading, '| user:', user);
+	const { user, loading } = useAuth();
 
-  if (loading) return null; // предотвратява мигане
 
-  return (
-    <>
-      <header className="header">
-        <nav className={styles.mainNav}>
-          <Link href="/">
-            <div className={styles.logoContainer}>
-              <img src="/logo_64pxH.svg" alt="logo" />
-            </div>
-          </Link>
+	if (loading) return null; // предотвратява мигане
 
-          <button
-            className={styles.hamburgerBtn}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <img src="/hamburger.svg" alt="Меню" />
-          </button>
+	return (
+		<>
+			<header className="header">
+				<nav className={styles.mainNav}>
+					<Link href="/">
+						<div className={styles.logoContainer}>
+							<img src="/logo_64pxH.svg" alt="logo" />
+						</div>
+					</Link>
 
-          <ul className={`${styles.mainNavList} ${mobileMenuOpen ? styles.showMenu : ''}`}>
-            <li><Link href="/">Начало</Link></li>
-            <li className={styles.hasSubmenu}>
-              <Link className={styles.menuItem} href="/products">Магазин</Link>
-              <ul className={styles.subNavList}>
-                <li><Link href="/products/all">Всички</Link></li>
-                <li><Link href="/products/toys">Животинки и играчки</Link></li>
-                <li><Link href="/products/dolls">Кукли с аксесоари</Link></li>
-                <li><Link href="/products/scarves-and-hats">Шалове и шапки</Link></li>
-                <li><Link href="/products/bags">Чанти и раници</Link></li>
-              </ul>
-            </li>
-            <li><Link href="/aboutus">За мен</Link></li>
-            <li><Link href="/blog">Блог</Link></li>
-            <li><Link href="/partners">За партньори</Link></li>
-            <li><Link href="/contacts">Контакти</Link></li>
-          </ul>
+					{!mobileMenuOpen && (
+						<button
+							className={`${styles.hamburgerBtn} ${mobileMenuOpen ? styles.hideHamburger : ''}`}
+							onClick={() => setMobileMenuOpen(true)}
+						>
+							<img src="/hamburger.svg" alt="Меню" />
+						</button>
+					)}
 
-          <form className={styles.searchForm} method="get">
-            <input type="text" placeholder="Търсене" className={styles.searchInput} />
-            <button type="submit" className={styles.searchBtn}>
-              <img src="/search_icon_green.svg" alt="search icon" />
-            </button>
-          </form>
 
-          {user?.username ? (
-            <p className={styles.userGreeting}>
-              Здравей, {user.username} | <Link href="/users/logout">Изход</Link>
-            </p>
-          ) : (
-            <p className={styles.userGreeting}>
-              <Link href="/users/register">Регистрация</Link> | <Link href="/users/login">Вход</Link>
-            </p>
-          )}
+					<ul className={`${styles.mainNavList} ${mobileMenuOpen ? styles.showMenu : ''}`}>
+						<li><Link href="/" onClick={() => setMobileMenuOpen(false)}>Начало</Link></li>
 
-          <Link href="/cart">
-            <img className={styles.basketGreen} src="/basket_green.svg" alt="Количка" />
-          </Link>
-        </nav>
-      </header>
+						<li className={styles.hasSubmenu}>
+							<Link className={styles.menuItem} href="/products" onClick={() => setMobileMenuOpen(false)}>Магазин</Link>
+							<ul className={styles.subNavList}>
+								<li><Link href="/products/all" onClick={() => setMobileMenuOpen(false)}>Всички</Link></li>
+								<li><Link href="/products/toys" onClick={() => setMobileMenuOpen(false)}>Животинки и играчки</Link></li>
+								<li><Link href="/products/dolls" onClick={() => setMobileMenuOpen(false)}>Кукли с аксесоари</Link></li>
+								<li><Link href="/products/scarves-and-hats" onClick={() => setMobileMenuOpen(false)}>Шалове и шапки</Link></li>
+								<li><Link href="/products/bags" onClick={() => setMobileMenuOpen(false)}>Чанти и раници</Link></li>
+							</ul>
+						</li>
 
-      {user && (
-        <ul className={styles.userNav}>
-          <li><Link href="/products/create">Създай продукт</Link></li>
-          {/* <li><Link href="/products/mine">Моите продукти</Link></li>
+						<li><Link href="/aboutus" onClick={() => setMobileMenuOpen(false)}>За мен</Link></li>
+						<li><Link href="/blog" onClick={() => setMobileMenuOpen(false)}>Блог</Link></li>
+						<li><Link href="/partners" onClick={() => setMobileMenuOpen(false)}>За партньори</Link></li>
+						<li><Link href="/contacts" onClick={() => setMobileMenuOpen(false)}>Контакти</Link></li>
+					</ul>
+
+
+					<form className={styles.searchForm} method="get">
+						<input type="text" placeholder="Търсене" className={styles.searchInput} />
+						<button type="submit" className={styles.searchBtn}>
+							<img src="/search_icon_green.svg" alt="search icon" />
+						</button>
+					</form>
+
+					{user?.username ? (
+						<p className={styles.userGreeting}>
+							Здравей, {user.username} | <Link href="/users/logout">Изход</Link>
+						</p>
+					) : (
+						<p className={styles.userGreeting}>
+							<Link href="/users/register">Регистрация</Link> | <Link href="/users/login">Вход</Link>
+						</p>
+					)}
+
+					<Link href="/cart">
+						<img className={styles.basketGreen} src="/basket_green.svg" alt="Количка" />
+					</Link>
+				</nav>
+			</header>
+
+			{user && (
+				<ul className={styles.userNav}>
+					<li><Link href="/products/create">Създай продукт</Link></li>
+					{/* <li><Link href="/products/mine">Моите продукти</Link></li>
           <li><Link href="/dashboard">Админ панел</Link></li> */}
-        </ul>
-      )}
-    </>
-  );
+				</ul>
+			)}
+		</>
+	);
 }

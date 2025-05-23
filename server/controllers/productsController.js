@@ -1,9 +1,21 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { createProduct } from '../services/productsServices.js'; // Импорт на createProduct функцията
+import { createProduct, getAllProducts } from '../services/productsServices.js'; // Импорт на createProduct функцията
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'secret';
+
+router.get('/', async (req, res) => {
+  try {
+    const products = await getAllProducts(); // от services
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Грешка при зареждане на продуктите' });
+  }
+});
+
+
+
 
 // 🟢 POST /products – създаване на продукт
 router.post('/', async (req, res) => {
