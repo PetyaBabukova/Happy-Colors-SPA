@@ -1,11 +1,19 @@
-
-import CreateProductForm from './CreateProductForm';
-
-export const metadata = {
-  title: 'Създай продукт | Happy Colors',
-  description: 'Добави нов продукт в твоя онлайн магазин Happy Colors.',
-};
+'use client';
+import ProductForm from '@/components/products/ProductForm';
+import { onCreateProductSubmit } from '@/managers/productsManager';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CreateProductPage() {
-  return <CreateProductForm />;
+  const { user } = useAuth();
+
+  return (
+    <ProductForm
+      initialValues={{ title: '', description: '', category: '', price: '', imageUrl: '' }}
+      onSubmit={(values, setSuccess, setError, setInvalidFields, router) =>
+        onCreateProductSubmit(values, setSuccess, setError, setInvalidFields, user, router)
+      }
+      legendText="Създаване на нов продукт"
+      successMessage="Продуктът беше създаден успешно!"
+    />
+  );
 }

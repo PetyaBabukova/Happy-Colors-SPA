@@ -1,16 +1,14 @@
 'use client';
 
-import styles from './create.module.css';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import MessageBox from '@/components/ui/MessageBox';
 import useForm from '@/hooks/useForm';
 import { handleSubmit } from '@/utils/formSubmitHelper';
-import { useAuth } from '@/context/AuthContext';
-import { onCreateProductSubmit } from '@/managers/productsManager';
+import MessageBox from '@/components/ui/MessageBox';
+import styles from './create.module.css';
 
-export default function CreateProductForm() {
+export default function ProductForm({ initialValues, onSubmit, legendText, successMessage }) {
   const router = useRouter();
-  const { user } = useAuth();
 
   const {
     formValues,
@@ -30,12 +28,18 @@ export default function CreateProductForm() {
     imageUrl: '',
   });
 
+  useEffect(() => {
+    if (initialValues) {
+      setFormValues(initialValues);
+    }
+  }, [initialValues, setFormValues]);
+
   return (
     <div className={styles.registerFormContainer}>
       {error && <MessageBox type="error" message={`Грешка: ${error}`} />}
-      {success && <MessageBox type="success" message="Продуктът беше създаден успешно!" />}
+      {success && <MessageBox type="success" message={successMessage || 'Успешно изпълнение'} />}
 
-      <legend>Създаване на нов продукт</legend>
+      <legend>{legendText}</legend>
 
       <form
         className={styles.registerForm}
@@ -48,7 +52,7 @@ export default function CreateProductForm() {
             setError,
             setInvalidFields,
             (values, setSuccess, setError, setInvalidFields) =>
-              onCreateProductSubmit(values, setSuccess, setError, setInvalidFields, user, router)
+              onSubmit(values, setSuccess, setError, setInvalidFields, router)
           )
         }
       >
@@ -93,7 +97,7 @@ export default function CreateProductForm() {
           className={invalidFields.includes('imageUrl') ? styles.invalidField : ''}
         />
 
-        <button type="submit">Създай продукт</button>
+        <button type="submit">Запази</button>
       </form>
     </div>
   );
