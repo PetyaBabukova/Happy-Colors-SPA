@@ -72,18 +72,28 @@
   font-size: 1.2em;
 }
 
-.putInCartLink {
+.actionButtonsContainer{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em; 
+}
+
+.actionBtn {
   text-decoration: none;
   color: var(--dark-green);
   font-size: 1.2em;
   font-weight: bold;
-  padding: 0.3em 0.8em;
+  padding: 0.2em 0.8em 0.4em;
   border: 1px solid var(--dark-green);
   border-radius: 0.5em;
   transition: all 0.3s ease-in-out;
+  margin: 0.5em;
+
 }
 
-.putInCartLink:hover {
+.actionBtn:hover {
   background-color: var(--light-green);
   color: white;
 }
@@ -131,4 +141,76 @@
 
 .connectedProductLink {
   text-decoration: none;
+}
+
+
+
+@media (max-width: 768px) {
+  .productDetails {
+    flex-direction: column;
+    gap: 2em;
+    align-items: center;
+  }
+
+  .productDescriptionContainer {
+    width: 100%;
+    padding: 0 1em;
+    align-items: center;
+    text-align: center;
+  }
+
+  .productDetailsImagesContainer {
+    width: 100%;
+    order: -1;
+  }
+
+  .productDetailsMainImage {
+    width: 90%;
+    margin: 0 auto;
+  }
+
+  .reviewContainer {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5em;
+  }
+
+  .productDetailsBodyTabsContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    padding: 0.5em;
+  }
+
+  .productDetailsBodyTab a {
+    font-size: 1em;
+    padding: 0.4em 0.8em;
+  }
+
+  .productDescriptionBody {
+    padding: 0 1em;
+  }
+
+  .productDescriptionBody p {
+    max-width: 100%;
+    font-size: 1.1em;
+  }
+
+  .actionBtn {
+    font-size: 1em;
+    padding: 0.6em 1.2em;
+    display: inline-block;
+  }
+
+  .price {
+    font-size: 1.2em;
+    margin-top: 1em;
+  }
+
+  .similarProductsContainer {
+    display: none;
+    /* скриваме за мобилно */
+  }
 }

@@ -4,6 +4,7 @@ import {
   createProduct,
   getAllProducts,
   getProductById,
+  deleteProduct,
 } from '../services/productsServices.js';
 
 const router = express.Router();
@@ -62,6 +63,44 @@ router.post('/', async (req, res) => {
     }
 
     res.status(400).json({ message });
+  }
+});
+
+router.delete('/:productId', async (req, res) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Missing authentication token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    await deleteProduct(req.params.productId, decoded._id);
+
+    res.status(204).end(); // Успешно, без съдържание
+  } catch (err) {
+    res.status(403).json({ message: err.message });
+  }
+});
+
+router.put('/:productId', async (req, res) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Missing authentication token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    const updatedProduct = await editProduct(
+      req.params.productId,
+      req.body,
+      decoded._id
+    );
+
+    res.status(200).json(updatedProduct);
+  } catch (err) {
+    res.status(403).json({ message: err.message });
   }
 });
 

@@ -20,7 +20,7 @@ export default function Header() {
 				<nav className={styles.mainNav}>
 					<Link href="/">
 						<div className={styles.logoContainer}>
-							<Image src="/logo_64pxH.svg" alt="logo" width={256} heightht={256}></Image>
+							<Image src="/logo_64pxH.svg" alt="logo" width={256} height={256}></Image>
 						</div>
 					</Link>
 
