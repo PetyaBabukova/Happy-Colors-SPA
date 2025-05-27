@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import baseURL from '@/config';
 
-
 export default function EditProductPage({ params }) {
   const { productId } = use(params);
   const { user } = useAuth();
@@ -27,7 +26,15 @@ export default function EditProductPage({ params }) {
     <ProductForm
       initialValues={product}
       onSubmit={(values, setSuccess, setError, setInvalidFields) =>
-        onEditProductSubmit(productId, values, setSuccess, setError, setInvalidFields, user, router)
+        onEditProductSubmit(
+          values,             // 👈 правилният ред
+          setSuccess,
+          setError,
+          setInvalidFields,
+          user,
+          router,
+          productId
+        )
       }
       legendText="Редактиране на продукта"
       successMessage="Продуктът беше редактиран успешно!"
