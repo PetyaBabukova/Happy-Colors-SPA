@@ -1,9 +1,19 @@
 import Product from '../models/Product.js';
 
 // 🟢 GET /products – получаване на всички продукти
-export async function getAllProducts() {
-  return await Product.find().populate('category', 'name').lean();
+export async function getAllProducts(categoryName) {
+  const products = await Product.find()
+    .populate('category', 'name')
+    .lean();
+
+  // Ако има зададено categoryName – филтрирай по него
+  if (categoryName) {
+    return products.filter(p => p.category?.name === categoryName);
+  }
+
+  return products;
 }
+
 
 
 export async function createProduct(data) {

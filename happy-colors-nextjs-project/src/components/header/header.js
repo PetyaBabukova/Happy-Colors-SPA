@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './header.module.css';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -7,12 +7,24 @@ import Image from 'next/image';
 
 export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-	const [submenuOpen, setSubmenuOpen] = useState(false);
-
+	const [categories, setCategories] = useState([]);
 	const { user, loading } = useAuth();
 
+	useEffect(() => {
+		const fetchCategories = async () => {
+			try {
+				const res = await fetch('http://localhost:3030/categories');
+				const data = await res.json();
+				setCategories(data);
+			} catch (err) {
+				console.error('Error fetching categories:', err);
+			}
+		};
 
-	if (loading) return null; // предотвратява мигане
+		fetchCategories();
+	}, []);
+
+	if (loading) return null;
 
 	return (
 		<>
@@ -20,19 +32,18 @@ export default function Header() {
 				<nav className={styles.mainNav}>
 					<Link href="/">
 						<div className={styles.logoContainer}>
-							<Image src="/logo_64pxH.svg" alt="logo" width={256} height={256}></Image>
+							<Image src="/logo_64pxH.svg" alt="logo" width={256} height={256} />
 						</div>
 					</Link>
 
 					{!mobileMenuOpen && (
 						<button
-							className={`${styles.hamburgerBtn} ${mobileMenuOpen ? styles.hideHamburger : ''}`}
+							className={`${styles.hamburgerBtn}`}
 							onClick={() => setMobileMenuOpen(true)}
 						>
 							<Image src="/hamburger.svg" alt="Меню" width={64} height={64} />
 						</button>
 					)}
-
 
 					<ul className={`${styles.mainNavList} ${mobileMenuOpen ? styles.showMenu : ''}`}>
 						<li><Link href="/" onClick={() => setMobileMenuOpen(false)}>Начало</Link></li>
@@ -40,11 +51,21 @@ export default function Header() {
 						<li className={styles.hasSubmenu}>
 							<Link className={styles.menuItem} href="/products" onClick={() => setMobileMenuOpen(false)}>Магазин</Link>
 							<ul className={styles.subNavList}>
-								<li><Link href="/products/all" onClick={() => setMobileMenuOpen(false)}>Всички</Link></li>
-								<li><Link href="/products/toys" onClick={() => setMobileMenuOpen(false)}>Животинки и играчки</Link></li>
-								<li><Link href="/products/dolls" onClick={() => setMobileMenuOpen(false)}>Кукли с аксесоари</Link></li>
-								<li><Link href="/products/scarves-and-hats" onClick={() => setMobileMenuOpen(false)}>Шалове и шапки</Link></li>
-								<li><Link href="/products/bags" onClick={() => setMobileMenuOpen(false)}>Чанти и раници</Link></li>
+								<li>
+									<Link href="/products" onClick={() => setMobileMenuOpen(false)}>
+										Всички
+									</Link>
+								</li>
+								{categories.map((cat) => (
+									<li key={cat._id}>
+										<Link
+											href={`/products?category=${encodeURIComponent(cat.name)}`}
+											onClick={() => setMobileMenuOpen(false)}
+										>
+											{cat.name}
+										</Link>
+									</li>
+								))}
 							</ul>
 						</li>
 
@@ -53,7 +74,6 @@ export default function Header() {
 						<li><Link href="/partners" onClick={() => setMobileMenuOpen(false)}>За партньори</Link></li>
 						<li><Link href="/contacts" onClick={() => setMobileMenuOpen(false)}>Контакти</Link></li>
 					</ul>
-
 
 					<form className={styles.searchForm} method="get">
 						<input type="text" placeholder="Търсене" className={styles.searchInput} />
@@ -82,7 +102,6 @@ export default function Header() {
 				<ul className={styles.userNav}>
 					<li><Link href="/products/create">Създай продукт</Link></li>
 					<li><Link href="/categories/create">Създай категория</Link></li>
-          {/* <li><Link href="/dashboard">Админ панел</Link></li> */}
 				</ul>
 			)}
 		</>

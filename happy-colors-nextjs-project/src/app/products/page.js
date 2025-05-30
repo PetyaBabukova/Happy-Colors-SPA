@@ -1,4 +1,4 @@
-import baseURL from '@/config';
+import { getProducts } from '@/managers/productsManager';
 import Shop from './Shop';
 
 export const metadata = {
@@ -6,14 +6,10 @@ export const metadata = {
   description: 'Разгледайте нашите ръчно изработени продукти по категории.',
 };
 
-export default async function ProductsPage() {
-  const res = await fetch(`${baseURL}/products`, { cache: 'no-store' });
+export default async function ProductsPage({ searchParams }) {
+  const category = searchParams?.category || null;
 
-  if (!res.ok) {
-    return <div>Неуспешно зареждане на продуктите.</div>;
-  }
-
-  const allProducts = await res.json();
+  const allProducts = await getProducts(category);
 
   return <Shop products={allProducts} />;
 }

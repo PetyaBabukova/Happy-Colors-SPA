@@ -11,15 +11,16 @@ import {
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'secret';
 
-// 🟢 GET /products – всички продукти
 router.get('/', async (req, res) => {
   try {
-    const products = await getAllProducts();
+    const category = req.query.category;
+    const products = await getAllProducts(category);
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: 'Грешка при зареждане на продуктите' });
   }
 });
+
 
 // 🟢 GET /products/:productId – детайлен изглед
 router.get('/:productId', async (req, res) => {

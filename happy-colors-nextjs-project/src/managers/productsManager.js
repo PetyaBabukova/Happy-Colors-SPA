@@ -84,4 +84,24 @@ export async function onEditProductSubmit(
   }
 }
 
+export async function getProducts(categoryName) {
+  try {
+    let url = `${baseURL}/products`;
+
+    if (categoryName && categoryName !== 'Всички') {
+      url += `?category=${encodeURIComponent(categoryName)}`;
+    }
+
+    const res = await fetch(url, { cache: 'no-store' });
+
+    if (!res.ok) {
+      throw new Error('Неуспешно зареждане на продуктите');
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error(err.message);
+    return [];
+  }
+}
 
