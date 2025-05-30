@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import { handleSubmit } from '@/utils/formSubmitHelper';
@@ -9,6 +9,7 @@ import styles from './create.module.css';
 
 export default function ProductForm({ initialValues, onSubmit, legendText, successMessage }) {
   const router = useRouter();
+  const [categories, setCategories] = useState([]);
 
   const {
     formValues,
@@ -33,6 +34,19 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
       setFormValues(initialValues);
     }
   }, [initialValues, setFormValues]);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch('http://localhost:3030/categories');
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error('Грешка при зареждане на категориите', err);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   return (
     <div className={styles.registerFormContainer}>
@@ -73,12 +87,19 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
         />
 
         <label htmlFor="category">Категория</label>
-        <input
+        <select
           name="category"
           value={formValues.category}
           onChange={handleChange}
           className={invalidFields.includes('category') ? styles.invalidField : ''}
-        />
+        >
+          <option value="">-- Изберете категория --</option>
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
 
         <label htmlFor="price">Цена</label>
         <input

@@ -8,11 +8,12 @@ export default function Shop({ products }) {
 
   // Групиране на продуктите по категория
   products.forEach((product) => {
-    const category = product.category || 'Без категория';
-    if (!grouped[category]) {
-      grouped[category] = [];
+    const categoryName = product.category?.name || 'Без категория';
+    if (!grouped[categoryName]) {
+      grouped[categoryName] = [];
     }
-    grouped[category].push(product);
+    grouped[categoryName].push(product);
+
   });
 
   const categories = Object.keys(grouped);
