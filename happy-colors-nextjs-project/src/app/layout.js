@@ -1,7 +1,7 @@
-// ✅ /src/app/layout.js
 import './globals.css';
-import Header from '@/components/header/header';
 import AuthWrapper from '@/context/AuthWrapper';
+import { ProductProvider } from '@/context/ProductContext';
+import ClientLayout from './ClientLayout';
 
 export const metadata = {
   title: 'Happy Colors',
@@ -13,8 +13,9 @@ export default function RootLayout({ children }) {
     <html lang="bg">
       <body>
         <AuthWrapper>
-          <Header />
-          <main>{children}</main>
+          <ProductProvider>
+            <ClientLayout>{children}</ClientLayout>
+          </ProductProvider>
         </AuthWrapper>
       </body>
     </html>

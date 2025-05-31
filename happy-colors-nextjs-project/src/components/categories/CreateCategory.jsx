@@ -1,13 +1,16 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import { handleSubmit } from '@/utils/formSubmitHelper';
 import { sanitizeText } from '@/utils/formValidations';
 import { onCreateCategorySubmit } from '@/managers/categoriesManager';
 import MessageBox from '@/components/ui/MessageBox';
 
-import styles from '../products/create.module.css'; // 🟢 ползваме същия CSS
+import styles from '../products/create.module.css';
 
 export default function CreateCategory() {
+  const router = useRouter();
+
   const {
     formValues,
     setFormValues,
@@ -39,7 +42,14 @@ export default function CreateCategory() {
             setSuccess,
             setError,
             setInvalidFields,
-            onCreateCategorySubmit,
+            (formValues, setSuccess, setError, setInvalidFields) =>
+              onCreateCategorySubmit(
+                formValues,
+                setSuccess,
+                setError,
+                setInvalidFields,
+                router
+              ),
             [
               (values) => {
                 const name = sanitizeText(values.name);

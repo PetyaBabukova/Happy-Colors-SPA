@@ -4,7 +4,8 @@ export async function onCreateCategorySubmit(
   formValues,
   setSuccess,
   setError,
-  setInvalidFields
+  setInvalidFields,
+  router // 🟢 получава се от компонента
 ) {
   try {
     const res = await fetch(`${baseURL}/categories`, {
@@ -23,6 +24,9 @@ export async function onCreateCategorySubmit(
     setSuccess(true);
     setError('');
     setInvalidFields([]);
+
+    // 🟢 Редирект към формата за създаване на продукт
+    router.push('/products/create');
   } catch (err) {
     setSuccess(false);
     setError(err.message || 'Възникна грешка при създаване на категория.');

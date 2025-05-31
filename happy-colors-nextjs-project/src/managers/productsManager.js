@@ -6,7 +6,8 @@ export async function onCreateProductSubmit(
   setError,
   setInvalidFields,
   user,
-  router
+  router,
+  triggerCategoriesReload // 🟢 ново
 ) {
   try {
     const res = await fetch(`${baseURL}/products`, {
@@ -30,6 +31,9 @@ export async function onCreateProductSubmit(
     setSuccess(true);
     setError('');
     setInvalidFields([]);
+
+    triggerCategoriesReload(); // 🟢 презареждаме категориите за Header
+
     router.push(`/products/${result._id}`);
   } catch (err) {
     setSuccess(false);
@@ -42,6 +46,8 @@ export async function onCreateProductSubmit(
     }
   }
 }
+
+
 
 export async function onEditProductSubmit(
   formValues,

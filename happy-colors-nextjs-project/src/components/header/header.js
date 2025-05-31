@@ -1,28 +1,15 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './header.module.css';
 import { useAuth } from '@/context/AuthContext';
+import { useProducts } from '@/context/ProductContext';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-	const [categories, setCategories] = useState([]);
 	const { user, loading } = useAuth();
-
-	useEffect(() => {
-		const fetchCategories = async () => {
-			try {
-				const res = await fetch('http://localhost:3030/categories');
-				const data = await res.json();
-				setCategories(data);
-			} catch (err) {
-				console.error('Error fetching categories:', err);
-			}
-		};
-
-		fetchCategories();
-	}, []);
+	const { categories } = useProducts(); // 🟢 тук идват категориите от контекста
 
 	if (loading) return null;
 
@@ -38,7 +25,7 @@ export default function Header() {
 
 					{!mobileMenuOpen && (
 						<button
-							className={`${styles.hamburgerBtn}`}
+							className={styles.hamburgerBtn}
 							onClick={() => setMobileMenuOpen(true)}
 						>
 							<Image src="/hamburger.svg" alt="Меню" width={64} height={64} />
@@ -56,13 +43,13 @@ export default function Header() {
 										Всички
 									</Link>
 								</li>
-								{categories.map((cat) => (
-									<li key={cat._id}>
+								{categories.map((name) => (
+									<li key={name}>
 										<Link
-											href={`/products?category=${encodeURIComponent(cat.name)}`}
+											href={`/products?category=${encodeURIComponent(name)}`}
 											onClick={() => setMobileMenuOpen(false)}
 										>
-											{cat.name}
+											{name}
 										</Link>
 									</li>
 								))}
