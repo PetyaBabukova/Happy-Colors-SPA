@@ -164,6 +164,7 @@
 
     .logoContainer img {
         flex: 0 1 70%;
+        height: auto;
     }
 
     .hamburgerBtn {

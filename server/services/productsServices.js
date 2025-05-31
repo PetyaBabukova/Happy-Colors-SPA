@@ -54,3 +54,15 @@ export async function editProduct(productId, productData, userId) {
   await product.save();
   return product;
 }
+
+
+export async function searchProducts(query) {
+  const regex = new RegExp(query, 'i'); // case-insensitive
+
+  return await Product.find({
+    $or: [
+      { name: regex },
+      { 'category.name': regex },
+    ]
+  }).lean();
+}

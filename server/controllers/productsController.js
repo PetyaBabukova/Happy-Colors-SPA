@@ -5,7 +5,8 @@ import {
   getAllProducts,
   getProductById,
   deleteProduct,
-  editProduct
+  editProduct,
+    searchProducts, // 🟢 нов ред
 } from '../services/productsServices.js';
 
 const router = express.Router();
@@ -65,6 +66,18 @@ router.post('/', async (req, res) => {
     }
 
     res.status(400).json({ message });
+  }
+});
+
+// 🟢 GET /products/search?q=...
+router.get('/search', async (req, res) => {
+  try {
+    const query = req.query.q || '';
+    const results = await searchProducts(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Грешка при търсене:', err.message);
+    res.status(500).json({ message: 'Грешка при търсенето' });
   }
 });
 
