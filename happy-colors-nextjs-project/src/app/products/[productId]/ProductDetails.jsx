@@ -2,12 +2,13 @@
 
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { isOwner } from '@/utils/isOwner';
 
 import styles from './details.module.css';
 
 export default function ProductDetails({ product }) {
 	const { user } = useAuth();
-	const isOwner = user?._id === product.owner;
+	const canEdit = isOwner(product, user);
 
 	return (
 		<section className={styles.productDetails}>
@@ -45,7 +46,7 @@ export default function ProductDetails({ product }) {
 						Сложи в количката
 					</Link>
 
-					{isOwner && (
+					{canEdit && (
 						<div className={styles.ownerActions}>
 							<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>Редактирай</Link>
 							<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>Изтрий</Link>
@@ -71,7 +72,6 @@ export default function ProductDetails({ product }) {
 						</div>
 					))}
 				</div>
-
 			</div>
 		</section>
 	);

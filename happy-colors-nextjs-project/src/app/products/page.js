@@ -6,7 +6,8 @@ export const metadata = {
   description: 'Разгледайте нашите ръчно изработени продукти по категории.',
 };
 
-export default async function ProductsPage({ searchParams }) {
+export default async function ProductsPage(props) {
+  const searchParams = await props.searchParams;
   const category = searchParams?.category || null;
 
   const allProducts = await getProducts(category);
