@@ -1,11 +1,11 @@
 import express from 'express';
-import { createCategory, getAllCategories } from '../services/categoryServices.js';
+import { createCategory, getAllCategoriesWithProducts } from '../services/categoryServices.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const categories = await getAllCategories();
+    const categories = await getAllCategoriesWithProducts();
     res.json(categories);
   } catch (err) {
     res.status(500).json({ message: 'Грешка при зареждане на категориите.' });

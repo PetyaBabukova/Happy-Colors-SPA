@@ -12,7 +12,7 @@ export function ProductProvider({ children }) {
       try {
         const res = await fetch('http://localhost:3030/categories');
         const data = await res.json();
-        const categoryNames = data.map(cat => cat.name);
+        const categoryNames = data.map(cat => cat.name).filter(Boolean);
         setCategories(categoryNames);
       } catch (err) {
         console.error('Грешка при зареждане на категориите', err);

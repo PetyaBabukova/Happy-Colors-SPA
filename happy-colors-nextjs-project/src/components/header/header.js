@@ -11,7 +11,7 @@ export default function Header() {
 	const { user, loading } = useAuth();
 	const { categories } = useProducts(); // 🟢 тук идват категориите от контекста
 
-	if (loading) return null;
+	  if (loading || categories.length === 0) return null;
 
 	return (
 		<>
