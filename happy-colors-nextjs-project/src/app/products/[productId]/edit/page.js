@@ -1,40 +1,43 @@
 'use client';
-import ProductForm from '@/components/products/ProductForm';
-import { onEditProductSubmit } from '@/managers/productsManager';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, use } from 'react';
-import baseURL from '@/config';
 
-export default function EditProductPage({ params }) {
-  const { productId } = use(params);
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import ProductForm from '@/components/products/ProductForm';
+import MessageBox from '@/components/ui/MessageBox';
+import { onEditProductSubmit } from '@/managers/productsManager';
+import { checkProductAccess } from '@/utils/checkProductAccess';
+
+export default function Page({ params }) {
+  const { productId } = params;
   const { user } = useAuth();
   const router = useRouter();
 
   const [product, setProduct] = useState(null);
+  const [unauthorized, setUnauthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${baseURL}/products/${productId}`)
-      .then(res => res.json())
-      .then(data => setProduct(data))
-      .catch(() => router.push('/not-found'));
-  }, [productId, router]);
+    if (user === undefined) return;
 
-  if (!product) return <p>Зареждане...</p>;
+    checkProductAccess(productId, user).then(({ product, unauthorized }) => {
+      setProduct(product);
+      setUnauthorized(unauthorized);
+      setLoading(false);
+    });
+  }, [productId, user]);
+
+  if (user === undefined || loading) return <p>Зареждане...</p>;
+
+  if (unauthorized) {
+    return <MessageBox type="error" message="Нямате права да редактирате този продукт." />;
+  }
 
   return (
     <ProductForm
       initialValues={product}
       onSubmit={(values, setSuccess, setError, setInvalidFields) =>
-        onEditProductSubmit(
-          values,             // 👈 правилният ред
-          setSuccess,
-          setError,
-          setInvalidFields,
-          user,
-          router,
-          productId
-        )
+        onEditProductSubmit(values, setSuccess, setError, setInvalidFields, user, router, productId)
       }
       legendText="Редактиране на продукта"
       successMessage="Продуктът беше редактиран успешно!"

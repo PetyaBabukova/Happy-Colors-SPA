@@ -14,8 +14,6 @@ export async function getAllProducts(categoryName) {
   return products;
 }
 
-
-
 export async function createProduct(data) {
   const product = new Product(data);
   return await product.save();

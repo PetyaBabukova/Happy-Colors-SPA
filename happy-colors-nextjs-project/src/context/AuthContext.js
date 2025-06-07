@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined); // 🟡 важно: undefined докато зарежда
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,9 +17,9 @@ export const AuthProvider = ({ children }) => {
         if (!res.ok) throw new Error('Not authenticated');
 
         const userData = await res.json();
-        setUser(userData);
+        setUser(userData); // 🟢 логнат
       } catch (err) {
-        setUser(null);
+        setUser(null); // 🔴 не е логнат
       } finally {
         setLoading(false);
       }

@@ -47,8 +47,6 @@ export async function onCreateProductSubmit(
   }
 }
 
-
-
 export async function onEditProductSubmit(
   formValues,
   setSuccess,
