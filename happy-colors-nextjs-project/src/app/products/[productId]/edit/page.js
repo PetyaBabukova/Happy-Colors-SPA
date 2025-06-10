@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProductForm from '@/components/products/ProductForm';
 import MessageBox from '@/components/ui/MessageBox';
 import { onEditProductSubmit } from '@/managers/productsManager';
 import { checkProductAccess } from '@/utils/checkProductAccess';
-import { use } from 'react';
 
 
 export default function Page({ params }) {

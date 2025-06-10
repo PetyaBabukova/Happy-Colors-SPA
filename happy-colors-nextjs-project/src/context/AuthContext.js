@@ -1,25 +1,28 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
+import baseUrl from '@/config';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(undefined); // 🟡 важно: undefined докато зарежда
+  const [user, setUser] = useState(undefined);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false); // 🟢 нов флаг
 
   useEffect(() => {
+    setIsClient(true); // 🟢 безопасно да рендерираме
+
     const fetchUser = async () => {
       try {
-        const res = await fetch('http://localhost:3030/users/me', {
+        const res = await fetch(`${baseUrl}/users/me`, {
           credentials: 'include',
         });
 
         if (!res.ok) throw new Error('Not authenticated');
-
         const userData = await res.json();
-        setUser(userData); // 🟢 логнат
+        setUser(userData);
       } catch (err) {
-        setUser(null); // 🔴 не е логнат
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -27,6 +30,8 @@ export const AuthProvider = ({ children }) => {
 
     fetchUser();
   }, []);
+
+  if (!isClient) return null; // 🛑 избягваме SSR рендериране
 
   return (
     <AuthContext.Provider value={{ user, setUser, loading }}>

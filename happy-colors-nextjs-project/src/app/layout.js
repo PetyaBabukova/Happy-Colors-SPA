@@ -11,7 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="bg">
-      <body>
+      <body suppressHydrationWarning>
         <AuthWrapper>
           <ProductProvider>
             <ClientLayout>{children}</ClientLayout>
