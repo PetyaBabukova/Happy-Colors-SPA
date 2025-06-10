@@ -1,85 +1,77 @@
-.shopPage{
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: space-between;
-    justify-content: space-between;
-    gap:2em;
-    flex-wrap: wrap;
+.shopPage {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2em;
+  flex-wrap: wrap;
 }
 
-.shopPageTitle{
-    width: 100%;
-    margin-bottom: 0;
-    text-align: center;
+.shopPageTitle {
+  width: 100%;
+  margin-bottom: 0;
+  text-align: center;
 }
 
-.filters{
-    margin: 0 auto;
-    flex: 0 1 15%;
-    justify-content: center;
-    align-items: center;
-    padding: 1em;
-    border-right: 1px, solid var(--light-green );
-    background-color: var(--lighter-green );
-    min-height: 100vh;
+.filters {
+  margin: 0 auto;
+  flex: 0 1 15%;
+  justify-content: center;
+  align-items: center;
+  padding: 1em;
+  border-right: 1px solid var(--light-green);
+  background-color: var(--lighter-green);
+  min-height: 100vh;
 }
 
-.categories{
-    flex: 0 1 80%;
-    padding: 1em;
-    padding-top: 0;
-    display: flex;
-    flex-direction: column;
-    
+.categories {
+  flex: 0 1 80%;
+  padding: 1em;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-
-.productList{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 2em;
-    margin: 2em 0;
-           
+.productList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2em;
+  margin: 2em 0;
 }
 
-.product{
-    flex: 0 1 22%;
-    padding: 1em;
-    border: 1px solid var(--light-green );
-    border-radius: 0.5em;
-    }
-
-.productImageContainer{
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    max-height: 350px;
-    border-radius: 0.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+.product {
+  flex: 0 1 22%;
+  padding: 1em;
+  border: 1px solid var(--light-green);
+  border-radius: 0.5em;
 }
 
-.productImageContainer img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0.5em;
-    width: 100%;
-    height: 100%;
-    min-width: 100%;
-    min-height: 100%;
-    object-fit: cover;
-    border-radius: 0.5em;
-    display: block;
+.productImageContainer {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 350px;
+  border-radius: 0.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.product:hover{
-    background-color: var(--lighter-green);
-    color: var(--dark-green);
+.productImageContainer img {
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  border-radius: 0.5em;
+  display: block;
+}
+
+.product:hover {
+  background-color: var(--lighter-green);
+  color: var(--dark-green);
 }
 
 @media screen and (max-width: 768px) {

@@ -1,43 +1,52 @@
 .deleteContainer {
   padding: 2em;
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  min-height: 200px; /* предотвратява визуално "подскачане" */
 }
 
 .buttons {
   margin-top: 2em;
   display: flex;
-  gap: 2em;
   justify-content: center;
+  gap: 2em;
+  flex-wrap: wrap;
+}
+
+.deleteBtn,
+.cancelBtn {
+  padding: 0.6em 1.2em;
+  border-radius: 0.5em;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+  border: none;
+  min-width: 100px;
+  transition: background-color 0.3s ease;
 }
 
 .deleteBtn {
   background-color: var(--dark-orange);
   color: white;
-  padding: 0.6em 1.2em;
-  border-radius: 0.5em;
-  cursor: pointer;
 }
 
 .cancelBtn {
   background-color: var(--light-green);
   color: white;
-  padding: 0.6em 1.2em;
-  border-radius: 0.5em;
-  cursor: pointer;
 }
 
-.message {
-  text-align: center;
-  padding: 2em;
+.message,
+.error {
   font-size: 1.2em;
+  padding: 2em;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
 }
 
 .error {
   color: red;
-  text-align: center;
-  padding: 2em;
 }

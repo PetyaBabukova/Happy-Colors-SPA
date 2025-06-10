@@ -9,8 +9,8 @@
 .productDescriptionContainer {
   flex: 1 0 30%;
   display: flex;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
   gap: 2em;
 }
 
@@ -42,16 +42,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 0 1em;
+}
+
+.productDescriptionBody p {
+  max-width: 50%;
+  font-size: 1.2em;
 }
 
 .productDetailsBodyTabsContainer {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   list-style: none;
   text-transform: uppercase;
   margin: 0 0 2em 0;
   padding: 0;
+  gap: 0.5em;
 }
 
 .productDetailsBodyTabsContainer a {
@@ -59,6 +66,7 @@
   color: var(--dark-green);
   padding: 0.5em 1.2em;
   text-decoration: none;
+  display: inline-block;
 }
 
 .productDetailsBodyTabsContainer a:hover,
@@ -67,17 +75,12 @@
   color: white;
 }
 
-.productDescriptionBody p {
-  max-width: 50%;
-  font-size: 1.2em;
-}
-
-.actionButtonsContainer{
+.actionButtonsContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1em; 
+  gap: 1em;
 }
 
 .actionBtn {
@@ -90,7 +93,6 @@
   border-radius: 0.5em;
   transition: all 0.3s ease-in-out;
   margin: 0.5em;
-
 }
 
 .actionBtn:hover {
@@ -101,7 +103,6 @@
 .productDetailsImagesContainer {
   flex: 0 1 40%;
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 3em;
@@ -109,11 +110,17 @@
 
 .productDetailsImagesContainer img {
   width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 0.5em;
+  object-fit: cover;
+  display: block;
 }
 
 .productDetailsMainImage {
   width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0.5em;
 }
 
 .connectedProductsContainer {
@@ -128,7 +135,6 @@
 
 .similarProductsContainer {
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1em;
@@ -142,8 +148,6 @@
 .connectedProductLink {
   text-decoration: none;
 }
-
-
 
 @media (max-width: 768px) {
   .productDetails {
@@ -176,21 +180,8 @@
   }
 
   .productDetailsBodyTabsContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 0.5em;
     flex-wrap: wrap;
     padding: 0.5em;
-  }
-
-  .productDetailsBodyTab a {
-    font-size: 1em;
-    padding: 0.4em 0.8em;
-  }
-
-  .productDescriptionBody {
-    padding: 0 1em;
   }
 
   .productDescriptionBody p {
@@ -201,7 +192,6 @@
   .actionBtn {
     font-size: 1em;
     padding: 0.6em 1.2em;
-    display: inline-block;
   }
 
   .price {
@@ -211,6 +201,5 @@
 
   .similarProductsContainer {
     display: none;
-    /* скриваме за мобилно */
   }
 }
