@@ -90,6 +90,7 @@ export default function Header() {
 				<ul className={styles.userNav}>
 					<li><Link href="/products/create">Създай продукт</Link></li>
 					<li><Link href="/categories/create">Създай категория</Link></li>
+					<li><Link href="/categories">Категории</Link></li>
 				</ul>
 			)}
 		</>

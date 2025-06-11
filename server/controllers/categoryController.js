@@ -3,6 +3,7 @@ import {
   createCategory,
   getAllCategories,
   getVisibleCategories,
+  deleteCategory, // 🟢 ново
 } from '../services/categoryServices.js';
 
 const router = express.Router();
@@ -41,6 +42,15 @@ router.post('/', async (req, res) => {
     }
 
     res.status(400).json({ message });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await deleteCategory(req.params.id);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message || 'Неуспешно изтриване на категория.' });
   }
 });
 
