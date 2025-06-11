@@ -1,6 +1,8 @@
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
 import { slugify } from '../utils/slugify.js';
+import mongoose from 'mongoose'; 
+
 
 // 👉 Създаване на категория със slug
 export async function createCategory(data) {
@@ -71,3 +73,21 @@ export async function deleteCategory(categoryId) {
     reassigned: true,
   };
 }
+
+export async function getCategoryById(categoryId) {
+  if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+    throw new Error('Невалидно ID');
+  }
+
+  return await Category.findById(categoryId).lean();
+}
+
+export async function updateCategory(categoryId, data) {
+  const slug = slugify(data.name);
+  return await Category.findByIdAndUpdate(
+    categoryId,
+    { ...data, slug },
+    { new: true, runValidators: true }
+  );
+}
+

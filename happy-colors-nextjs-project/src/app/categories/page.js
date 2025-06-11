@@ -59,7 +59,7 @@ export default function CategoriesManagerPage() {
               <span className="text-lg">{cat.name}</span>
               <div className="flex gap-4">
                 <Link
-                  href={`/categories/edit/${cat._id}`}
+                  href={`/categories/${cat._id}/edit`}
                   className="text-green-700 hover:text-green-800 text-2xl cursor-pointer transition"
                   title="Редактирай"
                 >
