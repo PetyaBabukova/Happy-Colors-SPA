@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import { handleSubmit } from '@/utils/formSubmitHelper';
 import MessageBox from '@/components/ui/MessageBox';
+import { useProducts } from '@/context/ProductContext'; // 🟢 ново
 import styles from './create.module.css';
 
 export default function ProductForm({ initialValues, onSubmit, legendText, successMessage }) {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
+  const { categories } = useProducts(); // 🟢 взимаме всички категории от контекста
 
   const {
     formValues,
@@ -34,19 +35,6 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
       setFormValues(initialValues);
     }
   }, [initialValues, setFormValues]);
-
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const res = await fetch('http://localhost:3030/categories');
-        const data = await res.json();
-        setCategories(data);
-      } catch (err) {
-        console.error('Грешка при зареждане на категориите', err);
-      }
-    }
-    fetchCategories();
-  }, []);
 
   return (
     <div className={styles.registerFormContainer}>

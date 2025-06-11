@@ -9,9 +9,9 @@ import Image from 'next/image';
 export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const { user, loading } = useAuth();
-	const { categories } = useProducts(); // 🟢 тук идват категориите от контекста
+	const { visibleCategories } = useProducts(); // 🟢 използваме само видимите категории
 
-	  if (loading || categories.length === 0) return null;
+	if (loading || visibleCategories.length === 0) return null;
 
 	return (
 		<>
@@ -43,16 +43,17 @@ export default function Header() {
 										Всички
 									</Link>
 								</li>
-								{categories.map((name) => (
-									<li key={name}>
+								{visibleCategories.map((cat) => (
+									<li key={cat._id}>
 										<Link
-											href={`/products?category=${encodeURIComponent(name)}`}
+											href={`/products?category=${encodeURIComponent(cat.name)}`}
 											onClick={() => setMobileMenuOpen(false)}
 										>
-											{name}
+											{cat.name}
 										</Link>
 									</li>
 								))}
+
 							</ul>
 						</li>
 
