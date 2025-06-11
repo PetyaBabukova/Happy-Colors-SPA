@@ -5,11 +5,12 @@ import { handleSubmit } from '@/utils/formSubmitHelper';
 import { sanitizeText } from '@/utils/formValidations';
 import { onCreateCategorySubmit } from '@/managers/categoriesManager';
 import MessageBox from '@/components/ui/MessageBox';
-
+import { useProducts } from '@/context/ProductContext'; // 🟢 ново
 import styles from '../products/create.module.css';
 
 export default function CreateCategory() {
   const router = useRouter();
+  const { triggerCategoriesReload } = useProducts(); // 🟢 ново
 
   const {
     formValues,
@@ -48,7 +49,8 @@ export default function CreateCategory() {
                 setSuccess,
                 setError,
                 setInvalidFields,
-                router
+                router,
+                triggerCategoriesReload // 🟢 подаваме
               ),
             [
               (values) => {

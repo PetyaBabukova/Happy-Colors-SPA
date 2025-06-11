@@ -5,7 +5,8 @@ export async function onCreateCategorySubmit(
   setSuccess,
   setError,
   setInvalidFields,
-  router // 🟢 получава се от компонента
+  router,
+  triggerCategoriesReload 
 ) {
   try {
     const res = await fetch(`${baseURL}/categories`, {
@@ -22,6 +23,7 @@ export async function onCreateCategorySubmit(
     }
 
     setSuccess(true);
+    triggerCategoriesReload(); 
     setError('');
     setInvalidFields([]);
 
