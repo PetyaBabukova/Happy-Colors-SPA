@@ -5,7 +5,8 @@ import {
   getAllProducts,
   getProductById,
   deleteProduct,
-  editProduct
+  editProduct,
+   
 } from '../services/productsServices.js';
 
 const router = express.Router();
@@ -20,7 +21,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Грешка при зареждане на продуктите' });
   }
 });
-
 
 // 🟢 GET /products/:productId – детайлен изглед
 router.get('/:productId', async (req, res) => {

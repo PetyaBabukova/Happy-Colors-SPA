@@ -63,12 +63,18 @@ export default function Header() {
 						<li><Link href="/contacts" onClick={() => setMobileMenuOpen(false)}>Контакти</Link></li>
 					</ul>
 
-					<form className={styles.searchForm} method="get">
-						<input type="text" placeholder="Търсене" className={styles.searchInput} />
+					<form className={styles.searchForm} action="/search" method="get">
+						<input
+							type="text"
+							name="q"
+							placeholder="Търсене"
+							className={styles.searchInput}
+						/>
 						<button type="submit" className={styles.searchBtn}>
 							<Image src="/search_icon_green.svg" alt="search icon" width={16} height={16} />
 						</button>
 					</form>
+
 
 					{user?.username ? (
 						<p className={styles.userGreeting}>

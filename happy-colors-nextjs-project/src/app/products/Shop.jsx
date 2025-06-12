@@ -16,7 +16,15 @@ export default function Shop({ products }) {
 
   });
 
-  const categories = Object.keys(grouped);
+  const categories = Object.keys(grouped)
+  .filter((cat) => cat !== 'Други')
+  .sort((a, b) => a.localeCompare(b, 'bg', { sensitivity: 'base' }));
+
+if (grouped['Други']) {
+  categories.push('Други'); // добавяме я последна
+}
+
+
 
   return (
     <section className={styles.shopPage}>

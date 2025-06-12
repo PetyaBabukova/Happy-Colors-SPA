@@ -52,3 +52,4 @@ export async function editProduct(productId, productData, userId) {
   await product.save();
   return product;
 }
+
