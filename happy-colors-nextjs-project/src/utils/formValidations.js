@@ -65,3 +65,28 @@ export function validateImageUrl(values) {
     };
   }
 }
+
+
+// Специализирана валидация за контактната форма
+export function validateContactForm(formValues) {
+  const emptyFields = [];
+  const sanitizedValues = {};
+  let hasForbiddenChars = false;
+
+  const forbiddenPattern = /<[^>]*>/g; // Засича всякакъв HTML таг
+
+  for (const [key, value] of Object.entries(formValues)) {
+    const trimmed = String(value).trim();
+    sanitizedValues[key] = sanitizeText(trimmed);
+
+    if (!trimmed) {
+      emptyFields.push(key);
+    }
+
+    if (forbiddenPattern.test(trimmed)) {
+      hasForbiddenChars = true;
+    }
+  }
+
+  return { sanitizedValues, emptyFields, hasForbiddenChars };
+}

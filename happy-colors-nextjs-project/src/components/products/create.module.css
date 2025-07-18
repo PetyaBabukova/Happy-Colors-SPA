@@ -54,6 +54,14 @@
   color: #004b3f;
 }
 
+.title{
+    text-align: center;
+}
+
+.red{
+    color: var(--dark-orange);
+}
+
 
 
 
