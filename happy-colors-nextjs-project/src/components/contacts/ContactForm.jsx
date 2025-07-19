@@ -3,7 +3,7 @@
 import useForm from '@/hooks/useForm';
 import MessageBox from '@/components/ui/MessageBox';
 import { validateContactForm } from '@/utils/formValidations';
-import extractErrorMessage from '@/utils/errorHandler';
+import { extractErrorMessage } from '@/utils/errorHandler';
 import { sendContactForm } from '../../managers/contactsManager';
 import styles from '../../components/products/create.module.css';
 

@@ -4,8 +4,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import routes from './routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-dotenv.config();
+console.log('📦 EMAIL =', process.env.CONTACT_EMAIL);
+console.log('📦 PASS  =', process.env.CONTACT_EMAIL_PASS);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+// dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 
 const app = express();
 const PORT = process.env.PORT || 3030;
