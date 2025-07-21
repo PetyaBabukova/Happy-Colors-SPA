@@ -9,6 +9,7 @@ export default function ClientLayout({ children }) {
     <AuthWrapper>
       <ProductProvider>
         <Header />
+        
         <main>{children}</main>
       </ProductProvider>
     </AuthWrapper>

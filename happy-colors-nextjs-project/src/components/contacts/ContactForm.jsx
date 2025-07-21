@@ -1,15 +1,16 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import useForm from '@/hooks/useForm';
 import MessageBox from '@/components/ui/MessageBox';
 import { validateContactForm } from '@/utils/formValidations';
-import extractErrorMessage from '@/utils/errorHandler';
+import { extractErrorMessage } from '@/utils/errorHandler';
 import { sendContactForm } from '../../managers/contactsManager';
 import styles from '../../components/products/create.module.css';
 
 const initialValues = {
   name: '',
-  email: '', 
+  email: '',
   phone: '',
   message: '',
 };
@@ -27,6 +28,20 @@ export default function ContactForm() {
     handleChange,
     resetForm,
   } = useForm(initialValues);
+
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState(null); // 'success' | 'error'
+
+  useEffect(() => {
+    if (notificationMessage) {
+      const timer = setTimeout(() => {
+        setNotificationMessage('');
+        setNotificationType(null);
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [notificationMessage]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,60 +63,84 @@ export default function ContactForm() {
     try {
       await sendContactForm(sanitizedValues);
       setSuccess(true);
+      setNotificationMessage('Благодарим! Ще се свържем с вас при първа възможност.');
+      setNotificationType('success');
       resetForm();
     } catch (err) {
-      const message = extractErrorMessage(err);
-      setError(message);
+      setNotificationMessage(
+        'Възникна грешка, съобщението ви не е изпратено. Моля опитайте по-късно.'
+      );
+      setNotificationType('error');
+      // НЕ извикваме setError, за да избегнем двойно съобщение
     }
   };
 
   return (
     <div className={styles.registerFormContainer}>
-      {error && <MessageBox type="error" message={error} />}
-      {success && (
-        <MessageBox type="success" message="Съобщението беше изпратено успешно!" />
-      )}
-
-      {/* <legend>Задайте ни въпрос</legend> */}
+      {/* 🔔 Само едно съобщение се показва, по приоритет */}
+      {notificationMessage ? (
+        <MessageBox type={notificationType} message={notificationMessage} />
+      ) : error ? (
+        <MessageBox type="error" message={error} />
+      ) : success ? (
+        <MessageBox
+          type="success"
+          message="Съобщението беше изпратено успешно!"
+        />
+      ) : null}
 
       <form className={styles.registerForm} onSubmit={handleSubmit}>
-        <label htmlFor="name">Име<span className={styles.red}>*</span></label>
+        <label htmlFor="name">
+          Име<span className={styles.red}>*</span>
+        </label>
         <input
           id="name"
           name="name"
           value={formValues.name}
           onChange={handleChange}
-          className={invalidFields.includes('name') ? styles.invalidField : ''}
+          className={
+            invalidFields.includes('name') ? styles.invalidField : ''
+          }
         />
 
-        <label htmlFor="email">Имейл<span className={styles.red}>*</span></label>
+        <label htmlFor="email">
+          Имейл<span className={styles.red}>*</span>
+        </label>
         <input
           id="email"
           name="email"
           type="email"
           value={formValues.email}
           onChange={handleChange}
-          className={invalidFields.includes('email') ? styles.invalidField : ''}
+          className={
+            invalidFields.includes('email') ? styles.invalidField : ''
+          }
         />
 
-        <label htmlFor="email">Телефон</label>
+        <label htmlFor="phone">Телефон</label>
         <input
           id="phone"
           name="phone"
-          type="phone"
+          type="text"
           value={formValues.phone}
           onChange={handleChange}
-          className={invalidFields.includes('phone') ? styles.invalidField : ''}
+          className={
+            invalidFields.includes('phone') ? styles.invalidField : ''
+          }
         />
 
-        <label htmlFor="message">Съобщение<span className={styles.red}>*</span></label>
+        <label htmlFor="message">
+          Съобщение<span className={styles.red}>*</span>
+        </label>
         <textarea
           id="message"
           name="message"
           rows="6"
           value={formValues.message}
           onChange={handleChange}
-          className={invalidFields.includes('message') ? styles.invalidField : ''}
+          className={
+            invalidFields.includes('message') ? styles.invalidField : ''
+          }
           style={{
             padding: '0.5rem',
             border: '1px solid var(--dark-green)',
