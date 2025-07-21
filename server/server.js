@@ -8,8 +8,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-console.log('📦 EMAIL =', process.env.CONTACT_EMAIL);
-console.log('📦 PASS  =', process.env.CONTACT_EMAIL_PASS);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 // dotenv.config();

@@ -4,8 +4,7 @@ import { handleContactForm } from '../services/contactsServices.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  console.log('📩 POST /contacts получена');
-  console.log('Данни от клиента:', req.body);
+  
   try {
     const { name, email, phone = '', message } = req.body;
 
