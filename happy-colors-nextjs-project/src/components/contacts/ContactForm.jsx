@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import MessageBox from '@/components/ui/MessageBox';
 import { validateContactForm } from '@/utils/formValidations';
@@ -32,8 +33,21 @@ export default function ContactForm() {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState(null); // 'success' | 'error'
 
+  const router = useRouter();
+
   useEffect(() => {
-    if (notificationMessage) {
+  if (notificationMessage && notificationType === 'success') {
+    console.log('🔁 Redirecting to /products...');
+    const timer = setTimeout(() => {
+      setNotificationMessage('');
+      setNotificationType(null);
+      router.push('/products');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }
+
+    if (notificationMessage && notificationType === 'error') {
       const timer = setTimeout(() => {
         setNotificationMessage('');
         setNotificationType(null);
@@ -41,7 +55,7 @@ export default function ContactForm() {
 
       return () => clearTimeout(timer);
     }
-  }, [notificationMessage]);
+  }, [notificationMessage, notificationType, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,7 +85,7 @@ export default function ContactForm() {
         'Възникна грешка, съобщението ви не е изпратено. Моля опитайте по-късно.'
       );
       setNotificationType('error');
-      // НЕ извикваме setError, за да избегнем двойно съобщение
+      // НЕ извикваме setError, за да избегнем дублиране
     }
   };
 
