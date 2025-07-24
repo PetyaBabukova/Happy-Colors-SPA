@@ -38,6 +38,31 @@ export function sanitizeText(input) {
   return String(input).replace(/<\/?[^>]+(>|$)/g, '').trim();
 }
 
+// Проверка за дължина и валидност на контактната форма
+export function validateContactLength(values) {
+  const errors = [];
+
+  if (values.name.trim().length < 3 || values.name.trim().length > 20) {
+    errors.push('name');
+  }
+
+  if (values.phone && values.phone.trim().length > 20) {
+    errors.push('phone');
+  }
+
+  if (values.message.trim().length > 200) {
+    errors.push('message');
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(values.email.trim())) {
+    errors.push('email');
+  }
+
+  return errors;
+}
+
+
 // Валидира число (напр. цена)
 export function validatePrice(values) {
   const price = Number(values.price);

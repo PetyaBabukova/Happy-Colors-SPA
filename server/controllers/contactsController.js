@@ -8,6 +8,12 @@ function sanitizeText(input) {
   return String(input).replace(/<\/?[^>]+(>|$)/g, '').trim();
 }
 
+// Проверка за валиден email
+function isValidEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email.trim());
+}
+
 router.post('/', async (req, res) => {
   try {
     const { name, email, phone = '', message } = req.body;
@@ -15,6 +21,23 @@ router.post('/', async (req, res) => {
     // Задължителни полета
     if (!name || !email || !message) {
       return res.status(400).json({ message: 'Липсват задължителни полета.' });
+    }
+
+    // Валидации за дължини
+    if (name.trim().length < 3 || name.trim().length > 20) {
+      return res.status(400).json({ message: 'Името трябва да е между 3 и 20 символа.' });
+    }
+
+    if (phone && phone.trim().length > 20) {
+      return res.status(400).json({ message: 'Телефонът е прекалено дълъг (макс. 20 символа).' });
+    }
+
+    if (message.trim().length > 200) {
+      return res.status(400).json({ message: 'Съобщението е прекалено дълго (макс. 200 символа).' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Невалиден email формат.' });
     }
 
     // Забранени символи (HTML/code injection)

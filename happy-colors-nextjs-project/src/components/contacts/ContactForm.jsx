@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import MessageBox from '@/components/ui/MessageBox';
-import { validateContactForm, validateEmptyFields } from '@/utils/formValidations';
+import { validateEmptyFields, validateContactForm, validateContactLength } from '@/utils/formValidations';
 import { extractErrorMessage } from '@/utils/errorHandler';
 import { sendContactForm } from '../../managers/contactsManager';
 import styles from '../../components/products/create.module.css';
@@ -66,6 +66,14 @@ export default function ContactForm() {
       return;
     }
 
+    const lengthErrors = validateContactLength(formValues);
+    if (lengthErrors.length > 0) {
+      setInvalidFields(lengthErrors);
+      setError('Моля проверете дължината и формата на въведените данни');
+      return;
+    }
+
+
     const { sanitizedValues, hasForbiddenChars } =
       validateContactForm(formValues);
 
@@ -115,6 +123,8 @@ export default function ContactForm() {
             invalidFields.includes('name') ? styles.invalidField : ''
           }
         />
+        <p className={styles.fieldHint}>Името трябва да е с дължина от 3 до 20 символа</p>
+
 
         <label htmlFor="email">
           Имейл<span className={styles.red}>*</span>
@@ -129,6 +139,8 @@ export default function ContactForm() {
             invalidFields.includes('email') ? styles.invalidField : ''
           }
         />
+        <p className={styles.fieldHint}>Моля въведете валиден email адрес</p>
+
 
         <label htmlFor="phone">Телефон</label>
         <input
@@ -163,6 +175,8 @@ export default function ContactForm() {
             fontFamily: 'inherit',
           }}
         />
+        <p className={styles.fieldHint}>Съобщението ви не трябва да превишава 200 символа</p>
+
 
         <button type="submit">Изпрати</button>
       </form>
