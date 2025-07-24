@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import MessageBox from '@/components/ui/MessageBox';
-import { validateContactForm } from '@/utils/formValidations';
+import { validateContactForm, validateEmptyFields } from '@/utils/formValidations';
 import { extractErrorMessage } from '@/utils/errorHandler';
 import { sendContactForm } from '../../managers/contactsManager';
 import styles from '../../components/products/create.module.css';
@@ -31,21 +31,20 @@ export default function ContactForm() {
   } = useForm(initialValues);
 
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [notificationType, setNotificationType] = useState(null); // 'success' | 'error'
+  const [notificationType, setNotificationType] = useState(null);
 
   const router = useRouter();
 
   useEffect(() => {
-  if (notificationMessage && notificationType === 'success') {
-    console.log('🔁 Redirecting to /products...');
-    const timer = setTimeout(() => {
-      setNotificationMessage('');
-      setNotificationType(null);
-      router.push('/products');
-    }, 3000);
+    if (notificationMessage && notificationType === 'success') {
+      const timer = setTimeout(() => {
+        setNotificationMessage('');
+        setNotificationType(null);
+        router.push('/products');
+      }, 3000);
 
-    return () => clearTimeout(timer);
-  }
+      return () => clearTimeout(timer);
+    }
 
     if (notificationMessage && notificationType === 'error') {
       const timer = setTimeout(() => {
@@ -60,14 +59,16 @@ export default function ContactForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { sanitizedValues, emptyFields, hasForbiddenChars } =
-      validateContactForm(formValues);
-
+    const emptyFields = validateEmptyFields(formValues);
     if (emptyFields.length > 0) {
       setInvalidFields(emptyFields);
       setError('Моля попълнете всички задължителни полета');
       return;
     }
+
+    const { sanitizedValues, hasForbiddenChars } =
+      validateContactForm(formValues);
+
 
     if (hasForbiddenChars) {
       setError('Използване на забранени символи!');
@@ -85,13 +86,11 @@ export default function ContactForm() {
         'Възникна грешка, съобщението ви не е изпратено. Моля опитайте по-късно.'
       );
       setNotificationType('error');
-      // НЕ извикваме setError, за да избегнем дублиране
     }
   };
 
   return (
     <div className={styles.registerFormContainer}>
-      {/* 🔔 Само едно съобщение се показва, по приоритет */}
       {notificationMessage ? (
         <MessageBox type={notificationType} message={notificationMessage} />
       ) : error ? (

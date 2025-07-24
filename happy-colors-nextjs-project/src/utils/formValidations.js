@@ -1,14 +1,14 @@
-// Проверява за празни полета
+// Проверява за празни полета (без phone)
 export function validateEmptyFields(formValues) {
   return Object.entries(formValues)
-    .filter(([_, value]) => {
+    .filter(([key, value]) => {
+      if (key === 'phone') return false; // Телефонът НЕ е задължителен
       if (value === null || value === undefined) return true;
       if (typeof value === 'string') return value.trim() === '';
-      return false; // напр. ако е число или булев, не го третираме като празно
+      return false;
     })
     .map(([key]) => key);
 }
-
 
 // Валидира съвпадение на пароли
 export function passwordsMatchValidator(values) {
@@ -66,27 +66,21 @@ export function validateImageUrl(values) {
   }
 }
 
-
-// Специализирана валидация за контактната форма
+// Контактна форма: само санитизация + проверка за забранени символи
 export function validateContactForm(formValues) {
-  const emptyFields = [];
   const sanitizedValues = {};
   let hasForbiddenChars = false;
 
-  const forbiddenPattern = /<[^>]*>/g; // Засича всякакъв HTML таг
+  const forbiddenPattern = /<[^>]*>/g;
 
   for (const [key, value] of Object.entries(formValues)) {
     const trimmed = String(value).trim();
     sanitizedValues[key] = sanitizeText(trimmed);
 
-    if (!trimmed) {
-      emptyFields.push(key);
-    }
-
-    if (forbiddenPattern.test(trimmed)) {
+    if (trimmed && forbiddenPattern.test(trimmed)) {
       hasForbiddenChars = true;
     }
   }
 
-  return { sanitizedValues, emptyFields, hasForbiddenChars };
+  return { sanitizedValues, hasForbiddenChars };
 }
