@@ -45,13 +45,13 @@
   .registerForm select {
   width: 100%;
   padding: 8px;
-  border: 1px solid #0d6b57;
+  border: 1px solid var(--dark-green);
   border-radius: 5px;
   font-size: 1rem;
   font-family: inherit;
   margin-bottom: 1rem;
   background-color: white;
-  color: #004b3f;
+  color:var(--dark-green);
 }
 
 .title{

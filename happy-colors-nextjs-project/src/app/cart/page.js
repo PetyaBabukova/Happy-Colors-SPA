@@ -1,7 +1,6 @@
-import React from 'react'
+// app/cart/page.jsx
+import CartPage from '@/components/cart/CartPage';
 
 export default function Cart() {
-  return (
-   < h1>Hello from Cart page</h1>
-  )
+  return <CartPage />;
 }
