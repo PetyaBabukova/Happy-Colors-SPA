@@ -3,12 +3,27 @@
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { isOwner } from '@/utils/isOwner';
-
+import { useCart } from '@/context/CartContext';
+import { useRouter } from 'next/navigation'; // декларативна навигация с Next
 import styles from './details.module.css';
 
 export default function ProductDetails({ product }) {
 	const { user } = useAuth();
+	const { addToCart } = useCart();
 	const canEdit = isOwner(product, user);
+	const router = useRouter();
+
+	const handleAddToCart = () => {
+		addToCart({
+			_id: product._id,
+			title: product.title,
+			price: product.price,
+			image: product.imageUrl,
+		});
+
+		// декларативно пренасочване
+		router.push('/cart');
+	};
 
 	return (
 		<section className={styles.productDetails}>
@@ -40,11 +55,11 @@ export default function ProductDetails({ product }) {
 
 				<p>Цена: {product.price} лв</p>
 
-				{/* Тук са бутоните */}
+				{/* Бутоните */}
 				<div className={styles.actionButtonsContainer}>
-					<Link href="/cart" className={styles.actionBtn}>
-						Сложи в количката
-					</Link>
+					<button onClick={handleAddToCart} className={styles.actionBtn}>
+						Добави в количката
+					</button>
 
 					{canEdit && (
 						<div className={styles.ownerActions}>

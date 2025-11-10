@@ -28,7 +28,7 @@
 }
 
 .removeBtn {
-  background-color: #e74c3c;
+  background-color: var(--dark-orange);
   color: white;
   padding: 0.5rem 1rem;
   border: none;
@@ -38,7 +38,7 @@
 }
 
 .removeBtn:hover {
-  background-color: #c0392b;
+  background-color: var(--orange);
 }
 
 .summary {
@@ -49,16 +49,16 @@
 }
 
 .clearBtn {
-  background-color: #666;
-  color: white;
+  background-color: white;
+  color: var(--dark-orange);
   padding: 0.5rem 1rem;
-  border: none;
+  border: 1px solid var(--dark-orange);
   border-radius: 6px;
   cursor: pointer;
 }
 
 .clearBtn:hover {
-  background-color: #444;
+  background-color: var(--dark-orange);
 }
 
 .emptyCart {

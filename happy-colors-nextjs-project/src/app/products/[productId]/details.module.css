@@ -77,22 +77,24 @@
 
 .actionButtonsContainer {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-flow: row wrap;
+  align-items: space-between;
+  justify-content: space-between;
+  max-width: 300px;
   gap: 1em;
 }
 
 .actionBtn {
   text-decoration: none;
-  color: var(--dark-green);
+  color: white;
   font-size: 1.2em;
   font-weight: bold;
   padding: 0.2em 0.8em 0.4em;
   border: 1px solid var(--dark-green);
+  background-color: var(--dark-green);
   border-radius: 0.5em;
   transition: all 0.3s ease-in-out;
-  margin: 0.5em;
+  width: 100%;
 }
 
 .actionBtn:hover {
@@ -149,6 +151,18 @@
   text-decoration: none;
 }
 
+.ownerActions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.actionBtn {
+  min-width: 20%;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .productDetails {
     flex-direction: column;
@@ -187,6 +201,11 @@
   .productDescriptionBody p {
     max-width: 100%;
     font-size: 1.1em;
+  }
+
+  .actionButtonsContainer {
+    min-width: 100%;
+    min-height: auto;
   }
 
   .actionBtn {
