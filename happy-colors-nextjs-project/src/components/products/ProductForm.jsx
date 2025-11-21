@@ -7,6 +7,9 @@ import { handleSubmit } from '@/utils/formSubmitHelper';
 import MessageBox from '@/components/ui/MessageBox';
 import { useProducts } from '@/context/ProductContext'; // 🟢 ново
 import styles from './create.module.css';
+import { uploadImageToBucket } from '@/managers/uploadManager';
+
+
 
 export default function ProductForm({ initialValues, onSubmit, legendText, successMessage }) {
   const router = useRouter();
@@ -30,11 +33,48 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
     imageUrl: '',
   });
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
   useEffect(() => {
     if (initialValues) {
       setFormValues(initialValues);
     }
   }, [initialValues, setFormValues]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Моля, качете само файлове от тип изображение.');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('Файлът е твърде голям. Максимален размер: 5 MB.');
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const imageUrl = await uploadImageToBucket(file);
+
+      setFormValues((prev) => ({
+        ...prev,
+        imageUrl,
+      }));
+    } catch (err) {
+      console.error(err);
+      setUploadError('Възникна грешка при качването на изображението.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className={styles.registerFormContainer}>
@@ -98,13 +138,23 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
           className={invalidFields.includes('price') ? styles.invalidField : ''}
         />
 
-        <label htmlFor="imageUrl">Изображение (URL)</label>
-        <input
-          name="imageUrl"
-          value={formValues.imageUrl}
-          onChange={handleChange}
-          className={invalidFields.includes('imageUrl') ? styles.invalidField : ''}
-        />
+
+        <label> Изображение </label>
+          <input
+            type="file"
+            name="imageUrl"
+            onChange={handleFileChange}
+            accept="image/*"
+            className={invalidFields.includes('imageUrl') ? styles.invalidField : ''}
+          />
+          {uploading && <p className={styles.fieldHint}>Качване на изображението...</p>}
+          {invalidFields.imageUrl && (
+            <p className={styles.fieldHint}>Моля изберете изображение.</p>
+          )}
+          {uploadError && (
+            <p className={styles.fieldHint}>{uploadError}</p>
+          )}
+        
 
         <button type="submit">Запази</button>
       </form>
