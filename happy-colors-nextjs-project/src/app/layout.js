@@ -1,3 +1,4 @@
+// src/app/layout.js
 import './globals.css';
 import ClientLayout from './ClientLayout';
 

@@ -1,3 +1,5 @@
+//import { CartProvider } from '@/context/CartContext';
+
 'use client';
 
 import Header from '@/components/header/header';

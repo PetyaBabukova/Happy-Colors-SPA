@@ -4,23 +4,45 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const CartContext = createContext();
 
+// Уникален ключ за количката в localStorage
+const CART_STORAGE_KEY = 'happycolors_cart_v2';
+
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([]);
-
-  // Зареждане от localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedCart = localStorage.getItem('cartItems');
-      if (storedCart) {
-        setCartItems(JSON.parse(storedCart));
-      }
+  // 👉 Четем от localStorage директно в useState (само веднъж, при инициализация)
+  const [cartItems, setCartItems] = useState(() => {
+    if (typeof window === 'undefined') {
+      return [];
     }
-  }, []);
 
-  // Записване в localStorage при промяна
+    try {
+      const storedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+
+      if (!storedCart) {
+        return [];
+      }
+
+      const parsed = JSON.parse(storedCart);
+
+      if (Array.isArray(parsed)) {
+        return parsed;
+      } else {
+        console.warn('Stored cart is not an array, resetting');
+        return [];
+      }
+    } catch (err) {
+      console.error('Error reading cart from localStorage', err);
+      return [];
+    }
+  });
+
+  // 👉 Пишем в localStorage при всяка промяна на cartItems
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    if (typeof window === 'undefined') return;
+
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    } catch (err) {
+      console.error('Error saving cart to localStorage', err);
     }
   }, [cartItems]);
 
@@ -28,6 +50,7 @@ export function CartProvider({ children }) {
   function addToCart(product) {
     setCartItems(prev => {
       const existing = prev.find(item => item._id === product._id);
+
       if (existing) {
         return prev.map(item =>
           item._id === product._id
@@ -35,6 +58,7 @@ export function CartProvider({ children }) {
             : item
         );
       }
+
       return [...prev, { ...product, quantity: 1 }];
     });
   }
@@ -56,7 +80,10 @@ export function CartProvider({ children }) {
 
   // Обща сума
   function getTotalPrice() {
-    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return cartItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
   }
 
   return (

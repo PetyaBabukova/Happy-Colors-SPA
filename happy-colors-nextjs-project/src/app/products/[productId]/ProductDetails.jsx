@@ -1,3 +1,6 @@
+// happy-colors-nextjs-project/src/app/products/[productId]/ProductDetails.jsx
+
+
 'use client';
 
 import { useAuth } from '@/context/AuthContext';

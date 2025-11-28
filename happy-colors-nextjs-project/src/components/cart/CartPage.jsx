@@ -1,3 +1,5 @@
+// happy-colors-nextjs-project/src/components/cart/CartPage.jsx
+
 'use client';
 
 import { useCart } from '@/context/CartContext';
@@ -39,6 +41,13 @@ export default function CartPage() {
           Изчисти количката
         </button>
       </div>
+
+      <div className={styles.cartActions}>
+        <Link href="/checkout" className={styles.continueBtn}>
+          Продължи
+        </Link>
+      </div>
+
     </section>
   );
 }
