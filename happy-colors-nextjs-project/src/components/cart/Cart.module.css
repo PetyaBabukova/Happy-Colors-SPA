@@ -83,7 +83,7 @@
   padding: 10px 22px;
   border-radius: 4px;
   border: none;
-  background: var(--dark-orange);
+  background: var(--light-green);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -92,4 +92,6 @@
 
 .continueBtn:hover {
   opacity: 0.9;
+  background: var(--dark-orange);
+  color: white;
 }
