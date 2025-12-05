@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import styles from './checkout.module.css';
+import baseURL from '@/config';
 
 export default function CheckoutPage() {
   const { cartItems, getTotalPrice, clearCart } = useCart();
@@ -53,7 +54,6 @@ export default function CheckoutPage() {
   const handlePaymentChange = (method) => {
     setFormData((prev) => {
       const isSelected = prev.paymentMethods.includes(method);
-
       // визуално чекбокс, но логически позволяваме само 1 избор
       const newMethods = isSelected ? [] : [method];
 
@@ -107,6 +107,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setSubmitStatus({ type: '', message: '' });
 
     const newErrors = validate();
@@ -116,26 +117,37 @@ export default function CheckoutPage() {
       return;
     }
 
+    const paymentMethod = formData.paymentMethods[0]; // 'card' или 'cod'
+
     try {
       setIsSubmitting(true);
 
-      const res = await fetch('/api/orders', {
+      const res = await fetch(`${baseURL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          formData,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          city: formData.city,
+          address: formData.address,
+          note: formData.note,
+          paymentMethod,
           cartItems,
           totalPrice,
         }),
       });
 
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        throw new Error('Request failed');
+        throw new Error(data?.message || 'Възникна грешка при изпращане на поръчката.');
       }
 
       setSubmitStatus({
         type: 'success',
         message:
+          data?.message ||
           'Благодарим ви за поръчката, ще се свържем с вас възможно най-скоро.',
       });
 
@@ -146,6 +158,7 @@ export default function CheckoutPage() {
       setSubmitStatus({
         type: 'error',
         message:
+          err.message ||
           'Възникна грешка при изпращане на поръчката. Моля, опитайте отново.',
       });
     } finally {
@@ -159,7 +172,7 @@ export default function CheckoutPage() {
 
       <div className={styles.columns}>
         {/* Лява колона – данни за клиента */}
-        <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <h2 className={styles.subheading}>Данни за доставка</h2>
 
           <div className={styles.field}>
@@ -183,7 +196,7 @@ export default function CheckoutPage() {
             <input
               id="phone"
               name="phone"
-              type="tel"
+              type="text"
               value={formData.phone}
               onChange={handleChange}
             />
@@ -222,10 +235,10 @@ export default function CheckoutPage() {
             <label htmlFor="address">
               Адрес за доставка <span className={styles.requiredStar}>*</span>
             </label>
-            <textarea
+            <input
               id="address"
               name="address"
-              rows={3}
+              type="text"
               value={formData.address}
               onChange={handleChange}
             />
@@ -234,16 +247,15 @@ export default function CheckoutPage() {
 
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
-              Начин на плащане{' '}
-              <span className={styles.requiredStar}>*</span>
+              Начин на плащане <span className={styles.requiredStar}>*</span>
             </span>
 
             <div className={styles.paymentOptions}>
               <label className={styles.paymentOption}>
                 <input
                   type="checkbox"
-                  checked={formData.paymentMethods.includes('bank')}
-                  onChange={() => handlePaymentChange('bank')}
+                  checked={formData.paymentMethods.includes('card')}
+                  onChange={() => handlePaymentChange('card')}
                 />
                 <span>С банкова карта</span>
               </label>
@@ -256,7 +268,6 @@ export default function CheckoutPage() {
                 />
                 <span>Наложен платеж</span>
               </label>
-
             </div>
 
             {errors.paymentMethods && (

@@ -1,5 +1,4 @@
 // server/services/ordersServices.js
-
 import { sendEmail } from '../helpers/sendEmail.js';
 
 class OrderError extends Error {
