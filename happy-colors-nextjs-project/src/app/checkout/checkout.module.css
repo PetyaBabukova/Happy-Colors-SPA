@@ -134,3 +134,39 @@
   font-size: 0.9rem;
   color: #555;
 }
+
+.requiredStar {
+  color: #c0392b;
+  margin-left: 2px;
+}
+
+.fieldLabel {
+  font-weight: 500;
+}
+
+.paymentOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.paymentOption {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.infoMessage {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.infoSuccess {
+  color: #2c7a3f;
+}
+
+.infoError {
+  color: #c0392b;
+}

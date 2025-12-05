@@ -1,3 +1,5 @@
+// server/helpers/sendEmail.js
+
 import nodemailer from 'nodemailer';
 
 export async function sendEmail({ subject, text }) {

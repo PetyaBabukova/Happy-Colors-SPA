@@ -1,3 +1,5 @@
+// src/config.js
+
 // const baseURL =
 //     process.env.NODE_ENV === 'production'
 //         ? 'https://api.happycolors.com' // Сложи тук реалния прод URL

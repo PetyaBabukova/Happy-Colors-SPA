@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import styles from './checkout.module.css';
 
 export default function CheckoutPage() {
-  const { cartItems, getTotalPrice } = useCart();
+  const { cartItems, getTotalPrice, clearCart } = useCart();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -15,12 +15,13 @@ export default function CheckoutPage() {
     city: '',
     address: '',
     note: '',
+    paymentMethods: [], // списък с избрани начини на плащане
   });
 
   const [errors, setErrors] = useState({});
-  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ако количката е празна – няма какво да чекираме
   if (cartItems.length === 0) {
     return (
       <section className={styles.emptyCheckout}>
@@ -35,53 +36,122 @@ export default function CheckoutPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // чистим грешката за конкретното поле, ако има
-    setErrors(prev => ({
+
+    setErrors((prev) => ({
       ...prev,
       [name]: '',
     }));
-    setSubmitMessage('');
+
+    setSubmitStatus({ type: '', message: '' });
+  };
+
+  const handlePaymentChange = (method) => {
+    setFormData((prev) => {
+      const isSelected = prev.paymentMethods.includes(method);
+
+      // визуално чекбокс, но логически позволяваме само 1 избор
+      const newMethods = isSelected ? [] : [method];
+
+      return {
+        ...prev,
+        paymentMethods: newMethods,
+      };
+    });
+
+    setErrors((prev) => ({
+      ...prev,
+      paymentMethods: '',
+    }));
+
+    setSubmitStatus({ type: '', message: '' });
   };
 
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) newErrors.name = 'Моля, въведете име и фамилия.';
-    if (!formData.phone.trim()) newErrors.phone = 'Моля, въведете телефон.';
-    if (!formData.city.trim()) newErrors.city = 'Моля, въведете град.';
-    if (!formData.address.trim()) newErrors.address = 'Моля, въведете адрес за доставка.';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Моля, въведете име и фамилия.';
+    }
 
-    if (formData.email && !formData.email.includes('@')) {
-      newErrors.email = 'Моля, въведете валиден e-mail или оставете полето празно.';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Моля, въведете телефон.';
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = 'Моля, въведете град.';
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = 'Моля, въведете адрес за доставка.';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Моля, въведете e-mail.';
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = 'Моля, въведете валиден e-mail.';
+    }
+
+    if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
+      newErrors.paymentMethods = 'Моля, изберете начин на плащане.';
     }
 
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const totalPrice = getTotalPrice();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitStatus({ type: '', message: '' });
+
     const newErrors = validate();
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setSubmitMessage('');
       return;
     }
 
-    // Засега само логваме – реалния checkout flow ще добавим по-късно
-    console.log('Checkout form data:', formData);
-    console.log('Cart items:', cartItems);
+    try {
+      setIsSubmitting(true);
 
-    setSubmitMessage(
-      'Това е демо версия на checkout-а. Реалното изпращане на поръчката ще го добавим допълнително.'
-    );
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData,
+          cartItems,
+          totalPrice,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Request failed');
+      }
+
+      setSubmitStatus({
+        type: 'success',
+        message:
+          'Благодарим ви за поръчката, ще се свържем с вас възможно най-скоро.',
+      });
+
+      // по желание: чистим количката
+      clearCart();
+    } catch (err) {
+      console.error('Order submit error:', err);
+      setSubmitStatus({
+        type: 'error',
+        message:
+          'Възникна грешка при изпращане на поръчката. Моля, опитайте отново.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  const totalPrice = getTotalPrice();
 
   return (
     <section className={styles.checkoutContainer}>
@@ -93,7 +163,9 @@ export default function CheckoutPage() {
           <h2 className={styles.subheading}>Данни за доставка</h2>
 
           <div className={styles.field}>
-            <label htmlFor="name">Име и фамилия *</label>
+            <label htmlFor="name">
+              Име и фамилия <span className={styles.requiredStar}>*</span>
+            </label>
             <input
               id="name"
               name="name"
@@ -105,7 +177,9 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="phone">Телефон *</label>
+            <label htmlFor="phone">
+              Телефон <span className={styles.requiredStar}>*</span>
+            </label>
             <input
               id="phone"
               name="phone"
@@ -117,7 +191,9 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="email">E-mail (по избор)</label>
+            <label htmlFor="email">
+              E-mail <span className={styles.requiredStar}>*</span>
+            </label>
             <input
               id="email"
               name="email"
@@ -129,7 +205,9 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="city">Град *</label>
+            <label htmlFor="city">
+              Град <span className={styles.requiredStar}>*</span>
+            </label>
             <input
               id="city"
               name="city"
@@ -141,7 +219,9 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="address">Адрес за доставка *</label>
+            <label htmlFor="address">
+              Адрес за доставка <span className={styles.requiredStar}>*</span>
+            </label>
             <textarea
               id="address"
               name="address"
@@ -150,6 +230,38 @@ export default function CheckoutPage() {
               onChange={handleChange}
             />
             {errors.address && <p className={styles.error}>{errors.address}</p>}
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>
+              Начин на плащане{' '}
+              <span className={styles.requiredStar}>*</span>
+            </span>
+
+            <div className={styles.paymentOptions}>
+              <label className={styles.paymentOption}>
+                <input
+                  type="checkbox"
+                  checked={formData.paymentMethods.includes('bank')}
+                  onChange={() => handlePaymentChange('bank')}
+                />
+                <span>С банкова карта</span>
+              </label>
+
+              <label className={styles.paymentOption}>
+                <input
+                  type="checkbox"
+                  checked={formData.paymentMethods.includes('cod')}
+                  onChange={() => handlePaymentChange('cod')}
+                />
+                <span>Наложен платеж</span>
+              </label>
+
+            </div>
+
+            {errors.paymentMethods && (
+              <p className={styles.error}>{errors.paymentMethods}</p>
+            )}
           </div>
 
           <div className={styles.field}>
@@ -163,16 +275,29 @@ export default function CheckoutPage() {
             />
           </div>
 
-          {submitMessage && (
-            <p className={styles.infoMessage}>{submitMessage}</p>
+          {submitStatus.message && (
+            <p
+              className={`${styles.infoMessage} ${
+                submitStatus.type === 'success'
+                  ? styles.infoSuccess
+                  : styles.infoError
+              }`}
+            >
+              {submitStatus.message}
+            </p>
           )}
 
-          <button type="submit" className={styles.submitBtn}>
-            Потвърди поръчката
+          <button
+            type="submit"
+            className={styles.submitBtn}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Изпращане...' : 'Потвърди поръчката'}
           </button>
 
           <p className={styles.requiredNote}>
-            Полетата, отбелязани със *, са задължителни.
+            Полетата, отбелязани със{' '}
+            <span className={styles.requiredStar}>*</span>, са задължителни.
           </p>
         </form>
 
@@ -181,7 +306,7 @@ export default function CheckoutPage() {
           <h2 className={styles.subheading}>Вашата поръчка</h2>
 
           <ul className={styles.itemsList}>
-            {cartItems.map(item => (
+            {cartItems.map((item) => (
               <li key={item._id} className={styles.itemRow}>
                 <div>
                   <p className={styles.itemTitle}>{item.title}</p>
