@@ -1,27 +1,22 @@
+// happy-colors-nextjs-project/src/app/checkout/page.js
+
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
 import styles from './checkout.module.css';
-import baseURL from '@/config';
+import { useCheckoutManager } from '@/managers/checkoutManager';
 
 export default function CheckoutPage() {
-  const { cartItems, getTotalPrice, clearCart } = useCart();
-
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    city: '',
-    address: '',
-    note: '',
-    paymentMethods: [], // списък с избрани начини на плащане
-  });
-
-  const [errors, setErrors] = useState({});
-  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    cartItems,
+    totalPrice,
+    formData,
+    errors,
+    isSubmitting,
+    handleChange,
+    handlePaymentChange,
+    handleSubmit,
+  } = useCheckoutManager();
 
   if (cartItems.length === 0) {
     return (
@@ -34,137 +29,6 @@ export default function CheckoutPage() {
       </section>
     );
   }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: '',
-    }));
-
-    setSubmitStatus({ type: '', message: '' });
-  };
-
-  const handlePaymentChange = (method) => {
-    setFormData((prev) => {
-      const isSelected = prev.paymentMethods.includes(method);
-      // визуално чекбокс, но логически позволяваме само 1 избор
-      const newMethods = isSelected ? [] : [method];
-
-      return {
-        ...prev,
-        paymentMethods: newMethods,
-      };
-    });
-
-    setErrors((prev) => ({
-      ...prev,
-      paymentMethods: '',
-    }));
-
-    setSubmitStatus({ type: '', message: '' });
-  };
-
-  const validate = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Моля, въведете име и фамилия.';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Моля, въведете телефон.';
-    }
-
-    if (!formData.city.trim()) {
-      newErrors.city = 'Моля, въведете град.';
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = 'Моля, въведете адрес за доставка.';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Моля, въведете e-mail.';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Моля, въведете валиден e-mail.';
-    }
-
-    if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
-      newErrors.paymentMethods = 'Моля, изберете начин на плащане.';
-    }
-
-    return newErrors;
-  };
-
-  const totalPrice = getTotalPrice();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    setSubmitStatus({ type: '', message: '' });
-
-    const newErrors = validate();
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    const paymentMethod = formData.paymentMethods[0]; // 'card' или 'cod'
-
-    try {
-      setIsSubmitting(true);
-
-      const res = await fetch(`${baseURL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          city: formData.city,
-          address: formData.address,
-          note: formData.note,
-          paymentMethod,
-          cartItems,
-          totalPrice,
-        }),
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        throw new Error(data?.message || 'Възникна грешка при изпращане на поръчката.');
-      }
-
-      setSubmitStatus({
-        type: 'success',
-        message:
-          data?.message ||
-          'Благодарим ви за поръчката, ще се свържем с вас възможно най-скоро.',
-      });
-
-      // по желание: чистим количката
-      clearCart();
-    } catch (err) {
-      console.error('Order submit error:', err);
-      setSubmitStatus({
-        type: 'error',
-        message:
-          err.message ||
-          'Възникна грешка при изпращане на поръчката. Моля, опитайте отново.',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <section className={styles.checkoutContainer}>
@@ -285,18 +149,6 @@ export default function CheckoutPage() {
               onChange={handleChange}
             />
           </div>
-
-          {submitStatus.message && (
-            <p
-              className={`${styles.infoMessage} ${
-                submitStatus.type === 'success'
-                  ? styles.infoSuccess
-                  : styles.infoError
-              }`}
-            >
-              {submitStatus.message}
-            </p>
-          )}
 
           <button
             type="submit"

@@ -1,3 +1,5 @@
+// happy-colors-nextjs-project/src/components/ui/MessageBox.jsx
+
 'use client';
 import React from 'react';
 import styles from './MessageBox.module.css';

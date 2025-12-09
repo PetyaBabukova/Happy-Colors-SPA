@@ -35,6 +35,10 @@ export async function handleOrder(rawData) {
     paymentMethod,
     cartItems = [],
     totalPrice,
+    shippingMethod = '',
+    econtOffice = '',
+    speedyOffice = '',
+    boxNow = false,
   } = rawData || {};
 
   // 1) Задължителни полета
@@ -78,9 +82,24 @@ export async function handleOrder(rawData) {
     throw new OrderError('Невалиден начин на плащане.', 400);
   }
 
+  // При наложен платеж – изискваме данни за доставка
+  if (paymentMethod === 'cod' && !shippingMethod) {
+    throw new OrderError('Липсва информация за начина на доставка.', 400);
+  }
+
   // 3) Забранени HTML тагове
   const forbiddenPattern = /<[^>]*>/g;
-  const allFields = [name, email, phone, city, address, note];
+  const allFields = [
+    name,
+    email,
+    phone,
+    city,
+    address,
+    note,
+    shippingMethod,
+    econtOffice,
+    speedyOffice,
+  ];
   if (allFields.some((val) => forbiddenPattern.test(String(val).trim()))) {
     throw new OrderError('Забранени символи в полетата!', 400);
   }
@@ -96,6 +115,13 @@ export async function handleOrder(rawData) {
     paymentMethod: sanitizeText(paymentMethod),
   };
 
+  const cleanShipping = {
+    shippingMethod: sanitizeText(shippingMethod),
+    econtOffice: sanitizeText(econtOffice),
+    speedyOffice: sanitizeText(speedyOffice),
+    boxNow: Boolean(boxNow),
+  };
+
   const safeTotalPrice = Number(totalPrice || 0);
 
   // 5) Подготовка на имейл
@@ -105,7 +131,25 @@ export async function handleOrder(rawData) {
   };
 
   const paymentLabel =
-    paymentLabelMap[cleanCustomer.paymentMethod] || cleanCustomer.paymentMethod || '-';
+    paymentLabelMap[cleanCustomer.paymentMethod] ||
+    cleanCustomer.paymentMethod ||
+    '-';
+
+  const shippingLabelMap = {
+    econt: 'Доставка до офис на Еконт',
+    speedy: 'Доставка до офис на Спиди',
+    boxnow: 'Доставка през Box Now',
+  };
+
+  const shippingLabel =
+    shippingLabelMap[cleanShipping.shippingMethod] || '-';
+
+  const shippingText = `
+Начин на доставка: ${shippingLabel}
+Офис на Еконт: ${cleanShipping.econtOffice || '-'}
+Офис на Спиди: ${cleanShipping.speedyOffice || '-'}
+Box Now: ${cleanShipping.boxNow ? 'Да' : 'Не'}
+`.trim();
 
   const itemsText = (cartItems || [])
     .map(
@@ -127,6 +171,9 @@ export async function handleOrder(rawData) {
 Град: ${cleanCustomer.city}
 Адрес за доставка: ${cleanCustomer.address}
 Начин на плащане: ${paymentLabel}
+
+${shippingText}
+
 Бележка: ${cleanCustomer.note || '(няма)'}
 
 Поръчани продукти:
