@@ -5,7 +5,7 @@ import styles from './Cart.module.css';
 import Image from 'next/image';
 
 export default function CartItem({ item }) {
-  const { removeFromCart } = useCart();
+  const { removeFromCart, increaseQuantity, decreaseQuantity } = useCart();
 
   return (
     <div className={styles.cartItem}>
@@ -20,7 +20,27 @@ export default function CartItem({ item }) {
       <div className={styles.details}>
         <h4>{item.title}</h4>
         <p>Цена: {item.price.toFixed(2)} лв.</p>
-        <p>Количество: {item.quantity}</p>
+
+        {/* ➕➖ Добавени бутони за количество */}
+        <div className={styles.qtyControls}>
+        <p>Количество: </p>
+          <button
+            className={styles.qtyBtn}
+            onClick={() => decreaseQuantity(item._id)}
+          >
+            –
+          </button>
+
+          <span className={styles.qtyNumber}>{item.quantity}</span>
+
+          <button
+            className={styles.qtyBtn}
+            onClick={() => increaseQuantity(item._id)}
+          >
+            +
+          </button>
+        </div>
+
         <p>Общо: {(item.price * item.quantity).toFixed(2)} лв.</p>
       </div>
 

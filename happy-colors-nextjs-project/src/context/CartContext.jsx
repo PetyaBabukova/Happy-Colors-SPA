@@ -86,6 +86,31 @@ export function CartProvider({ children }) {
     );
   }
 
+    // Увеличаване на количество
+  function increaseQuantity(productId) {
+    setCartItems(prev =>
+      prev.map(item =>
+        item._id === productId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
+  }
+
+  // Намаляване на количество
+  function decreaseQuantity(productId) {
+    setCartItems(prev =>
+      prev
+        .map(item =>
+          item._id === productId
+            ? { ...item, quantity: Math.max(0, item.quantity - 1) }
+            : item
+        )
+        .filter(item => item.quantity > 0) // Ако стане 0 → махаме артикула
+    );
+  }
+
+
   return (
     <CartContext.Provider
       value={{
@@ -95,6 +120,8 @@ export function CartProvider({ children }) {
         clearCart,
         getTotalItems,
         getTotalPrice,
+        decreaseQuantity,
+        increaseQuantity,
       }}
     >
       {children}
