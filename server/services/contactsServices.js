@@ -1,3 +1,5 @@
+// server/services/contactsServices.js
+
 import { sendEmail } from '../helpers/sendEmail.js';
 
 export async function handleContactForm({ name, email, phone, message }) {

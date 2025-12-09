@@ -5,7 +5,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'cdncloudcart.com',
-        pathname: '**',
+        pathname: '/**',              // леко поправям от '**' на '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/happycolors-store/**', // пътят към твоя bucket
       },
     ],
   },

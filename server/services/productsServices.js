@@ -8,7 +8,7 @@ export async function getAllProducts(categoryName) {
     .lean();
 
   if (categoryName) {
-    return products.filter(p => p.category?.name === categoryName);
+    return products.filter((p) => p.category?.name === categoryName);
   }
 
   return products;
@@ -25,7 +25,7 @@ export async function getProductById(productId) {
   return await Product.findById(productId).lean();
 }
 
-// 🟢 EDIT
+// 🟢 EDIT – тук добавяме логика за триене на старото изображение
 export async function editProduct(productId, productData, userId) {
   const product = await Product.findById(productId);
 
@@ -37,12 +37,21 @@ export async function editProduct(productId, productData, userId) {
     throw new Error('Нямате права да редактирате този продукт.');
   }
 
+  const oldImageUrl = product.imageUrl;
+  const newImageUrl = productData.imageUrl;
+
+  // Ако в заявката има imageUrl И то е различно от текущото – трием старото изображение
+  if (newImageUrl && oldImageUrl && oldImageUrl !== newImageUrl) {
+    await deleteImageFromGCS(oldImageUrl);
+  }
+
   Object.assign(product, productData);
   await product.save();
+
   return product;
 }
 
-// 🟢 DELETE
+// 🟢 DELETE – вече работи с триене и в GCS
 export async function deleteProduct(productId, userId) {
   const product = await Product.findById(productId);
 
@@ -54,12 +63,12 @@ export async function deleteProduct(productId, userId) {
     throw new Error('Нямате права да изтриете този продукт.');
   }
 
-  // 1) изтриваме изображението (НЕ хвърля грешки нагоре)
+  // 1) трием изображението, ако има такова
   if (product.imageUrl) {
     await deleteImageFromGCS(product.imageUrl);
   }
 
-  // 2) изтриваме продукта
+  // 2) трием продукта от базата
   await Product.findByIdAndDelete(productId);
 
   return { message: 'Продуктът беше изтрит успешно.' };
