@@ -152,13 +152,14 @@ Box Now: ${cleanShipping.boxNow ? 'Да' : 'Не'}
 `.trim();
 
   const itemsText = (cartItems || [])
-    .map(
-      (item) =>
-        `- ${item.title} | количество: ${item.quantity} | единична цена: ${item.price} лв. | общо: ${
-          item.quantity * item.price
-        } лв.`
-    )
-    .join('\n');
+  .map(
+    (item) =>
+      `- ${item.title} (ID: ${item._id}) | количество: ${item.quantity} | единична цена: ${item.price} лв. | общо: ${
+        item.quantity * item.price
+      } лв.`
+  )
+  .join('\n');
+
 
   const subject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
 

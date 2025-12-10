@@ -7,6 +7,7 @@ import categoryController from './controllers/categoryController.js';
 import searchController from './controllers/searchController.js';
 import contactsController from './controllers/contactsController.js';
 import ordersController from './controllers/ordersController.js';
+import paymentsController from './controllers/paymentsController.js';
 
 
 const router = express.Router();
@@ -18,6 +19,8 @@ router.use('/categories', categoryController);
 router.use('/search', searchController);
 router.use('/contacts', contactsController);
 router.use('/orders', ordersController);
+router.use('/payments', paymentsController);
+
 
 
 

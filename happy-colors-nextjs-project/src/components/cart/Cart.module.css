@@ -29,16 +29,17 @@
 
 .removeBtn {
   background-color: var(--dark-orange);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
+  color: var(--dark-orange);
+  padding: 0.5rem;
   border-radius: 6px;
+  background-color: white;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  flex: 0 1 10%;
 }
 
 .removeBtn:hover {
-  background-color: var(--orange);
+  background-color: var(--dark-orange);
 }
 
 .summary {
@@ -51,10 +52,10 @@
 .clearBtn {
   background-color: white;
   color: var(--dark-orange);
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--dark-orange);
+  padding: 0.5rem;
   border-radius: 6px;
   cursor: pointer;
+  flex: 0 1 26%;
 }
 
 .clearBtn:hover {
@@ -85,13 +86,54 @@
   border: none;
   background: var(--light-green);
   color: #fff;
-  font-weight: 600;
+  font-size: 1.2em;
+  font-weight: bold;
   cursor: pointer;
   text-decoration: none;
+  text-align: center;
+  justify-content: center;
+}
+
+.clearBtn,
+.removeBtn {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .continueBtn:hover {
   opacity: 0.9;
-  background: var(--dark-orange);
+  background: var(--dark-green);
   color: white;
+}
+
+.qtyControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.5em 0;
+}
+
+.qtyBtn {
+  padding: 0.3em 0.2em;
+  cursor: pointer;
+  width: 1.5em;
+  height: 1.5em;
+  color: var(--dark-green);
+  border: none;
+  border-radius: 0.3em;
+  background: var(--light-gray);
+  cursor: pointer;
+  line-height: 0.5;
+  transition: background 0.2s;
+}
+
+.qtyBtn:hover {
+  background: var(--light-green);
+}
+
+.qtyNumber {
+  min-width: 20px;
+  text-align: center;
+  /* font-weight: bold; */
+  display: inline-block;
 }

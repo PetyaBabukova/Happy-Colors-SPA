@@ -4,8 +4,7 @@
 
 import Link from 'next/link';
 import styles from './checkout.module.css';
-import { useCheckoutManager } from '@/managers/checkoutManager';
-
+import { useCheckoutManager } from '@/managers/checkoutManager'; 
 export default function CheckoutPage() {
   const {
     cartItems,
