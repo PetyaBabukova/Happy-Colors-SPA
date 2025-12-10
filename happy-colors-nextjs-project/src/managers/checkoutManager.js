@@ -89,7 +89,7 @@ export function useCheckoutManager() {
   }, [formData]);
 
   const handleSubmit = useCallback(
-    async (e) => {
+    (e) => {
       e.preventDefault();
       setIsSubmitting(true);
 
@@ -104,7 +104,7 @@ export function useCheckoutManager() {
       const paymentMethod = formData.paymentMethods[0]; // 'card' или 'cod'
 
       // Подготвяме чернова на поръчката,
-      // която ще се довърши на следващата стъпка (доставка или картово плащане)
+      // която ще се довърши на следващата стъпка (избор на доставка и/или картово плащане)
       const orderDraft = {
         name: formData.name.trim(),
         email: formData.email.trim(),
@@ -119,13 +119,8 @@ export function useCheckoutManager() {
         window.localStorage.setItem('hc_order_draft', JSON.stringify(orderDraft));
       }
 
-      if (paymentMethod === 'cod') {
-        // Наложен платеж → стъпка 2: избор на доставка
-        router.push('/checkout/shipping');
-      } else if (paymentMethod === 'card') {
-        // Плащане с карта – засега placeholder страница за бъдеща интеграция
-        router.push('/checkout/card-payment');
-      }
+      // И при 'cod', и при 'card' → следващата стъпка е избор на доставка
+      router.push('/checkout/shipping');
 
       setIsSubmitting(false);
     },
