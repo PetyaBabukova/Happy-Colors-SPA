@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import MessageBox from '@/components/ui/MessageBox';
-import { validateEmptyFields, validateContactForm, validateContactLength } from '@/utils/formValidations';
-import { extractErrorMessage } from '@/utils/errorHandler';
+import {
+  validateEmptyFields,
+  validateContactForm,
+  validateContactLength,
+} from '@/utils/formValidations';
 import { sendContactForm } from '../../managers/contactsManager';
 import styles from '../../components/products/create.module.css';
 
@@ -17,9 +20,11 @@ const initialValues = {
 };
 
 export default function ContactForm() {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get('productId'); // очакваме ?productId=...
+
   const {
     formValues,
-    setFormValues,
     error,
     setError,
     success,
@@ -73,18 +78,23 @@ export default function ContactForm() {
       return;
     }
 
-
-    const { sanitizedValues, hasForbiddenChars } =
-      validateContactForm(formValues);
-
+    const { sanitizedValues, hasForbiddenChars } = validateContactForm(formValues);
 
     if (hasForbiddenChars) {
       setError('Използване на забранени символи!');
       return;
     }
 
+    // ✅ ако идва от продукт → пращаме и URL (по-надеждно от само ID)
+    const payload = {
+      ...sanitizedValues,
+      productId: productId || null,
+      productUrl: productId ? `${window.location.origin}/products/${productId}` : null,
+    };
+
     try {
-      await sendContactForm(sanitizedValues);
+      await sendContactForm(payload);
+
       setSuccess(true);
       setNotificationMessage('Благодарим! Ще се свържем с вас при първа възможност.');
       setNotificationType('success');
@@ -104,10 +114,7 @@ export default function ContactForm() {
       ) : error ? (
         <MessageBox type="error" message={error} />
       ) : success ? (
-        <MessageBox
-          type="success"
-          message="Съобщението беше изпратено успешно!"
-        />
+        <MessageBox type="success" message="Съобщението беше изпратено успешно!" />
       ) : null}
 
       <form className={styles.registerForm} onSubmit={handleSubmit}>
@@ -119,12 +126,9 @@ export default function ContactForm() {
           name="name"
           value={formValues.name}
           onChange={handleChange}
-          className={
-            invalidFields.includes('name') ? styles.invalidField : ''
-          }
+          className={invalidFields.includes('name') ? styles.invalidField : ''}
         />
         <p className={styles.fieldHint}>Името трябва да е с дължина от 3 до 20 символа</p>
-
 
         <label htmlFor="email">
           Имейл<span className={styles.red}>*</span>
@@ -135,12 +139,9 @@ export default function ContactForm() {
           type="email"
           value={formValues.email}
           onChange={handleChange}
-          className={
-            invalidFields.includes('email') ? styles.invalidField : ''
-          }
+          className={invalidFields.includes('email') ? styles.invalidField : ''}
         />
         <p className={styles.fieldHint}>Моля въведете валиден email адрес</p>
-
 
         <label htmlFor="phone">Телефон</label>
         <input
@@ -149,9 +150,7 @@ export default function ContactForm() {
           type="text"
           value={formValues.phone}
           onChange={handleChange}
-          className={
-            invalidFields.includes('phone') ? styles.invalidField : ''
-          }
+          className={invalidFields.includes('phone') ? styles.invalidField : ''}
         />
 
         <label htmlFor="message">
@@ -163,9 +162,8 @@ export default function ContactForm() {
           rows="6"
           value={formValues.message}
           onChange={handleChange}
-          className={
-            invalidFields.includes('message') ? styles.invalidField : ''
-          }
+          className={invalidFields.includes('message') ? styles.invalidField : ''}
+          // ✅ ВРЪЩАМЕ ТВОЯ СТИЛ, за да има рамка както преди
           style={{
             padding: '0.5rem',
             border: '1px solid var(--dark-green)',
@@ -176,7 +174,6 @@ export default function ContactForm() {
           }}
         />
         <p className={styles.fieldHint}>Съобщението ви не трябва да превишава 200 символа</p>
-
 
         <button type="submit">Изпрати</button>
       </form>

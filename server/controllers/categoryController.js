@@ -1,3 +1,5 @@
+// server/controllers/categoryController.js
+
 import express from 'express';
 import {
   createCategory,
