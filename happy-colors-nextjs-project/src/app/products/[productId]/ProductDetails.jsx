@@ -40,23 +40,24 @@ export default function ProductDetails({ product }) {
 						))}
 					</div>
 
-					<p className={styles.reviewCounter}>|</p>
+					{/* <p className={styles.reviewCounter}> |</p>
 					<p className={styles.reviewCounter}>{product.feedback?.length || 0} отзива</p>
 					<p className={styles.reviewCounter}>|</p>
-					<a className={styles.reviewLink} href="/">Оставете отзив</a>
+					<a className={styles.reviewLink} href="/">Оставете отзив</a> */}
 				</div>
 
 				<ul className={styles.productDetailsBodyTabsContainer}>
 					<li className={styles.productDetailsBodyTab}><a href="/">описание</a></li>
-					<li className={styles.productDetailsBodyTab}><a href="/">отзиви</a></li>
+					{/* <li className={styles.productDetailsBodyTab}><a href="/">отзиви</a></li> */}
 					<li className={styles.productDetailsBodyTab}><a href="/">доставка и плащане</a></li>
 				</ul>
 
 				<div className={styles.productDescriptionBody}>
 					<p>{product.description}</p>
 				</div>
+				<p><b>Наличност:</b></p>
 
-				<p>Цена: {product.price} лв</p>
+				<p><b>Цена:</b> {product.price} лв</p>
 
 				{/* Бутоните */}
 				<div className={styles.actionButtonsContainer}>
