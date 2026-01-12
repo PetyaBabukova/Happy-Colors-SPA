@@ -1,13 +1,12 @@
 // happy-colors-nextjs-project/src/app/products/[productId]/ProductDetails.jsx
 
-
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { isOwner } from '@/utils/isOwner';
 import { useCart } from '@/context/CartContext';
-import { useRouter } from 'next/navigation'; // декларативна навигация с Next
+import { useRouter } from 'next/navigation';
 import styles from './details.module.css';
 
 export default function ProductDetails({ product }) {
@@ -24,9 +23,14 @@ export default function ProductDetails({ product }) {
 			image: product.imageUrl,
 		});
 
-		// декларативно пренасочване
 		router.push('/cart');
 	};
+
+	// ✅ НОВО: текст за наличност (fallback за стари продукти без поле)
+	const availabilityLabel =
+		product?.availability === 'unavailable'
+			? 'Продукта не е наличен, ако желаете пратете запитване'
+			: 'Продукта е наличен и можете да го поръчате';
 
 	return (
 		<section className={styles.productDetails}>
@@ -39,27 +43,32 @@ export default function ProductDetails({ product }) {
 							<i key={i} className="fa-regular fa-star"></i>
 						))}
 					</div>
-
-					{/* <p className={styles.reviewCounter}> |</p>
-					<p className={styles.reviewCounter}>{product.feedback?.length || 0} отзива</p>
-					<p className={styles.reviewCounter}>|</p>
-					<a className={styles.reviewLink} href="/">Оставете отзив</a> */}
 				</div>
 
 				<ul className={styles.productDetailsBodyTabsContainer}>
 					<li className={styles.productDetailsBodyTab}><a href="/">описание</a></li>
-					{/* <li className={styles.productDetailsBodyTab}><a href="/">отзиви</a></li> */}
 					<li className={styles.productDetailsBodyTab}><a href="/">доставка и плащане</a></li>
 				</ul>
 
 				<div className={styles.productDescriptionBody}>
 					<p>{product.description}</p>
 				</div>
-				<p><b>Наличност:</b></p>
+
+				{/* ✅ НОВО: показване на наличността */}
+				{/* Наличност */}
+				<p
+					className={
+						product?.availability === 'unavailable'
+							? styles.unavailable
+							: styles.available
+					}
+				>
+					<b>Наличност:</b> {availabilityLabel}
+				</p>
+
 
 				<p><b>Цена:</b> {product.price} лв</p>
 
-				{/* Бутоните */}
 				<div className={styles.actionButtonsContainer}>
 					<button onClick={handleAddToCart} className={styles.actionBtn}>
 						Добави в количката

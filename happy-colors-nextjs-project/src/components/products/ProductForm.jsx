@@ -1,3 +1,5 @@
+// happy-colors-nextjs-project/src/components/products/ProductForm.jsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -5,15 +7,13 @@ import { useRouter } from 'next/navigation';
 import useForm from '@/hooks/useForm';
 import { handleSubmit } from '@/utils/formSubmitHelper';
 import MessageBox from '@/components/ui/MessageBox';
-import { useProducts } from '@/context/ProductContext'; // 🟢 ново
+import { useProducts } from '@/context/ProductContext';
 import styles from './create.module.css';
 import { uploadImageToBucket } from '@/managers/uploadManager';
 
-
-
 export default function ProductForm({ initialValues, onSubmit, legendText, successMessage }) {
   const router = useRouter();
-  const { categories } = useProducts(); // 🟢 взимаме всички категории от контекста
+  const { categories } = useProducts();
 
   const {
     formValues,
@@ -31,6 +31,9 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
     category: '',
     price: '',
     imageUrl: '',
+
+    // ✅ НОВО: наличност (default)
+    availability: 'available',
   });
 
   const [uploading, setUploading] = useState(false);
@@ -39,7 +42,12 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
 
   useEffect(() => {
     if (initialValues) {
-      setFormValues(initialValues);
+      // ✅ ако стар продукт няма availability (стари записи) → default 'available'
+      setFormValues({
+        availability: 'available',
+        ...initialValues,
+        availability: initialValues.availability || 'available',
+      });
     }
   }, [initialValues, setFormValues]);
 
@@ -138,23 +146,33 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
           className={invalidFields.includes('price') ? styles.invalidField : ''}
         />
 
+        {/* ✅ НОВО: Наличност */}
+        <label htmlFor="availability">Наличност</label>
+        <select
+          name="availability"
+          value={formValues.availability || 'available'}
+          onChange={handleChange}
+          className={invalidFields.includes('availability') ? styles.invalidField : ''}
+        >
+          <option value="available">Продукта е наличен и можете да го поръчате</option>
+          <option value="unavailable">Продукта не е наличен, ако желаете пратете запитване</option>
+        </select>
 
-        <label> Изображение </label>
-          <input
-            type="file"
-            name="imageUrl"
-            onChange={handleFileChange}
-            accept="image/*"
-            className={invalidFields.includes('imageUrl') ? styles.invalidField : ''}
-          />
-          {uploading && <p className={styles.fieldHint}>Качване на изображението...</p>}
-          {invalidFields.imageUrl && (
-            <p className={styles.fieldHint}>Моля изберете изображение.</p>
-          )}
-          {uploadError && (
-            <p className={styles.fieldHint}>{uploadError}</p>
-          )}
-        
+        <label>Изображение</label>
+        <input
+          type="file"
+          name="imageUrl"
+          onChange={handleFileChange}
+          accept="image/*"
+          className={invalidFields.includes('imageUrl') ? styles.invalidField : ''}
+        />
+        {uploading && <p className={styles.fieldHint}>Качване на изображението...</p>}
+        {invalidFields.imageUrl && (
+          <p className={styles.fieldHint}>Моля изберете изображение.</p>
+        )}
+        {uploadError && (
+          <p className={styles.fieldHint}>{uploadError}</p>
+        )}
 
         <button type="submit">Запази</button>
       </form>
