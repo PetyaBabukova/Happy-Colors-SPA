@@ -15,6 +15,12 @@ export default function ProductDetails({ product }) {
 	const canEdit = isOwner(product, user);
 	const router = useRouter();
 
+	const isAvailable = product?.availability !== 'unavailable';
+
+	const availabilityLabel = isAvailable
+		? 'Продукта е наличен и можете да го поръчате'
+		: 'Продукта не е наличен, ако желаете пратете запитване';
+
 	const handleAddToCart = () => {
 		addToCart({
 			_id: product._id,
@@ -26,11 +32,9 @@ export default function ProductDetails({ product }) {
 		router.push('/cart');
 	};
 
-	// ✅ НОВО: текст за наличност (fallback за стари продукти без поле)
-	const availabilityLabel =
-		product?.availability === 'unavailable'
-			? 'Продукта не е наличен, ако желаете пратете запитване'
-			: 'Продукта е наличен и можете да го поръчате';
+	const handleInquiry = () => {
+		router.push(`/contacts?productId=${product._id}`);
+	};
 
 	return (
 		<section className={styles.productDetails}>
@@ -54,30 +58,36 @@ export default function ProductDetails({ product }) {
 					<p>{product.description}</p>
 				</div>
 
-				{/* ✅ НОВО: показване на наличността */}
 				{/* Наличност */}
-				<p
-					className={
-						product?.availability === 'unavailable'
-							? styles.unavailable
-							: styles.available
-					}
-				>
+				<p className={isAvailable ? styles.available : styles.unavailable}>
 					<b>Наличност:</b> {availabilityLabel}
 				</p>
 
-
 				<p><b>Цена:</b> {product.price} лв</p>
 
+				{/* Действия */}
 				<div className={styles.actionButtonsContainer}>
-					<button onClick={handleAddToCart} className={styles.actionBtn}>
-						Добави в количката
-					</button>
+					{isAvailable ? (
+						<button onClick={handleAddToCart} className={styles.actionBtn}>
+							Добави в количката
+						</button>
+					) : (
+						<button
+							onClick={handleInquiry}
+							className={styles.actionBtn}
+						>
+							Попитай
+						</button>
+					)}
 
 					{canEdit && (
 						<div className={styles.ownerActions}>
-							<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>Редактирай</Link>
-							<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>Изтрий</Link>
+							<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>
+								Редактирай
+							</Link>
+							<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>
+								Изтрий
+							</Link>
 						</div>
 					)}
 				</div>
@@ -86,19 +96,6 @@ export default function ProductDetails({ product }) {
 			<div className={styles.productDetailsImagesContainer}>
 				<div className={styles.productDetailsMainImage}>
 					<img src={product.imageUrl} alt={product.title} />
-				</div>
-
-				<div className={styles.similarProductsContainer}>
-					<h4 className={styles.similarProductsHeading}>Свързани продукти</h4>
-
-					{(product.similarProducts || []).map((p, index) => (
-						<div key={index} className={styles.connectedProductsContainer}>
-							<Link href={`/products/${p._id}/details`} className={styles.connectedProductLink}>
-								<img src={p.imageUrl} alt={p.title} />
-								<h5>{p.title}</h5>
-							</Link>
-						</div>
-					))}
 				</div>
 			</div>
 		</section>
