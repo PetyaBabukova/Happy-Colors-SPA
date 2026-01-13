@@ -4,7 +4,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   gap: 1em;
-  margin-bottom: 0;
+  margin-bottom: 3rem;
 }
 
 .leftHiroSection {
@@ -12,11 +12,18 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  flex: 0 1 75%;
+  flex: 0 1 65%;
   display: flex;
   flex-direction: column;
   gap: 4em;
   padding: 5em;
+}
+
+.leftHiroSection svg{
+  display: inline-block;
+  color: var(--dark-orange);
+    max-width: 1rem;
+
 }
 
 .heroSmallImageContainer {
@@ -38,19 +45,22 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1 0 20%;
+  flex: 1 0 30%;
   gap: 2em;
 }
 
 .rightHiroSection h1 {
-  max-width: 12ch;
+  max-width: 15ch;
   text-align: center;
+  color: var(--light-green);
 }
 
 .rightHiroSection p {
   max-width: 35ch;
   text-align: center;
   font-size: 1.4rem;
+  line-height: 2em;
+  color:var(--dark-orange);
 }
 
 .hiroAccent {
@@ -60,6 +70,8 @@
   gap: 4em;
   color: var(--dark-green);
 }
+
+
 
 .hiroAccent h2 {
   font-weight: bold;
@@ -71,15 +83,32 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+.hiroAccent h2:hover {
+  cursor: pointer;
+  background: var(--dark-green);
+  color: var(--lighter-green);
+}
+
+.heroSmallImageContainer:hover{
+  cursor: pointer;
+  border-color: var(--dark-green);
+}
+
 .hiroShopLink {
   text-decoration: none;
   padding: 0.3rem 0.8rem;
-  background: var(--light-orange-transparent);
+  /* background: var(--light-orange-transparent); */
   border-radius: 0.5em;
-  color: var(--dark-orange);
+  color: var(--light-green);
   font-weight: lighter;
-  font-size: 3em;
+  font-size: 2em;
   transition: all 0.3s ease-in-out;
+}
+
+.hiroShopLink svg {
+  display: inline-block;
+    max-width: 1rem;
+
 }
 
 .hiroShopLink:hover {
@@ -94,6 +123,12 @@
 
 .breadcrumb p {
   margin: 0;
+}
+
+.shoppingCategories svg{
+  display: inline-block;
+  color: var(--light-green);
+  max-width: 1rem;
 }
 
 .shoppingCategories {
@@ -150,6 +185,16 @@
   font-size: 1.4rem;
   font-weight: normal;
   color: #003427;
+}
+
+.rightHiroSection h2{
+  margin: 0;
+}
+
+p.learnMorelink{
+  color: var(--light-green);
+  align-self: flex-end;
+  margin-top: 0.5em;
 }
 
 @media screen and (max-width: 768px) {

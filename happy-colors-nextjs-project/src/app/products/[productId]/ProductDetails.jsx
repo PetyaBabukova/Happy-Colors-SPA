@@ -63,7 +63,7 @@ export default function ProductDetails({ product }) {
 					<b>Наличност:</b> {availabilityLabel}
 				</p>
 
-				<p><b>Цена:</b> {product.price} лв</p>
+				<p><b>Цена:</b> {product.price} €</p>
 
 				{/* Действия */}
 				<div className={styles.actionButtonsContainer}>
