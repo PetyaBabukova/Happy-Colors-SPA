@@ -1,3 +1,5 @@
+// happy-colors-nextjs-project/src/app/products/[productId]/edit/page.js
+
 'use client';
 
 import { use, useEffect, useState } from 'react';
@@ -8,9 +10,8 @@ import MessageBox from '@/components/ui/MessageBox';
 import { onEditProductSubmit } from '@/managers/productsManager';
 import { checkProductAccess } from '@/utils/checkProductAccess';
 
-
 export default function Page({ params }) {
-   const { productId } = use(params);
+  const { productId } = use(params);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -22,7 +23,12 @@ export default function Page({ params }) {
     if (user === undefined) return;
 
     checkProductAccess(productId, user).then(({ product, unauthorized }) => {
-      setProduct(product);
+      // ✅ ако продуктът е стар и няма availability → default
+      const normalizedProduct = product
+        ? { availability: 'available', ...product, availability: product.availability || 'available' }
+        : product;
+
+      setProduct(normalizedProduct);
       setUnauthorized(unauthorized);
       setLoading(false);
     });

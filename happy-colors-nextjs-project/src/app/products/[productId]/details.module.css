@@ -163,6 +163,17 @@
   text-align: center;
 }
 
+.available {
+  color: var(--light-green);
+  font-weight: 600;
+}
+
+.unavailable {
+  color: var(--dark-orange);
+  font-weight: 600;
+}
+
+
 @media (max-width: 768px) {
   .productDetails {
     flex-direction: column;

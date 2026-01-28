@@ -1,3 +1,5 @@
+// server/services/productsServices.js
+
 import Product from '../models/Product.js';
 import { deleteImageFromGCS } from '../helpers/gcsImageHelper.js';
 

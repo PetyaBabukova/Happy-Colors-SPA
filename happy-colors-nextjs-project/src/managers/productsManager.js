@@ -1,3 +1,5 @@
+// happy-colors-nextjs-project/src/managers/productsManager.js
+
 import baseURL from '@/config';
 
 export async function onCreateProductSubmit(
@@ -7,19 +9,22 @@ export async function onCreateProductSubmit(
   setInvalidFields,
   user,
   router,
-  triggerCategoriesReload // 🟢 ново
+  triggerCategoriesReload
 ) {
   try {
+    const payload = {
+      ...formValues,
+      owner: user._id,
+      availability: formValues.availability || 'available', // ✅
+    };
+
     const res = await fetch(`${baseURL}/products`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({
-        ...formValues,
-        owner: user._id,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
@@ -32,7 +37,7 @@ export async function onCreateProductSubmit(
     setError('');
     setInvalidFields([]);
 
-    triggerCategoriesReload(); // 🟢 презареждаме категориите за Header
+    triggerCategoriesReload();
 
     router.push(`/products/${result._id}`);
   } catch (err) {
@@ -57,13 +62,18 @@ export async function onEditProductSubmit(
   productId
 ) {
   try {
+    const payload = {
+      ...formValues,
+      availability: formValues.availability || 'available', // ✅
+    };
+
     const res = await fetch(`${baseURL}/products/${productId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify(formValues),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
@@ -108,4 +118,3 @@ export async function getProducts(categoryName) {
     return [];
   }
 }
-

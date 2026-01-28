@@ -10,7 +10,7 @@ export default function ProductCard({ product }) {
                 <img src={product.imageUrl} alt={product.title} />
             </div>
             <h4>{product.title}</h4>
-            <p>Цена: {product.price} лв</p>
+            <p>Цена: {product.price} €</p>
         </Link>
     );
 }

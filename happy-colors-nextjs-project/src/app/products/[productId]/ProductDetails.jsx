@@ -1,13 +1,12 @@
 // happy-colors-nextjs-project/src/app/products/[productId]/ProductDetails.jsx
 
-
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { isOwner } from '@/utils/isOwner';
 import { useCart } from '@/context/CartContext';
-import { useRouter } from 'next/navigation'; // декларативна навигация с Next
+import { useRouter } from 'next/navigation';
 import styles from './details.module.css';
 
 export default function ProductDetails({ product }) {
@@ -15,6 +14,12 @@ export default function ProductDetails({ product }) {
 	const { addToCart } = useCart();
 	const canEdit = isOwner(product, user);
 	const router = useRouter();
+
+	const isAvailable = product?.availability !== 'unavailable';
+
+	const availabilityLabel = isAvailable
+		? 'Продукта е наличен и можете да го поръчате'
+		: 'Продукта не е наличен, ако желаете пратете запитване';
 
 	const handleAddToCart = () => {
 		addToCart({
@@ -24,8 +29,11 @@ export default function ProductDetails({ product }) {
 			image: product.imageUrl,
 		});
 
-		// декларативно пренасочване
 		router.push('/cart');
+	};
+
+	const handleInquiry = () => {
+		router.push(`/contacts?productId=${product._id}`);
 	};
 
 	return (
@@ -39,36 +47,47 @@ export default function ProductDetails({ product }) {
 							<i key={i} className="fa-regular fa-star"></i>
 						))}
 					</div>
-
-					{/* <p className={styles.reviewCounter}> |</p>
-					<p className={styles.reviewCounter}>{product.feedback?.length || 0} отзива</p>
-					<p className={styles.reviewCounter}>|</p>
-					<a className={styles.reviewLink} href="/">Оставете отзив</a> */}
 				</div>
 
 				<ul className={styles.productDetailsBodyTabsContainer}>
 					<li className={styles.productDetailsBodyTab}><a href="/">описание</a></li>
-					{/* <li className={styles.productDetailsBodyTab}><a href="/">отзиви</a></li> */}
 					<li className={styles.productDetailsBodyTab}><a href="/">доставка и плащане</a></li>
 				</ul>
 
 				<div className={styles.productDescriptionBody}>
 					<p>{product.description}</p>
 				</div>
-				<p><b>Наличност:</b></p>
 
-				<p><b>Цена:</b> {product.price} лв</p>
+				{/* Наличност */}
+				<p className={isAvailable ? styles.available : styles.unavailable}>
+					<b>Наличност:</b> {availabilityLabel}
+				</p>
 
-				{/* Бутоните */}
+				<p><b>Цена:</b> {product.price} €</p>
+
+				{/* Действия */}
 				<div className={styles.actionButtonsContainer}>
-					<button onClick={handleAddToCart} className={styles.actionBtn}>
-						Добави в количката
-					</button>
+					{isAvailable ? (
+						<button onClick={handleAddToCart} className={styles.actionBtn}>
+							Добави в количката
+						</button>
+					) : (
+						<button
+							onClick={handleInquiry}
+							className={styles.actionBtn}
+						>
+							Попитай
+						</button>
+					)}
 
 					{canEdit && (
 						<div className={styles.ownerActions}>
-							<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>Редактирай</Link>
-							<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>Изтрий</Link>
+							<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>
+								Редактирай
+							</Link>
+							<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>
+								Изтрий
+							</Link>
 						</div>
 					)}
 				</div>
@@ -77,19 +96,6 @@ export default function ProductDetails({ product }) {
 			<div className={styles.productDetailsImagesContainer}>
 				<div className={styles.productDetailsMainImage}>
 					<img src={product.imageUrl} alt={product.title} />
-				</div>
-
-				<div className={styles.similarProductsContainer}>
-					<h4 className={styles.similarProductsHeading}>Свързани продукти</h4>
-
-					{(product.similarProducts || []).map((p, index) => (
-						<div key={index} className={styles.connectedProductsContainer}>
-							<Link href={`/products/${p._id}/details`} className={styles.connectedProductLink}>
-								<img src={p.imageUrl} alt={p.title} />
-								<h5>{p.title}</h5>
-							</Link>
-						</div>
-					))}
 				</div>
 			</div>
 		</section>

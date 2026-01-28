@@ -37,7 +37,7 @@ export default function Header() {
             <li><Link href="/" onClick={() => setMobileMenuOpen(false)}>Начало</Link></li>
 
             <li className={styles.hasSubmenu}>
-              <Link className={styles.menuItem} href="/products" onClick={() => setMobileMenuOpen(false)}>Магазин</Link>
+              <Link className={styles.menuItem} href="/products" onClick={() => setMobileMenuOpen(false)}>Каталог</Link>
               {visibleCategories && visibleCategories.length > 0 && (
                 <ul className={styles.subNavList}>
                   <li>

@@ -1,4 +1,7 @@
 // server/services/ordersServices.js
+
+import Order from '../models/Order.js';
+import Payment from '../models/Payment.js';
 import { sendEmail } from '../helpers/sendEmail.js';
 
 class OrderError extends Error {
@@ -8,21 +11,26 @@ class OrderError extends Error {
   }
 }
 
-// Хелпър за премахване на HTML тагове
+// ----------------------
+// Helpers (временно тук)
+// ----------------------
+
 function sanitizeText(input) {
   return String(input).replace(/<\/?[^>]+(>|$)/g, '').trim();
 }
 
-// Проверка за валиден email
 function isValidEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(String(email).trim());
 }
 
 function isValidPaymentMethod(method) {
-  const allowed = ['card', 'cod']; // 'card' = С карта, 'cod' = Наложен платеж
-  return allowed.includes(method);
+  return ['card', 'cod'].includes(method);
 }
+
+// ----------------------
+// Main service
+// ----------------------
 
 export async function handleOrder(rawData) {
   const {
@@ -41,7 +49,10 @@ export async function handleOrder(rawData) {
     boxNow = false,
   } = rawData || {};
 
-  // 1) Задължителни полета
+  // ----------------------
+  // 1) Basic validations
+  // ----------------------
+
   if (!name || !email || !phone || !city || !address || !paymentMethod) {
     throw new OrderError('Липсват задължителни полета.', 400);
   }
@@ -50,16 +61,28 @@ export async function handleOrder(rawData) {
     throw new OrderError('Количката е празна или невалидна.', 400);
   }
 
-  // 2) Валидации за дължини
+  if (!isValidEmail(email)) {
+    throw new OrderError('Невалиден email формат.', 400);
+  }
+
+  if (!isValidPaymentMethod(paymentMethod)) {
+    throw new OrderError('Невалиден начин на плащане.', 400);
+  }
+
+  if (paymentMethod === 'cod' && !shippingMethod) {
+    throw new OrderError('Липсва информация за начина на доставка.', 400);
+  }
+
+  // ----------------------
+  // 2) Length & security checks
+  // ----------------------
+
   if (name.trim().length < 3 || name.trim().length > 50) {
     throw new OrderError('Името трябва да е между 3 и 50 символа.', 400);
   }
 
-  if (phone && phone.trim().length > 20) {
-    throw new OrderError(
-      'Телефонът е прекалено дълъг (макс. 20 символа).',
-      400
-    );
+  if (phone.trim().length > 20) {
+    throw new OrderError('Телефонът е прекалено дълъг.', 400);
   }
 
   if (city.trim().length < 2 || city.trim().length > 50) {
@@ -71,23 +94,9 @@ export async function handleOrder(rawData) {
   }
 
   if (note && note.trim().length > 500) {
-    throw new OrderError('Бележката е прекалено дълга (макс. 500 символа).', 400);
+    throw new OrderError('Бележката е прекалено дълга.', 400);
   }
 
-  if (!isValidEmail(email)) {
-    throw new OrderError('Невалиден email формат.', 400);
-  }
-
-  if (!isValidPaymentMethod(paymentMethod)) {
-    throw new OrderError('Невалиден начин на плащане.', 400);
-  }
-
-  // При наложен платеж – изискваме данни за доставка
-  if (paymentMethod === 'cod' && !shippingMethod) {
-    throw new OrderError('Липсва информация за начина на доставка.', 400);
-  }
-
-  // 3) Забранени HTML тагове
   const forbiddenPattern = /<[^>]*>/g;
   const allFields = [
     name,
@@ -100,11 +109,15 @@ export async function handleOrder(rawData) {
     econtOffice,
     speedyOffice,
   ];
-  if (allFields.some((val) => forbiddenPattern.test(String(val).trim()))) {
-    throw new OrderError('Забранени символи в полетата!', 400);
+
+  if (allFields.some((v) => forbiddenPattern.test(String(v)))) {
+    throw new OrderError('Забранени символи в полетата.', 400);
   }
 
-  // 4) Санитизация
+  // ----------------------
+  // 3) Sanitization
+  // ----------------------
+
   const cleanCustomer = {
     name: sanitizeText(name),
     email: sanitizeText(email),
@@ -112,7 +125,6 @@ export async function handleOrder(rawData) {
     city: sanitizeText(city),
     address: sanitizeText(address),
     note: sanitizeText(note),
-    paymentMethod: sanitizeText(paymentMethod),
   };
 
   const cleanShipping = {
@@ -124,66 +136,95 @@ export async function handleOrder(rawData) {
 
   const safeTotalPrice = Number(totalPrice || 0);
 
-  // 5) Подготовка на имейл
-  const paymentLabelMap = {
-    card: 'С карта',
-    cod: 'Наложен платеж',
-  };
+  // ----------------------
+  // 4) Map items (business data)
+  // ----------------------
 
-  const paymentLabel =
-    paymentLabelMap[cleanCustomer.paymentMethod] ||
-    cleanCustomer.paymentMethod ||
-    '-';
+  const mappedItems = cartItems.map((item) => ({
+    productId: item._id,
+    title: String(item.title || ''),
+    quantity: Number(item.quantity || 0),
+    unitPrice: Number(item.price || 0), // очакваме EUR
+  }));
 
-  const shippingLabelMap = {
-    econt: 'Доставка до офис на Еконт',
-    speedy: 'Доставка до офис на Спиди',
-    boxnow: 'Доставка през Box Now',
-  };
+  // ----------------------
+  // 5) Create Order
+  // ----------------------
 
-  const shippingLabel =
-    shippingLabelMap[cleanShipping.shippingMethod] || '-';
+  const order = await Order.create({
+    customer: cleanCustomer,
+    shipping: cleanShipping,
+    items: mappedItems,
+    totalPrice: safeTotalPrice,
+    paymentMethod,
+    status: 'new',
+  });
 
-  const shippingText = `
-Начин на доставка: ${shippingLabel}
-Офис на Еконт: ${cleanShipping.econtOffice || '-'}
-Офис на Спиди: ${cleanShipping.speedyOffice || '-'}
-Box Now: ${cleanShipping.boxNow ? 'Да' : 'Не'}
-`.trim();
+  // ----------------------
+  // 6) Payment handling
+  // ----------------------
 
-  const itemsText = (cartItems || [])
-  .map(
-    (item) =>
-      `- ${item.title} (ID: ${item._id}) | количество: ${item.quantity} | единична цена: ${item.price} лв. | общо: ${
-        item.quantity * item.price
-      } лв.`
-  )
-  .join('\n');
+  let payment = null;
 
+  if (paymentMethod === 'card') {
+    payment = await Payment.create({
+      provider: 'stripe',
+      amount: Math.round(safeTotalPrice * 100), // EUR → cents
+      currency: 'eur',
+      status: 'pending',
+    });
 
-  const subject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
+    order.paymentId = payment._id;
+    await order.save();
 
-  const text = `
+    // ⚠️ НЕ пращаме имейл тук
+    // ще се прати след webhook (payment succeeded)
+  }
+
+  // ----------------------
+  // 7) COD email (only here!)
+  // ----------------------
+
+  if (paymentMethod === 'cod') {
+    const subject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
+
+    const itemsText = mappedItems
+      .map(
+        (item) =>
+          `- ${item.title} | количество: ${item.quantity} | цена: ${item.unitPrice} €`
+      )
+      .join('\n');
+
+    const text = `
 Нова поръчка от Happy Colors
 
-Име и фамилия: ${cleanCustomer.name}
+Име: ${cleanCustomer.name}
 Имейл: ${cleanCustomer.email}
-Телефон: ${cleanCustomer.phone || '-'}
+Телефон: ${cleanCustomer.phone}
 Град: ${cleanCustomer.city}
-Адрес за доставка: ${cleanCustomer.address}
-Начин на плащане: ${paymentLabel}
+Адрес: ${cleanCustomer.address}
 
-${shippingText}
-
-Бележка: ${cleanCustomer.note || '(няма)'}
+Начин на плащане: Наложен платеж
 
 Поръчани продукти:
-${itemsText || '(няма продукти)'}
+${itemsText}
 
-Обща сума: ${safeTotalPrice.toFixed(2)} лв.
-  `.trim();
+Обща сума: ${safeTotalPrice.toFixed(2)} €
+`.trim();
 
-  await sendEmail({ subject, text });
+    await sendEmail({ subject, text });
+  }
 
-  return { message: 'Поръчката беше изпратена успешно.' };
+  // ----------------------
+  // 8) Response
+  // ----------------------
+
+  return {
+    message:
+      paymentMethod === 'card'
+        ? 'Поръчката е създадена. Очаква се плащане.'
+        : 'Поръчката беше изпратена успешно.',
+    orderId: order._id,
+    paymentId: payment ? payment._id : null,
+  };
 }

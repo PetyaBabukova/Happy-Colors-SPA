@@ -1,3 +1,5 @@
+// server/models/Product.js
+
 import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
@@ -22,6 +24,15 @@ const productSchema = new mongoose.Schema({
     ref: 'Category',
     required: [true, "Category is required!"],
   },
+
+  // ✅ НОВО: Наличност (две стойности)
+  availability: {
+    type: String,
+    enum: ['available', 'unavailable'],
+    default: 'available',
+    required: true,
+  },
+
   feedback: [
     {
       name: String,
