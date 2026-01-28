@@ -12,7 +12,7 @@ export const metadata = {
 export default function Partners() {
   return (
     <>
-      <h1>Да творим заедно</h1>
+      <h1>Искаш ли да творим заедно?</h1>
 
       <p>
         Happy Colors е място за ръчно изработени изделия, създадени с внимание,

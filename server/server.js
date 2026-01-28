@@ -28,20 +28,28 @@ if (!MONGO_URI) {
 
 // Свързваме се с MongoDB Atlas
 mongoose.set('strictQuery', true);
-mongoose.connect(MONGO_URI)
+mongoose
+  .connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
-  .catch(err => {
+  .catch((err) => {
     console.error('❌ Error connecting to MongoDB:', err.message);
     process.exit(1);
   });
 
 app.use(cookieParser());
+
+// ✅ КРИТИЧНО за Stripe webhook: raw body (трябва да е ПРЕДИ express.json())
+app.use('/payments/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:3000', // или добави прод адреса по-късно
-  credentials: true,
-}));
+
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // или добави прод адреса по-късно
+    credentials: true,
+  })
+);
 
 app.use(routes);
 
