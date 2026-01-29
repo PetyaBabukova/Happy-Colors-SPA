@@ -68,7 +68,7 @@ export async function handleOrder(rawData) {
     throw new OrderError('Невалиден начин на плащане.', 400);
   }
 
-  // ✅ Ключово: card НЕ минава през /orders
+  // ✅ card НЕ минава през /orders
   if (paymentMethod === 'card') {
     throw new OrderError(
       'Плащането с карта се обработва през Stripe. Моля използвайте card checkout flow.',
@@ -174,10 +174,10 @@ export async function handleOrder(rawData) {
   const adminSubject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
 
   const itemsText = mappedItems
-    .map(
-      (item) =>
-        `- ${item.title} | количество: ${item.quantity} | цена: ${item.unitPrice} €`
-    )
+    .map((item) => {
+      const productId = item.productId ? String(item.productId) : '-';
+      return `- ${item.title} | ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
+    })
     .join('\n');
 
   const adminText = `
@@ -203,12 +203,15 @@ ${itemsText}
 Обща сума: ${safeTotalPrice.toFixed(2)} €
 `.trim();
 
-  // Admin mail (default to CONTACT_EMAIL)
+  // Admin mail
   try {
     await sendEmail({ subject: adminSubject, text: adminText });
   } catch (e) {
     console.error('Грешка при изпращане на admin имейл:', e);
-    throw new OrderError('Поръчката е записана, но не успяхме да изпратим имейл.', 500);
+    throw new OrderError(
+      'Поръчката е записана, но не успяхме да изпратим имейл.',
+      500
+    );
   }
 
   // Customer mail
@@ -223,9 +226,12 @@ Happy Colors
 `.trim();
 
   try {
-    await sendEmail({ to: cleanCustomer.email, subject: customerSubject, text: customerText });
+    await sendEmail({
+      to: cleanCustomer.email,
+      subject: customerSubject,
+      text: customerText,
+    });
   } catch (e) {
-    // не е фатално за поръчката, но го логваме
     console.error('Грешка при изпращане на customer имейл:', e);
   }
 

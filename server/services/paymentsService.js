@@ -167,7 +167,7 @@ export async function createCardPaymentSession(orderData = {}) {
 
     return { url: session.url };
   } catch (err) {
-    // rollback, за да не остава “висяща” поръчка/плащане ако Stripe session не се създаде
+    // rollback
     try {
       await Order.findByIdAndDelete(order._id);
     } catch {}
@@ -238,7 +238,7 @@ export async function confirmCardPaymentSession(sessionId = '') {
     throw new PaymentError('Сумата в Stripe не съвпада с очакваната.', 400);
   }
 
-  // ✅ Идемпотентност: атомично маркираме Payment като paid само ако не е paid
+  // ✅ Идемпотентност
   const pi = session?.payment_intent;
   const paymentUpdate = {
     status: 'paid',
@@ -252,7 +252,6 @@ export async function confirmCardPaymentSession(sessionId = '') {
     { new: true }
   );
 
-  // Ако updatedPayment == null => вече е обработено (някой друг request е “спечелил”)
   if (!updatedPayment) {
     return {
       message: 'Плащането вече е потвърдено.',
@@ -261,22 +260,20 @@ export async function confirmCardPaymentSession(sessionId = '') {
     };
   }
 
-  // По желание можеш да смениш статус на order
+  // По желание сменяме статус на order
   try {
     order.status = 'paid';
     await order.save();
-  } catch {
-    // ако schema не позволява — игнорираме
-  }
+  } catch {}
 
   // ----------------
   // Emails
   // ----------------
   const itemsText = (order.items || [])
-    .map(
-      (i) =>
-        `- ${i.title} | количество: ${i.quantity} | цена: ${Number(i.unitPrice).toFixed(2)} €`
-    )
+    .map((i) => {
+      const productId = i.productId ? String(i.productId) : '-';
+      return `- ${i.title} | ID: ${productId} | количество: ${i.quantity} | цена: ${Number(i.unitPrice).toFixed(2)} €`;
+    })
     .join('\n');
 
   // 1) ADMIN
