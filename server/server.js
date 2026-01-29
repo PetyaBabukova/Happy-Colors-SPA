@@ -16,6 +16,11 @@ const __dirname = dirname(__filename);
 // Зареждаме .env от същата директория
 dotenv.config({ path: path.join(__dirname, '.env') });
 
+console.log('ENV FILE PATH =>', path.join(__dirname, '.env'));
+console.log('CLIENT_URL =>', process.env.CLIENT_URL);
+console.log('STRIPE_SECRET_KEY exists =>', Boolean(process.env.STRIPE_SECRET_KEY));
+
+
 const app = express();
 const PORT = process.env.PORT || 3030;
 const MONGO_URI = process.env.MONGO_URI;

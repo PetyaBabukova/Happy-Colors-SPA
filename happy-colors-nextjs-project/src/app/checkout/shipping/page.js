@@ -129,35 +129,9 @@ export default function ShippingPage() {
     }
   };
 
-const handleSubmit = (e) => {
-  e.preventDefault();
-  setErrorMessage('');
-  setSuccessMessage('');
+  const persistShippingChoice = () => {
+    if (typeof window === 'undefined') return;
 
-  if (!orderDraft) {
-    setErrorMessage('Липсва информация за поръчката. Моля, опитайте отново.');
-    return;
-  }
-
-  if (!shippingMethod) {
-    setErrorMessage('Моля, изберете начин на доставка.');
-    return;
-  }
-
-  if (shippingMethod === 'econt' && !econtOffice) {
-    setErrorMessage('Моля, изберете офис на Еконт.');
-    return;
-  }
-
-  if (shippingMethod === 'speedy' && !speedyOffice) {
-    setErrorMessage('Моля, изберете офис на Спиди.');
-    return;
-  }
-
-  const paymentMethod = orderDraft.paymentMethod; // 'cod' или 'card'
-
-  // запазваме избора на доставка (ще е полезно и по-късно)
-  if (typeof window !== 'undefined') {
     window.localStorage.setItem(
       SHIPPING_STORAGE_KEY,
       JSON.stringify({
@@ -167,71 +141,136 @@ const handleSubmit = (e) => {
         boxNow,
       })
     );
-  }
+  };
 
-  setIsSubmitting(true);
+  const startCardCheckout = async () => {
+    // 1) пазим избора на доставка (ще ни трябва след плащане)
+    persistShippingChoice();
 
-  // 🔹 ВРЕМЕННО: блокираме картовите плащания с ясно съобщение
-  if (paymentMethod === 'card') {
-    setErrorMessage(
-      'Картовите плащания все още не са активирани. ' +
-        'Моля, изберете „Наложен платеж“.'
-    );
-    setIsSubmitting(false);
-    return;
-  }
-
-  // 🔹 Наложен платеж – нормалният flow към /orders
-  fetch(`${baseURL}/orders`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+    // 2) създаваме Stripe Checkout session
+    const payload = {
       ...orderDraft,
-      paymentMethod: 'cod',
       cartItems,
       totalPrice,
       shippingMethod,
       econtOffice,
       speedyOffice,
       boxNow,
-    }),
-  })
-    .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
-      if (!ok) {
-        throw new Error(
-          data?.message ||
-            'Възникна грешка при финализиране на поръчката.'
-        );
-      }
+    };
 
-      setSuccessMessage(
-        'Благодарим ви за поръчката! Ще се свържем с вас при първа възможност.'
+    const res = await fetch(`${baseURL}/payments/create-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        data?.message || 'Възникна грешка при стартиране на картово плащане.'
       );
+    }
 
-      clearCart();
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('hc_order_draft');
-        window.localStorage.removeItem(SHIPPING_STORAGE_KEY);
+    if (!data?.url) {
+      throw new Error('Липсва URL за плащане от Stripe.');
+    }
+
+    // 3) редирект към Stripe Checkout
+    window.location.href = data.url;
+  };
+
+  const finalizeCodOrder = async () => {
+    // 1) пазим избора на доставка
+    persistShippingChoice();
+
+    // 2) COD → пращаме към /orders (както досега)
+    const res = await fetch(`${baseURL}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...orderDraft,
+        paymentMethod: 'cod',
+        cartItems,
+        totalPrice,
+        shippingMethod,
+        econtOffice,
+        speedyOffice,
+        boxNow,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        data?.message || 'Възникна грешка при финализиране на поръчката.'
+      );
+    }
+
+    setSuccessMessage(
+      'Благодарим ви за поръчката! Ще се свържем с вас при първа възможност.'
+    );
+
+    clearCart();
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('hc_order_draft');
+      window.localStorage.removeItem(SHIPPING_STORAGE_KEY);
+    }
+
+    setTimeout(() => {
+      router.push('/products');
+    }, 4000);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!orderDraft) {
+      setErrorMessage('Липсва информация за поръчката. Моля, опитайте отново.');
+      return;
+    }
+
+    if (!shippingMethod) {
+      setErrorMessage('Моля, изберете начин на доставка.');
+      return;
+    }
+
+    if (shippingMethod === 'econt' && !econtOffice) {
+      setErrorMessage('Моля, изберете офис на Еконт.');
+      return;
+    }
+
+    if (shippingMethod === 'speedy' && !speedyOffice) {
+      setErrorMessage('Моля, изберете офис на Спиди.');
+      return;
+    }
+
+    const paymentMethod = orderDraft.paymentMethod; // 'cod' или 'card'
+
+    setIsSubmitting(true);
+
+    try {
+      if (paymentMethod === 'card') {
+        await startCardCheckout();
+        return; // редиректът ще прекъсне flow-а
       }
 
-      setTimeout(() => {
-        router.push('/products');
-      }, 4000);
-    })
-    .catch((err) => {
-      console.error('Грешка при финализиране на поръчката:', err);
+      await finalizeCodOrder();
+    } catch (err) {
+      console.error('Checkout error:', err);
       setErrorMessage(
         err.message ||
           'Възникна грешка при финализиране на поръчката. Моля, опитайте отново.'
       );
-    })
-    .finally(() => {
       setIsSubmitting(false);
-    });
-};
-
-
+    } finally {
+      // Ако е card и има redirect, този finally може да не се изпълни — нормално.
+      setIsSubmitting(false);
+    }
+  };
 
   if (!orderDraft) {
     // Кратко "loading" състояние, докато се зареди черновата или redirect-не
@@ -248,6 +287,7 @@ const handleSubmit = (e) => {
       {!successMessage && (
         <h1 className={styles.heading}>Избор на доставка</h1>
       )}
+
       {/* Ако има успешно съобщение → показваме САМО него */}
       {successMessage ? (
         <div style={{ marginTop: '40px' }}>
@@ -258,9 +298,7 @@ const handleSubmit = (e) => {
           <form className={styles.form} onSubmit={handleSubmit}>
             <h2 className={styles.subheading}>Къде да изпратим пратката?</h2>
 
-            {errorMessage && (
-              <MessageBox type="error" message={errorMessage} />
-            )}
+            {errorMessage && <MessageBox type="error" message={errorMessage} />}
 
             <div className={styles.field}>
               <label htmlFor="econtOffice">Доставка до офис на Еконт</label>
