@@ -1,7 +1,6 @@
 // server/services/ordersServices.js
 
 import Order from '../models/Order.js';
-import Payment from '../models/Payment.js';
 import { sendEmail } from '../helpers/sendEmail.js';
 
 class OrderError extends Error {
@@ -12,7 +11,7 @@ class OrderError extends Error {
 }
 
 // ----------------------
-// Helpers (временно тук)
+// Helpers
 // ----------------------
 
 function sanitizeText(input) {
@@ -69,7 +68,15 @@ export async function handleOrder(rawData) {
     throw new OrderError('Невалиден начин на плащане.', 400);
   }
 
-  if (paymentMethod === 'cod' && !shippingMethod) {
+  // ✅ Ключово: card НЕ минава през /orders
+  if (paymentMethod === 'card') {
+    throw new OrderError(
+      'Плащането с карта се обработва през Stripe. Моля използвайте card checkout flow.',
+      400
+    );
+  }
+
+  if (!shippingMethod) {
     throw new OrderError('Липсва информация за начина на доставка.', 400);
   }
 
@@ -137,18 +144,18 @@ export async function handleOrder(rawData) {
   const safeTotalPrice = Number(totalPrice || 0);
 
   // ----------------------
-  // 4) Map items (business data)
+  // 4) Map items
   // ----------------------
 
   const mappedItems = cartItems.map((item) => ({
     productId: item._id,
     title: String(item.title || ''),
     quantity: Number(item.quantity || 0),
-    unitPrice: Number(item.price || 0), // очакваме EUR
+    unitPrice: Number(item.price || 0), // EUR
   }));
 
   // ----------------------
-  // 5) Create Order
+  // 5) Create Order (COD only)
   // ----------------------
 
   const order = await Order.create({
@@ -156,46 +163,24 @@ export async function handleOrder(rawData) {
     shipping: cleanShipping,
     items: mappedItems,
     totalPrice: safeTotalPrice,
-    paymentMethod,
+    paymentMethod: 'cod',
     status: 'new',
   });
 
   // ----------------------
-  // 6) Payment handling
+  // 6) Emails (admin + customer)
   // ----------------------
 
-  let payment = null;
+  const adminSubject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
 
-  if (paymentMethod === 'card') {
-    payment = await Payment.create({
-      provider: 'stripe',
-      amount: Math.round(safeTotalPrice * 100), // EUR → cents
-      currency: 'eur',
-      status: 'pending',
-    });
+  const itemsText = mappedItems
+    .map(
+      (item) =>
+        `- ${item.title} | количество: ${item.quantity} | цена: ${item.unitPrice} €`
+    )
+    .join('\n');
 
-    order.paymentId = payment._id;
-    await order.save();
-
-    // ⚠️ НЕ пращаме имейл тук
-    // ще се прати след webhook (payment succeeded)
-  }
-
-  // ----------------------
-  // 7) COD email (only here!)
-  // ----------------------
-
-  if (paymentMethod === 'cod') {
-    const subject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
-
-    const itemsText = mappedItems
-      .map(
-        (item) =>
-          `- ${item.title} | количество: ${item.quantity} | цена: ${item.unitPrice} €`
-      )
-      .join('\n');
-
-    const text = `
+  const adminText = `
 Нова поръчка от Happy Colors
 
 Име: ${cleanCustomer.name}
@@ -206,25 +191,51 @@ export async function handleOrder(rawData) {
 
 Начин на плащане: Наложен платеж
 
+Доставка:
+- Метод: ${cleanShipping.shippingMethod || '-'}
+- Еконт офис: ${cleanShipping.econtOffice || '-'}
+- Спиди офис: ${cleanShipping.speedyOffice || '-'}
+- Box Now: ${cleanShipping.boxNow ? 'Да' : 'Не'}
+
 Поръчани продукти:
 ${itemsText}
 
 Обща сума: ${safeTotalPrice.toFixed(2)} €
 `.trim();
 
-    await sendEmail({ subject, text });
+  // Admin mail (default to CONTACT_EMAIL)
+  try {
+    await sendEmail({ subject: adminSubject, text: adminText });
+  } catch (e) {
+    console.error('Грешка при изпращане на admin имейл:', e);
+    throw new OrderError('Поръчката е записана, но не успяхме да изпратим имейл.', 500);
+  }
+
+  // Customer mail
+  const customerSubject = 'Поръчката ви е приета (Happy Colors)';
+  const customerText = `
+Здравейте, ${cleanCustomer.name}!
+
+Поръчката ви е приета. Ще се свържем с вас при първа възможност.
+
+Поздрави,
+Happy Colors
+`.trim();
+
+  try {
+    await sendEmail({ to: cleanCustomer.email, subject: customerSubject, text: customerText });
+  } catch (e) {
+    // не е фатално за поръчката, но го логваме
+    console.error('Грешка при изпращане на customer имейл:', e);
   }
 
   // ----------------------
-  // 8) Response
+  // 7) Response
   // ----------------------
 
   return {
-    message:
-      paymentMethod === 'card'
-        ? 'Поръчката е създадена. Очаква се плащане.'
-        : 'Поръчката беше изпратена успешно.',
+    message: 'Поръчката беше изпратена успешно.',
     orderId: order._id,
-    paymentId: payment ? payment._id : null,
+    paymentId: null,
   };
 }
