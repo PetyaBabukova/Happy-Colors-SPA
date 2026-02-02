@@ -60,29 +60,29 @@ export function useCheckoutManager() {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Моля, въведете име и фамилия.';
+      newErrors.name = 'Моля, въведете име от 3 до 20 символа';
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Моля, въведете телефон.';
+      newErrors.phone = 'Моля, въведете телефон';
     }
 
     if (!formData.city.trim()) {
-      newErrors.city = 'Моля, въведете град.';
+      newErrors.city = 'Моля, въведете град';
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = 'Моля, въведете адрес за доставка.';
+      newErrors.address = 'Моля, въведете адрес за доставка - минимум 10 символа';
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Моля, въведете e-mail.';
+      newErrors.email = 'Моля, въведете валиден e-mail';
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Моля, въведете валиден e-mail.';
+      newErrors.email = 'Моля, въведете валиден e-mail';
     }
 
     if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
-      newErrors.paymentMethods = 'Моля, изберете начин на плащане.';
+      newErrors.paymentMethods = 'Моля, изберете начин на плащане';
     }
 
     return newErrors;
