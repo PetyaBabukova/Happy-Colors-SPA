@@ -14,7 +14,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
 
-    amount: { type: Number, required: true, min: 0 }, // cents
+    amount: { type: Number, required:  true, min: 0 }, // cents
     currency: { type: String, required: true, default: 'eur' },
 
     status: {
