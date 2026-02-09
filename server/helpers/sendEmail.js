@@ -2,19 +2,30 @@
 
 import nodemailer from 'nodemailer';
 
-export async function sendEmail({ subject, text }) {
+/**
+ * sendEmail({ to?, subject, text })
+ * - Ако "to" липсва -> праща към CONTACT_EMAIL (admin)
+ * - Ако "to" е подаден -> праща към него (например клиент)
+ */
+export async function sendEmail({ to, subject, text }) {
+  const fromEmail = process.env.CONTACT_EMAIL;
+  const pass = process.env.CONTACT_EMAIL_PASS;
+
+  if (!fromEmail || !pass) {
+    throw new Error('Липсват CONTACT_EMAIL / CONTACT_EMAIL_PASS в .env');
+  }
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.CONTACT_EMAIL,
-      pass: process.env.CONTACT_EMAIL_PASS,
+      user: fromEmail,
+      pass,
     },
   });
 
   const mailOptions = {
-    from: process.env.CONTACT_EMAIL,
-    to: process.env.CONTACT_EMAIL,
+    from: fromEmail,
+    to: to || fromEmail,
     subject,
     text,
   };

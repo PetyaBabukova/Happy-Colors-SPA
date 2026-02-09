@@ -4,6 +4,9 @@ import mongoose from 'mongoose';
 
 const paymentSchema = new mongoose.Schema(
   {
+    draftId: { type: mongoose.Schema.Types.ObjectId, ref: 'CheckoutDraft' },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+
     provider: {
       type: String,
       enum: ['stripe'],
@@ -11,8 +14,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Важно: amount е в "най-малката единица" (центове), за да няма floating грешки
-    amount: { type: Number, required: true, min: 0 },
+    amount: { type: Number, required: true, min: 0 }, // cents
     currency: { type: String, required: true, default: 'eur' },
 
     status: {
@@ -22,13 +24,17 @@ const paymentSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-    // Stripe identifiers (за Stripe Checkout)
     stripeSessionId: { type: String, default: '' },
 
-    // Ако някога минем към PaymentIntent flow:
     stripePaymentIntentId: { type: String, default: '' },
   },
   { timestamps: true }
+);
+
+// ✅ 1 Stripe session → 1 Payment
+paymentSchema.index(
+  { stripeSessionId: 1 },
+  { unique: true, sparse: true }
 );
 
 export default mongoose.model('Payment', paymentSchema);

@@ -1,10 +1,15 @@
 // happy-colors-nextjs-project/src/app/checkout/page.js
-
 'use client';
 
 import Link from 'next/link';
 import styles from './checkout.module.css';
-import { useCheckoutManager } from '@/managers/checkoutManager'; 
+import MessageBox from '@/components/ui/MessageBox';
+import {
+  useCheckoutManager,
+  ECONT_OFFICES,
+  SPEEDY_OFFICES,
+} from '@/managers/checkoutManager';
+
 export default function CheckoutPage() {
   const {
     cartItems,
@@ -12,6 +17,15 @@ export default function CheckoutPage() {
     formData,
     errors,
     isSubmitting,
+    shipping,
+    setShippingMethod,
+    setEcontOffice,
+    setSpeedyOffice,
+    isConfirmOpen,
+    closeConfirm,
+    confirmOrder,
+    submitError,
+    submitSuccess,
     handleChange,
     handlePaymentChange,
     handleSubmit,
@@ -29,14 +43,42 @@ export default function CheckoutPage() {
     );
   }
 
+  const paymentLabel =
+    formData.paymentMethods?.[0] === 'card'
+      ? 'С банкова карта'
+      : formData.paymentMethods?.[0] === 'cod'
+      ? 'Наложен платеж'
+      : '-';
+
+  const shippingLabel =
+    shipping.shippingMethod === 'econt'
+      ? `Еконт – ${shipping.econtOffice || '(не е избран офис)'}`
+      : shipping.shippingMethod === 'speedy'
+      ? `Спиди – ${shipping.speedyOffice || '(не е избран офис)'}`
+      : shipping.shippingMethod === 'boxnow'
+      ? 'Box Now'
+      : '-';
+
   return (
     <section className={styles.checkoutContainer}>
       <h1 className={styles.heading}>Завършване на поръчката</h1>
 
       <div className={styles.columns}>
-        {/* Лява колона – данни за клиента */}
+        {/* Лява колона – данни за клиента + доставка */}
         <form className={styles.form} onSubmit={handleSubmit}>
           <h2 className={styles.subheading}>Данни за доставка</h2>
+
+          {submitError && (
+            <div style={{ marginBottom: '12px' }}>
+              <MessageBox type="error" message={submitError} />
+            </div>
+          )}
+
+          {submitSuccess && (
+            <div style={{ marginBottom: '12px' }}>
+              <MessageBox type="success" message={submitSuccess} />
+            </div>
+          )}
 
           <div className={styles.field}>
             <label htmlFor="name">
@@ -108,6 +150,96 @@ export default function CheckoutPage() {
             {errors.address && <p className={styles.error}>{errors.address}</p>}
           </div>
 
+          {/* ---- ДОСТАВКА (ново) ---- */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>
+              Начин на доставка <span className={styles.requiredStar}>*</span>
+            </span>
+
+            <div className={styles.radioGroup}>
+              <label className={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="shippingMethod"
+                  checked={shipping.shippingMethod === 'econt'}
+                  onChange={() => setShippingMethod('econt')}
+                />
+                <span>Еконт (офис)</span>
+              </label>
+
+              <label className={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="shippingMethod"
+                  checked={shipping.shippingMethod === 'speedy'}
+                  onChange={() => setShippingMethod('speedy')}
+                />
+                <span>Спиди (офис)</span>
+              </label>
+
+              <label className={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="shippingMethod"
+                  checked={shipping.shippingMethod === 'boxnow'}
+                  onChange={() => setShippingMethod('boxnow')}
+                />
+                <span>Box Now</span>
+              </label>
+            </div>
+
+            {errors.shippingMethod && (
+              <p className={styles.error}>{errors.shippingMethod}</p>
+            )}
+          </div>
+
+          {shipping.shippingMethod === 'econt' && (
+            <div className={styles.field}>
+              <label htmlFor="econtOffice">
+                Офис на Еконт <span className={styles.requiredStar}>*</span>
+              </label>
+              <select
+                id="econtOffice"
+                value={shipping.econtOffice}
+                onChange={(e) => setEcontOffice(e.target.value)}
+              >
+                <option value="">Изберете офис на Еконт</option>
+                {ECONT_OFFICES.map((office) => (
+                  <option key={office} value={office}>
+                    {office}
+                  </option>
+                ))}
+              </select>
+              {errors.econtOffice && (
+                <p className={styles.error}>{errors.econtOffice}</p>
+              )}
+            </div>
+          )}
+
+          {shipping.shippingMethod === 'speedy' && (
+            <div className={styles.field}>
+              <label htmlFor="speedyOffice">
+                Офис на Спиди <span className={styles.requiredStar}>*</span>
+              </label>
+              <select
+                id="speedyOffice"
+                value={shipping.speedyOffice}
+                onChange={(e) => setSpeedyOffice(e.target.value)}
+              >
+                <option value="">Изберете офис на Спиди</option>
+                {SPEEDY_OFFICES.map((office) => (
+                  <option key={office} value={office}>
+                    {office}
+                  </option>
+                ))}
+              </select>
+              {errors.speedyOffice && (
+                <p className={styles.error}>{errors.speedyOffice}</p>
+              )}
+            </div>
+          )}
+
+          {/* ---- Плащане ---- */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на плащане <span className={styles.requiredStar}>*</span>
@@ -149,12 +281,8 @@ export default function CheckoutPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            className={styles.submitBtn}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Изпращане...' : 'Потвърди поръчката'}
+          <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+            {isSubmitting ? 'Изпращане...' : 'Продължи'}
           </button>
 
           <p className={styles.requiredNote}>
@@ -163,7 +291,7 @@ export default function CheckoutPage() {
           </p>
         </form>
 
-        {/* Дясна колона – обобщение на поръчката */}
+        {/* Дясна колона – обобщение */}
         <aside className={styles.summary}>
           <h2 className={styles.subheading}>Вашата поръчка</h2>
 
@@ -193,6 +321,79 @@ export default function CheckoutPage() {
           </Link>
         </aside>
       </div>
+
+      {/* ---------- MODAL STEP 2 ---------- */}
+      {isConfirmOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <div className={styles.modal}>
+            <h2 className={styles.modalTitle}>Моля проверете данните за доставка</h2>
+
+            <div className={styles.modalBody}>
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Име:</span>
+                <span className={styles.modalValue}>{formData.name}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Телефон:</span>
+                <span className={styles.modalValue}>{formData.phone}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>E-mail:</span>
+                <span className={styles.modalValue}>{formData.email}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Град:</span>
+                <span className={styles.modalValue}>{formData.city}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Адрес:</span>
+                <span className={styles.modalValue}>{formData.address}</span>
+              </div>
+
+              {formData.note?.trim() ? (
+                <div className={styles.modalRow}>
+                  <span className={styles.modalLabel}>Бележка:</span>
+                  <span className={styles.modalValue}>{formData.note}</span>
+                </div>
+              ) : null}
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Доставка:</span>
+                <span className={styles.modalValue}>{shippingLabel}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Плащане:</span>
+                <span className={styles.modalValue}>{paymentLabel}</span>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalBtnSecondary}
+                onClick={closeConfirm}
+                disabled={isSubmitting}
+              >
+                Редактирай
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalBtnPrimary}
+                onClick={confirmOrder}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Обработваме...' : 'Потвърждавам поръчката'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

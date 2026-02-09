@@ -1,5 +1,4 @@
-// server/helpers/stripeClient.js
-
+// server/utils/stripeClient.js
 import Stripe from 'stripe';
 
 let stripe = null;
