@@ -1,3 +1,5 @@
+// happy-colors-nextjs-project/src/components/cart/CartItem.jsx
+
 'use client';
 
 import { useCart } from '@/context/CartContext';
