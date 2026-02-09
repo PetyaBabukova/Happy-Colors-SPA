@@ -4,6 +4,9 @@ import mongoose from 'mongoose';
 
 const paymentSchema = new mongoose.Schema(
   {
+    draftId: { type: mongoose.Schema.Types.ObjectId, ref: 'CheckoutDraft' },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+
     provider: {
       type: String,
       enum: ['stripe'],
@@ -28,7 +31,8 @@ const paymentSchema = new mongoose.Schema(
     // Ако някога минем към PaymentIntent flow:
     stripePaymentIntentId: { type: String, default: '' },
   },
-  { timestamps: true }
+  { timestamps: true },
+
 );
 
 export default mongoose.model('Payment', paymentSchema);
