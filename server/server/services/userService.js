@@ -3,12 +3,20 @@ import bcrypt from 'bcrypt';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
 
+// Премахва HTML тагове и подрязва входни данни
+function sanitizeString(input) {
+  return String(input ?? '')
+    .replace(/<\/?[^>]+(>|$)/g, '')
+    .trim();
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'secret'; // за тестове може да остане така
 
 export async function loginUser(email, password) {
+    // Санитираме имейла
+    const cleanEmail = sanitizeString(email);
 
-
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
         console.log('❌ Няма такъв потребител!');
         throw new Error('Invalid credentials');
@@ -50,7 +58,11 @@ export async function loginUser(email, password) {
 
 
 export async function registerUser({ username, email, password }) {
-    const existing = await User.findOne({ email });
+    // Санитираме входните полета (без паролата) и проверяваме уникалност
+    const cleanEmail = sanitizeString(email);
+    const cleanUsername = sanitizeString(username);
+
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
         throw new Error('Този потребител вече съществува!');
     }
@@ -60,7 +72,7 @@ export async function registerUser({ username, email, password }) {
         minLowercase: 1,
         minUppercase: 1,
         minNumbers: 1,
-        minSymbols: 1
+        minSymbols: 1,
     });
 
     if (!isStrong) {
@@ -69,14 +81,14 @@ export async function registerUser({ username, email, password }) {
         );
     }
 
-    const user = new User({ username, email, password }); // ❗ без предварително хеширане
+    const user = new User({ username: cleanUsername, email: cleanEmail, password }); // ❗ без предварително хеширане
 
     await user.save();
 
     return {
         _id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
     };
 }
 

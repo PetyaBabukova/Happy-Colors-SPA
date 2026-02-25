@@ -49,9 +49,44 @@ app.use('/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+// Конфигурация на CORS
+//
+// За да не е твърдо дефиниран само localhost, разрешаваме множество
+// домейни чрез променлива на средата CLIENT_URL. Ако CLIENT_URL е
+// дефинирана, тя може да съдържа един или няколко домейна,
+// разделени със запетаи (например "http://localhost:3000,https://example.com").
+// Ако няма зададена стойност, приемаме по подразбиране само localhost.
 app.use(
   cors({
-    origin: 'http://localhost:3000', // или добави прод адреса по-късно
+    origin: (origin, callback) => {
+      // Прочитаме списъка от позволени домейни
+      const envList = process.env.CLIENT_URL || '';
+      const allowedOrigins = envList
+        .split(',')
+        .map((o) => o.trim())
+        .filter((o) => o.length > 0);
+
+      // Ако няма origin (напр. при сървър към сървър заявка) – позволяваме
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Ако няма конфигурирани домейни, разрешаваме localhost
+      if (allowedOrigins.length === 0) {
+        if (origin === 'http://localhost:3000') {
+          return callback(null, true);
+        }
+        return callback(new Error('CORS не е позволен за този домейн'), false);
+      }
+
+      // Ако origin присъства в списъка – позволяваме
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // В противен случай – отказ
+      return callback(new Error('CORS не е позволен за този домейн'), false);
+    },
     credentials: true,
   })
 );
