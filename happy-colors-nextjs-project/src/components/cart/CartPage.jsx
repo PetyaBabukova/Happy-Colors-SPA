@@ -36,7 +36,7 @@ export default function CartPage() {
       </div>
 
       <div className={styles.summary}>
-        <p>Обща сума: <strong>{getTotalPrice().toFixed(2)} лв.</strong></p>
+        <p>Обща сума: <strong>{getTotalPrice().toFixed(2)} €</strong></p>
         <button onClick={clearCart} className={styles.clearBtn}>
           Изчисти количката
         </button>

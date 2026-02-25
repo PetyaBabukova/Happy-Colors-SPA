@@ -21,7 +21,7 @@ export default function CartItem({ item }) {
 
       <div className={styles.details}>
         <h4>{item.title}</h4>
-        <p>Цена: {item.price.toFixed(2)} лв.</p>
+        <p>Цена: {item.price.toFixed(2)} €</p>
 
         {/* ➕➖ Добавени бутони за количество */}
         <div className={styles.qtyControls}>
@@ -43,7 +43,7 @@ export default function CartItem({ item }) {
           </button>
         </div>
 
-        <p>Общо: {(item.price * item.quantity).toFixed(2)} лв.</p>
+        <p>Общо: {(item.price * item.quantity).toFixed(2)} €</p>
       </div>
 
       <button
