@@ -242,6 +242,5 @@ Happy Colors
   return {
     message: 'Поръчката беше изпратена успешно.',
     orderId: order._id,
-    paymentId: null,
   };
 }

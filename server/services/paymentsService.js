@@ -90,7 +90,7 @@ export async function finalizePaidCheckoutSession(session) {
     throw new PaymentError('Липсва metadata (paymentId/draftId) в Stripe session.', 500);
   }
 
-  // 1) Плащане
+  // 1) Payment
   const payment = await Payment.findById(paymentId);
   if (!payment) throw new PaymentError('Payment не е намерен.', 404);
 
@@ -103,7 +103,7 @@ export async function finalizePaidCheckoutSession(session) {
   const draft = await CheckoutDraft.findById(draftId).lean();
   if (!draft) throw new PaymentError('Draft не е намерен.', 404);
 
-  // 3) Сума/валута checks
+  // 3) Amount/Currency checks
   const sessionAmountTotal = Number(session?.amount_total ?? 0); // cents
   const sessionCurrency = String(session?.currency ?? '').toLowerCase();
 
@@ -117,16 +117,15 @@ export async function finalizePaidCheckoutSession(session) {
     throw new PaymentError('Сумата в Stripe не съвпада с очакваната.', 400);
   }
 
-  // 4) Ако вече имаме Order за този payment → връщаме (идемпотентно)
+  // 4) Ако вече има Order за този payment → идемпотентно връщаме
   const existingOrder = await Order.findOne({ paymentId: payment._id }).lean();
   if (existingOrder) {
-    // гарантираме, че payment има orderId и е paid
     if (payment.status !== 'paid' || !payment.orderId) {
       payment.status = 'paid';
       payment.orderId = existingOrder._id;
       payment.stripeSessionId = sessionId;
-      const pi = session?.payment_intent;
-      if (pi) payment.stripePaymentIntentId = String(pi);
+      const pi0 = session?.payment_intent;
+      if (pi0) payment.stripePaymentIntentId = String(pi0);
       await payment.save();
     }
 
@@ -137,8 +136,7 @@ export async function finalizePaidCheckoutSession(session) {
     };
   }
 
-  // 5) Опитваме атомично да маркираме payment като paid (ако не е paid)
-  // Ако някой друг вече е “спечелил”, updatedPayment ще е null.
+  // 5) Маркираме payment paid (атомично)
   const pi = session?.payment_intent;
   const paymentUpdate = {
     status: 'paid',
@@ -152,23 +150,20 @@ export async function finalizePaidCheckoutSession(session) {
     { new: true }
   );
 
-  // Ако вече е paid, продължаваме към “recovery” сценарий: платено без order
-  // (например crash между paid и order creation)
   const paymentForOrder = updatedPayment || payment;
 
-  // 6) Създаваме Order (само ако няма)
+  // 6) Create Order
   const createdOrder = await Order.create({
     customer: draft.customer,
     shipping: draft.shipping,
     items: draft.items,
     totalPrice: draft.totalPrice,
     paymentMethod: 'card',
-    // ✅ ВАЖНО: нямаш 'paid' в enum-а → използваме 'processing'
     status: 'processing',
     paymentId: paymentForOrder._id,
   });
 
-  // 7) Записваме orderId в payment (дори да е бил paid от друг поток)
+  // 7) Link orderId to payment
   await Payment.findByIdAndUpdate(paymentId, {
     $set: {
       orderId: createdOrder._id,
@@ -183,7 +178,7 @@ export async function finalizePaidCheckoutSession(session) {
     await CheckoutDraft.findByIdAndUpdate(draftId, { $set: { status: 'used' } });
   } catch {}
 
-  // 9) Emails (admin + customer) + продукт ID
+  // 9) Emails
   const itemsText = (draft.items || [])
     .map(
       (i) =>
@@ -252,6 +247,7 @@ Happy Colors
 export async function createCardPaymentSession(orderData = {}) {
   const stripeSecretKey = requireEnv('STRIPE_SECRET_KEY');
   const clientUrl = requireEnv('CLIENT_URL');
+
   const stripe = new Stripe(stripeSecretKey);
 
   const {
@@ -314,7 +310,7 @@ export async function createCardPaymentSession(orderData = {}) {
     status: 'open',
   });
 
-  // 2) Payment
+  // 2) Payment (pending) — без sessionId на този етап
   const payment = await Payment.create({
     provider: 'stripe',
     amount: Math.round(safeTotalPrice * 100),
@@ -337,7 +333,13 @@ export async function createCardPaymentSession(orderData = {}) {
       },
     });
 
-    payment.stripeSessionId = String(session.id);
+    // ✅ CRITICAL FIX: никога не допускаме празен stripeSessionId
+    const sessionId = String(session?.id || '').trim();
+    if (!sessionId) {
+      throw new PaymentError('Stripe не върна валиден session id.', 500);
+    }
+
+    payment.stripeSessionId = sessionId;
     await payment.save();
 
     return { url: session.url };

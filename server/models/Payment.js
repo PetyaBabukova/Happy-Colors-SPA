@@ -14,7 +14,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
 
-    amount: { type: Number, required:  true, min: 0 }, // cents
+    amount: { type: Number, required: true, min: 0 }, // cents
     currency: { type: String, required: true, default: 'eur' },
 
     status: {
@@ -24,17 +24,20 @@ const paymentSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-    stripeSessionId: { type: String, default: '' },
-
-    stripePaymentIntentId: { type: String, default: '' },
+    // ✅ без default '' (да може полето да липсва)
+    stripeSessionId: { type: String, required: false },
+    stripePaymentIntentId: { type: String, required: false },
   },
   { timestamps: true }
 );
 
-// ✅ 1 Stripe session → 1 Payment
+// ✅ 1 Stripe session → 1 Payment (само ако е реален непразен string)
 paymentSchema.index(
   { stripeSessionId: 1 },
-  { unique: true, sparse: true }
+  {
+    unique: true,
+    partialFilterExpression: { stripeSessionId: { $type: 'string', $ne: '' } },
+  }
 );
 
 export default mongoose.model('Payment', paymentSchema);

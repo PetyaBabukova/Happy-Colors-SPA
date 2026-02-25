@@ -47,10 +47,11 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
+    // ✅ важно: без default:null, за да може полето да липсва при COD
     paymentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Payment',
-      default: null,
+      required: false,
     },
 
     items: { type: [orderItemSchema], required: true },
@@ -62,10 +63,13 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ КЛЮЧОВО: 1 payment → 1 order (COD няма paymentId → затова sparse)
+// ✅ 1 payment → 1 order, но само ако paymentId е реален ObjectId
 orderSchema.index(
   { paymentId: 1 },
-  { unique: true, sparse: true }
+  {
+    unique: true,
+    partialFilterExpression: { paymentId: { $type: 'objectId' } },
+  }
 );
 
 export default mongoose.model('Order', orderSchema);
