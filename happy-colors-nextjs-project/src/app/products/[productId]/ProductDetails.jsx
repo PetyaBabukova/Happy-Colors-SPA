@@ -39,7 +39,7 @@ export default function ProductDetails({ product }) {
 	return (
 		<section className={styles.productDetails}>
 			<div className={styles.productDescriptionContainer}>
-				<h2>{product.title}</h2>
+				<h1>{product.title}</h1>
 
 				<div className={styles.reviewContainer}>
 					<div className={styles.starsEmpty}>
