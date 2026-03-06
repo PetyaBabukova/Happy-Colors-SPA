@@ -15,17 +15,25 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: [true, "Price is required!"],
   },
+
+  // ✅ Старото поле го пазим, за да не счупим старите продукти
   imageUrl: {
     type: String,
-    required: [true, "Image URL is required!"],
+    default: '',
   },
+
+  // ✅ Ново поле за много снимки
+  imageUrls: {
+    type: [String],
+    default: [],
+  },
+
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: [true, "Category is required!"],
   },
 
-  // ✅ НОВО: Наличност (две стойности)
   availability: {
     type: String,
     enum: ['available', 'unavailable'],
@@ -40,12 +48,14 @@ const productSchema = new mongoose.Schema({
       rating: Number,
     }
   ],
+
   accessories: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Accessory'
     }
   ],
+
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

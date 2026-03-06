@@ -69,8 +69,29 @@
   margin-bottom: 0.8em;
 }
 
+.imagePreviewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.imagePreviewItem button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.5em;
+  width: fit-content;
+  padding: 0.4em 0.2em;
+  color: var(--dark-orange);
+}
 
 
+.imagePreviewItem {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5em;}
 
 
 

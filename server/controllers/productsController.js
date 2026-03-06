@@ -11,6 +11,8 @@ import {
    
 } from '../services/productsServices.js';
 
+import { deleteProductImage } from '../services/productImagesService.js';
+
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -103,6 +105,30 @@ router.put('/:productId', async (req, res) => {
     );
 
     res.status(200).json(updatedProduct);
+  } catch (err) {
+    res.status(403).json({ message: err.message });
+  }
+});
+
+// 🟢 DELETE PRODUCT IMAGE
+router.delete('/:productId/image', async (req, res) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Missing authentication token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    const { imageUrl } = req.body;
+
+    const result = await deleteProductImage(
+      req.params.productId,
+      imageUrl,
+      decoded._id
+    );
+
+    res.status(200).json(result);
   } catch (err) {
     res.status(403).json({ message: err.message });
   }

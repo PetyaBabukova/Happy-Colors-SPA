@@ -3,31 +3,77 @@
 import Product from '../models/Product.js';
 import { deleteImageFromGCS } from '../helpers/gcsImageHelper.js';
 
+// Helper: нормализира снимките така, че:
+// - стар продукт с imageUrl да продължи да работи
+// - нов продукт с imageUrls да работи коректно
+function normalizeProductImages(product) {
+  const normalizedImageUrls = Array.isArray(product.imageUrls)
+    ? product.imageUrls.filter(Boolean)
+    : [];
+
+  if (normalizedImageUrls.length === 0 && product.imageUrl) {
+    normalizedImageUrls.push(product.imageUrl);
+  }
+
+  return {
+    ...product,
+    imageUrls: normalizedImageUrls,
+    imageUrl: normalizedImageUrls[0] || product.imageUrl || '',
+  };
+}
+
 // 🟢 GET
 export async function getAllProducts(categoryName) {
   const products = await Product.find()
     .populate('category', 'name')
     .lean();
 
+  const normalizedProducts = products.map(normalizeProductImages);
+
   if (categoryName) {
-    return products.filter((p) => p.category?.name === categoryName);
+    return normalizedProducts.filter((p) => p.category?.name === categoryName);
   }
 
-  return products;
+  return normalizedProducts;
 }
 
 // 🟢 CREATE
 export async function createProduct(data) {
-  const product = new Product(data);
-  return await product.save();
+  const normalizedImageUrls = Array.isArray(data.imageUrls)
+    ? data.imageUrls.filter(Boolean)
+    : [];
+
+  const fallbackImageUrl = data.imageUrl || normalizedImageUrls[0] || '';
+
+  const productData = {
+    ...data,
+    imageUrl: fallbackImageUrl,
+    imageUrls:
+      normalizedImageUrls.length > 0
+        ? normalizedImageUrls
+        : fallbackImageUrl
+          ? [fallbackImageUrl]
+          : [],
+  };
+
+  const product = new Product(productData);
+  const savedProduct = await product.save();
+
+  return normalizeProductImages(savedProduct.toObject());
 }
 
 // 🟢 GET BY ID
 export async function getProductById(productId) {
-  return await Product.findById(productId).lean();
+  const product = await Product.findById(productId).lean();
+
+  if (!product) {
+    return null;
+  }
+
+  return normalizeProductImages(product);
 }
 
-// 🟢 EDIT – тук добавяме логика за триене на старото изображение
+// 🟢 EDIT – добавяме новите изображения към съществуващите
 export async function editProduct(productId, productData, userId) {
   const product = await Product.findById(productId);
 
@@ -39,21 +85,34 @@ export async function editProduct(productId, productData, userId) {
     throw new Error('Нямате права да редактирате този продукт.');
   }
 
-  const oldImageUrl = product.imageUrl;
-  const newImageUrl = productData.imageUrl;
+  const currentImageUrls = Array.isArray(product.imageUrls)
+    ? product.imageUrls.filter(Boolean)
+    : product.imageUrl
+      ? [product.imageUrl]
+      : [];
 
-  // Ако в заявката има imageUrl И то е различно от текущото – трием старото изображение
-  if (newImageUrl && oldImageUrl && oldImageUrl !== newImageUrl) {
-    await deleteImageFromGCS(oldImageUrl);
-  }
+  const incomingImageUrls = Array.isArray(productData.imageUrls)
+    ? productData.imageUrls.filter(Boolean)
+    : productData.imageUrl
+      ? [productData.imageUrl]
+      : [];
 
-  Object.assign(product, productData);
+  // ✅ Вариант B: новите снимки се добавят към старите
+  const mergedImageUrls = [...new Set([...currentImageUrls, ...incomingImageUrls])];
+
+  const normalizedProductData = {
+    ...productData,
+    imageUrls: mergedImageUrls,
+    imageUrl: mergedImageUrls[0] || '',
+  };
+
+  Object.assign(product, normalizedProductData);
   await product.save();
 
-  return product;
+  return normalizeProductImages(product.toObject());
 }
 
-// 🟢 DELETE – вече работи с триене и в GCS
+// 🟢 DELETE – трием всички изображения от GCS
 export async function deleteProduct(productId, userId) {
   const product = await Product.findById(productId);
 
@@ -65,12 +124,16 @@ export async function deleteProduct(productId, userId) {
     throw new Error('Нямате права да изтриете този продукт.');
   }
 
-  // 1) трием изображението, ако има такова
-  if (product.imageUrl) {
-    await deleteImageFromGCS(product.imageUrl);
+  const imageUrlsToDelete = Array.isArray(product.imageUrls) && product.imageUrls.length > 0
+    ? product.imageUrls.filter(Boolean)
+    : product.imageUrl
+      ? [product.imageUrl]
+      : [];
+
+  for (const imageUrl of imageUrlsToDelete) {
+    await deleteImageFromGCS(imageUrl);
   }
 
-  // 2) трием продукта от базата
   await Product.findByIdAndDelete(productId);
 
   return { message: 'Продуктът беше изтрит успешно.' };

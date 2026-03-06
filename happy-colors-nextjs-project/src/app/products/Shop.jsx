@@ -1,3 +1,5 @@
+//happy-colors-nextjs-project/src/app/products/Shop.jsx
+
 'use client';
 
 import styles from './shop.module.css';
