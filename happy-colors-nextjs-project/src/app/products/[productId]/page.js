@@ -1,5 +1,5 @@
 
-// happy-colors-nextjs-project/src/app/products/%5BproductId%5D/page.js
+// happy-colors-nextjs-project/src/app/products/[productId]/page.js
 import ProductDetails from './ProductDetails';
 import baseURL from '@/config';
 

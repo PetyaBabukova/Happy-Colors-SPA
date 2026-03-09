@@ -12,10 +12,18 @@ export async function onCreateProductSubmit(
   triggerCategoriesReload
 ) {
   try {
+    const normalizedImageUrls = Array.isArray(formValues.imageUrls)
+      ? formValues.imageUrls.filter(Boolean)
+      : formValues.imageUrl
+        ? [formValues.imageUrl]
+        : [];
+
     const payload = {
       ...formValues,
       owner: user._id,
-      availability: formValues.availability || 'available', // ✅
+      imageUrls: normalizedImageUrls,
+      imageUrl: normalizedImageUrls[0] || '',
+      availability: formValues.availability || 'available',
     };
 
     const res = await fetch(`${baseURL}/products`, {
@@ -62,9 +70,17 @@ export async function onEditProductSubmit(
   productId
 ) {
   try {
+    const normalizedImageUrls = Array.isArray(formValues.imageUrls)
+      ? formValues.imageUrls.filter(Boolean)
+      : formValues.imageUrl
+        ? [formValues.imageUrl]
+        : [];
+
     const payload = {
       ...formValues,
-      availability: formValues.availability || 'available', // ✅
+      imageUrls: normalizedImageUrls,
+      imageUrl: normalizedImageUrls[0] || '',
+      availability: formValues.availability || 'available',
     };
 
     const res = await fetch(`${baseURL}/products/${productId}`, {
@@ -117,4 +133,24 @@ export async function getProducts(categoryName) {
     console.error(err.message);
     return [];
   }
+}
+
+
+export async function deleteProductImage(productId, imageUrl) {
+  const res = await fetch(`${baseURL}/products/${productId}/image`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ imageUrl }),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    throw new Error(result.message || 'Грешка при изтриване на изображение');
+  }
+
+  return result;
 }

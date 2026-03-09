@@ -1,6 +1,7 @@
 // happy-colors-nextjs-project/src/app/products/create/page.js
 
 'use client';
+
 import ProductForm from '@/components/products/ProductForm';
 import { onCreateProductSubmit } from '@/managers/productsManager';
 import { useAuth } from '@/context/AuthContext';
@@ -18,8 +19,7 @@ export default function CreateProductPage() {
         category: '',
         price: '',
         imageUrl: '',
-
-        // ✅ НОВО
+        imageUrls: [],
         availability: 'available',
       }}
       onSubmit={(values, setSuccess, setError, setInvalidFields, router) =>

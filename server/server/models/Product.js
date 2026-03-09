@@ -40,12 +40,20 @@ const productSchema = new mongoose.Schema({
       rating: Number,
     }
   ],
-  accessories: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Accessory'
-    }
-  ],
+  /*
+   * accessories
+   *
+   * Полето за аксесоари се добавя като референции към бъдещ модел Accessory.
+   * Тъй като функционалността за аксесоари е временно отложена,
+   * закоментираме това поле, за да не създава проблеми при валидиране
+   * или попълване на модели. При нужда може лесно да бъде върнато.
+   */
+  // accessories: [
+  //   {
+  //     type: mongoose.Schema.Types.ObjectId,
+  //     ref: 'Accessory',
+  //   },
+  // ],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

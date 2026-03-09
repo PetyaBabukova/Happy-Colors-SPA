@@ -1,13 +1,21 @@
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
 import { slugify } from '../utils/slugify.js';
-import mongoose from 'mongoose'; 
+import mongoose from 'mongoose';
+
+// Санитира входните текстови полета, премахвайки HTML тагове
+function sanitizeString(input) {
+  return String(input ?? '')
+    .replace(/<\/?[^>]+(>|$)/g, '')
+    .trim();
+}
 
 
 // 👉 Създаване на категория със slug
 export async function createCategory(data) {
-  const slug = slugify(data.name);
-  const category = new Category({ ...data, slug });
+  const cleanName = sanitizeString(data.name);
+  const slug = slugify(cleanName);
+  const category = new Category({ ...data, name: cleanName, slug });
   return await category.save();
 }
 
@@ -83,10 +91,12 @@ export async function getCategoryById(categoryId) {
 }
 
 export async function updateCategory(categoryId, data) {
-  const slug = slugify(data.name);
+  // Санитираме името и генерираме slug
+  const cleanName = sanitizeString(data.name);
+  const slug = slugify(cleanName);
   return await Category.findByIdAndUpdate(
     categoryId,
-    { ...data, slug },
+    { ...data, name: cleanName, slug },
     { new: true, runValidators: true }
   );
 }

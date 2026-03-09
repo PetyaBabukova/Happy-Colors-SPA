@@ -1,3 +1,5 @@
+//happy-colors-nextjs-project/src/app/products/page.js
+
 import { getProducts } from '@/managers/productsManager';
 import Shop from './Shop';
 

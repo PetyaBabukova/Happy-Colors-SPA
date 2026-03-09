@@ -2,6 +2,7 @@
 
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { isOwner } from '@/utils/isOwner';
@@ -15,18 +16,35 @@ export default function ProductDetails({ product }) {
 	const canEdit = isOwner(product, user);
 	const router = useRouter();
 
+	const imageUrls = useMemo(() => {
+		if (Array.isArray(product?.imageUrls) && product.imageUrls.length > 0) {
+			return product.imageUrls.filter(Boolean);
+		}
+
+		if (product?.imageUrl) {
+			return [product.imageUrl];
+		}
+
+		return [];
+	}, [product]);
+
+	const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
 	const isAvailable = product?.availability !== 'unavailable';
 
 	const availabilityLabel = isAvailable
 		? 'Продукта е наличен и можете да го поръчате'
 		: 'Продукта не е наличен, ако желаете пратете запитване';
 
+	const mainImage = imageUrls[currentImageIndex] || product.imageUrl || '';
+	const hasMultipleImages = imageUrls.length > 1;
+
 	const handleAddToCart = () => {
 		addToCart({
 			_id: product._id,
 			title: product.title,
 			price: product.price,
-			image: product.imageUrl,
+			image: mainImage,
 		});
 
 		router.push('/cart');
@@ -36,10 +54,22 @@ export default function ProductDetails({ product }) {
 		router.push(`/contacts?productId=${product._id}`);
 	};
 
+	const showPrevImage = () => {
+		setCurrentImageIndex((prevIndex) =>
+			prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
+		);
+	};
+
+	const showNextImage = () => {
+		setCurrentImageIndex((prevIndex) =>
+			prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
+		);
+	};
+
 	return (
 		<section className={styles.productDetails}>
 			<div className={styles.productDescriptionContainer}>
-				<h2>{product.title}</h2>
+				<h1>{product.title}</h1>
 
 				<div className={styles.reviewContainer}>
 					<div className={styles.starsEmpty}>
@@ -58,14 +88,12 @@ export default function ProductDetails({ product }) {
 					<p>{product.description}</p>
 				</div>
 
-				{/* Наличност */}
 				<p className={isAvailable ? styles.available : styles.unavailable}>
 					<b>Наличност:</b> {availabilityLabel}
 				</p>
 
 				<p><b>Цена:</b> {product.price} €</p>
 
-				{/* Действия */}
 				<div className={styles.actionButtonsContainer}>
 					{isAvailable ? (
 						<button onClick={handleAddToCart} className={styles.actionBtn}>
@@ -95,7 +123,31 @@ export default function ProductDetails({ product }) {
 
 			<div className={styles.productDetailsImagesContainer}>
 				<div className={styles.productDetailsMainImage}>
-					<img src={product.imageUrl} alt={product.title} />
+					{hasMultipleImages && (
+						<button
+							type="button"
+							onClick={showPrevImage}
+							aria-label="Предишно изображение"
+							    className={`${styles.imageNavBtn} ${styles.imageNavBtnLeft}`}
+
+						>
+							‹
+						</button>
+					)}
+
+					{mainImage && <img src={mainImage} alt={product.title} />}
+
+					{hasMultipleImages && (
+						<button
+							type="button"
+							onClick={showNextImage}
+							aria-label="Следващо изображение"
+							    className={`${styles.imageNavBtn} ${styles.imageNavBtnRight}`}
+
+						>
+							›
+						</button>
+					)}
 				</div>
 			</div>
 		</section>

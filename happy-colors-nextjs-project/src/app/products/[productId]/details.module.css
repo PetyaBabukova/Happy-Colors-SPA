@@ -119,10 +119,11 @@
 }
 
 .productDetailsMainImage {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: cover;
   border-radius: 0.5em;
+  overflow: hidden;
 }
 
 .connectedProductsContainer {
@@ -172,6 +173,41 @@
   color: var(--dark-orange);
   font-weight: 600;
 }
+
+.imageNavBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+}
+
+.imageNavBtnLeft {
+  left: 0.5rem;
+}
+
+.imageNavBtnRight {
+  right: 0.5rem;
+}
+
+.imageNavBtn:hover,
+.imageNavBtn:focus,
+.imageNavBtn:active {
+  background: transparent;
+  color: var(--dark-orange);
+  box-shadow: none;
+}
+
 
 
 @media (max-width: 768px) {

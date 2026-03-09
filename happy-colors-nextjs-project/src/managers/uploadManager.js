@@ -1,8 +1,6 @@
 // src/managers/uploadManager.js
 
-// Тази функция се вика от ProductForm.jsx при избор на файл.
-// Тя качва файла към Next API /api/upload-image и връща публичния URL.
-
+// Качва едно изображение към Next API /api/upload-image и връща публичния URL.
 export async function uploadImageToBucket(file) {
   if (!file) {
     throw new Error('Не е избран файл.');
@@ -53,4 +51,20 @@ export async function uploadImageToBucket(file) {
   }
 
   return data.imageUrl;
+}
+
+// Качва много изображения последователно през браузъра и връща масив от URL-и.
+export async function uploadImagesToBucket(files = []) {
+  if (!Array.isArray(files) || files.length === 0) {
+    return [];
+  }
+
+  const uploadedImageUrls = [];
+
+  for (const file of files) {
+    const imageUrl = await uploadImageToBucket(file);
+    uploadedImageUrls.push(imageUrl);
+  }
+
+  return uploadedImageUrls;
 }

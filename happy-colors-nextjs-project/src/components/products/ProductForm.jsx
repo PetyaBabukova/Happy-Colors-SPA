@@ -1,4 +1,4 @@
-// happy-colors-nextjs-project/src/components/products/ProductForm.jsx
+//happy-colors-nextjs-project/src/components/products/ProductForm.jsx
 
 'use client';
 
@@ -9,7 +9,8 @@ import { handleSubmit } from '@/utils/formSubmitHelper';
 import MessageBox from '@/components/ui/MessageBox';
 import { useProducts } from '@/context/ProductContext';
 import styles from './create.module.css';
-import { uploadImageToBucket } from '@/managers/uploadManager';
+import { uploadImagesToBucket } from '@/managers/uploadManager';
+import { deleteProductImage } from '@/managers/productsManager';
 
 export default function ProductForm({ initialValues, onSubmit, legendText, successMessage }) {
   const router = useRouter();
@@ -31,8 +32,7 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
     category: '',
     price: '',
     imageUrl: '',
-
-    // ✅ НОВО: наличност (default)
+    imageUrls: [],
     availability: 'available',
   });
 
@@ -42,47 +42,77 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
 
   useEffect(() => {
     if (initialValues) {
-      // ✅ ако стар продукт няма availability (стари записи) → default 'available'
+      const normalizedImageUrls = Array.isArray(initialValues.imageUrls)
+        ? initialValues.imageUrls.filter(Boolean)
+        : initialValues.imageUrl
+        ? [initialValues.imageUrl]
+        : [];
+
       setFormValues({
+        title: '',
+        description: '',
+        category: '',
+        price: '',
+        imageUrl: '',
+        imageUrls: [],
         availability: 'available',
         ...initialValues,
+        imageUrls: normalizedImageUrls,
+        imageUrl: normalizedImageUrls[0] || initialValues.imageUrl || '',
         availability: initialValues.availability || 'available',
       });
     }
   }, [initialValues, setFormValues]);
 
   const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
 
     setUploadError(null);
 
-    if (!file.type.startsWith('image/')) {
+    const hasInvalidType = selectedFiles.some((file) => !file.type.startsWith('image/'));
+    if (hasInvalidType) {
       setUploadError('Моля, качете само файлове от тип изображение.');
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('Файлът е твърде голям. Максимален размер: 5 MB.');
+    const hasOversizedFile = selectedFiles.some((file) => file.size > MAX_FILE_SIZE);
+    if (hasOversizedFile) {
+      setUploadError('Един или повече файлове са твърде големи. Максимален размер: 5 MB.');
       return;
     }
 
     try {
       setUploading(true);
 
-      const imageUrl = await uploadImageToBucket(file);
+      const uploadedImageUrls = await uploadImagesToBucket(selectedFiles);
 
-      setFormValues((prev) => ({
-        ...prev,
-        imageUrl,
-      }));
+      setFormValues((prev) => {
+        const currentImageUrls = Array.isArray(prev.imageUrls)
+          ? prev.imageUrls.filter(Boolean)
+          : prev.imageUrl
+          ? [prev.imageUrl]
+          : [];
+
+        const mergedImageUrls = [...new Set([...currentImageUrls, ...uploadedImageUrls])];
+
+        return {
+          ...prev,
+          imageUrls: mergedImageUrls,
+          imageUrl: mergedImageUrls[0] || '',
+        };
+      });
+
+      e.target.value = '';
     } catch (err) {
       console.error(err);
-      setUploadError('Възникна грешка при качването на изображението.');
+      setUploadError('Възникна грешка при качването на изображенията.');
     } finally {
       setUploading(false);
     }
   };
+
+  const hasImages = Array.isArray(formValues.imageUrls) && formValues.imageUrls.length > 0;
 
   return (
     <div className={styles.registerFormContainer}>
@@ -146,7 +176,6 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
           className={invalidFields.includes('price') ? styles.invalidField : ''}
         />
 
-        {/* ✅ НОВО: Наличност */}
         <label htmlFor="availability">Наличност</label>
         <select
           name="availability"
@@ -158,20 +187,75 @@ export default function ProductForm({ initialValues, onSubmit, legendText, succe
           <option value="unavailable">Продукта не е наличен, ако желаете пратете запитване</option>
         </select>
 
-        <label>Изображение</label>
+        <label>Изображения</label>
         <input
           type="file"
-          name="imageUrl"
+          name="imageUrls"
           onChange={handleFileChange}
           accept="image/*"
-          className={invalidFields.includes('imageUrl') ? styles.invalidField : ''}
+          multiple
+          className={
+            invalidFields.includes('imageUrl') || invalidFields.includes('imageUrls')
+              ? styles.invalidField
+              : ''
+          }
         />
-        {uploading && <p className={styles.fieldHint}>Качване на изображението...</p>}
-        {invalidFields.imageUrl && (
-          <p className={styles.fieldHint}>Моля изберете изображение.</p>
+
+        <p className={styles.fieldHint}>
+          {hasImages
+            ? 'Изберете още изображения, за да ги добавите към вече качените.'
+            : 'Можете да качите едно или няколко изображения.'}
+        </p>
+
+        {uploading && <p className={styles.fieldHint}>Качване на изображенията...</p>}
+
+        {(invalidFields.includes('imageUrl') || invalidFields.includes('imageUrls')) && (
+          <p className={styles.fieldHint}>Моля изберете поне едно изображение.</p>
         )}
-        {uploadError && (
-          <p className={styles.fieldHint}>{uploadError}</p>
+
+        {uploadError && <p className={styles.fieldHint}>{uploadError}</p>}
+
+        {hasImages && (
+          <div className={styles.uploadedImagesPreview}>
+            <p className={styles.fieldHint}>
+              Текущи изображения: {formValues.imageUrls.length}
+            </p>
+
+            <ul>
+              {formValues.imageUrls.map((url, index) => (
+                <li key={`${url}-${index}`} className={styles.imagePreviewItem}>
+                  <span>Изображение {index + 1}</span>
+
+                  {formValues.imageUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          if (!initialValues?._id) return;
+
+                          await deleteProductImage(initialValues._id, url);
+
+                          setFormValues((prev) => {
+                            const updated = prev.imageUrls.filter((img) => img !== url);
+
+                            return {
+                              ...prev,
+                              imageUrls: updated,
+                              imageUrl: updated[0] || '',
+                            };
+                          });
+                        } catch (err) {
+                          alert(err.message);
+                        }
+                      }}
+                    >
+                      ❌
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         <button type="submit">Запази</button>

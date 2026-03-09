@@ -1,3 +1,5 @@
+//happy-colors-nextjs-project/src/app/products/ProductCard.jsx
+
 'use client';
 
 import Link from 'next/link';
