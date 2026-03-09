@@ -1,14 +1,11 @@
 // happy-colors-nextjs-project/src/app/checkout/page.js
+
 'use client';
 
 import Link from 'next/link';
 import styles from './checkout.module.css';
 import MessageBox from '@/components/ui/MessageBox';
-import {
-  useCheckoutManager,
-  ECONT_OFFICES,
-  SPEEDY_OFFICES,
-} from '@/managers/checkoutManager';
+import { useCheckoutManager } from '@/managers/checkoutManager';
 
 export default function CheckoutPage() {
   const {
@@ -21,6 +18,10 @@ export default function CheckoutPage() {
     setShippingMethod,
     setEcontOffice,
     setSpeedyOffice,
+    econtOffices,
+    speedyOffices,
+    isLoadingEcontOffices,
+    isLoadingSpeedyOffices,
     isConfirmOpen,
     closeConfirm,
     confirmOrder,
@@ -50,11 +51,21 @@ export default function CheckoutPage() {
       ? 'Наложен платеж'
       : '-';
 
+  const selectedEcontOfficeLabel =
+    econtOffices.find((office) => office.id === shipping.econtOffice)?.label || '';
+
+  const selectedSpeedyOfficeLabel =
+    speedyOffices.find((office) => office.id === shipping.speedyOffice)?.label || '';
+
   const shippingLabel =
     shipping.shippingMethod === 'econt'
-      ? `Еконт – ${shipping.econtOffice || '(не е избран офис)'}`
+      ? `Еконт – ${
+          selectedEcontOfficeLabel || '(не е избран офис)'
+        }`
       : shipping.shippingMethod === 'speedy'
-      ? `Спиди – ${shipping.speedyOffice || '(не е избран офис)'}`
+      ? `Спиди – ${
+          selectedSpeedyOfficeLabel || '(не е избран офис)'
+        }`
       : shipping.shippingMethod === 'boxnow'
       ? 'Box Now'
       : '-';
@@ -64,7 +75,6 @@ export default function CheckoutPage() {
       <h1 className={styles.heading}>Завършване на поръчката</h1>
 
       <div className={styles.columns}>
-        {/* Лява колона – данни за клиента + доставка */}
         <form className={styles.form} onSubmit={handleSubmit}>
           <h2 className={styles.subheading}>Данни за доставка</h2>
 
@@ -150,7 +160,6 @@ export default function CheckoutPage() {
             {errors.address && <p className={styles.error}>{errors.address}</p>}
           </div>
 
-          {/* ---- ДОСТАВКА (ново) ---- */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на доставка <span className={styles.requiredStar}>*</span>
@@ -198,18 +207,30 @@ export default function CheckoutPage() {
               <label htmlFor="econtOffice">
                 Офис на Еконт <span className={styles.requiredStar}>*</span>
               </label>
+
               <select
                 id="econtOffice"
                 value={shipping.econtOffice}
                 onChange={(e) => setEcontOffice(e.target.value)}
+                disabled={isLoadingEcontOffices || formData.city.trim().length < 2}
               >
-                <option value="">Изберете офис на Еконт</option>
-                {ECONT_OFFICES.map((office) => (
-                  <option key={office} value={office}>
-                    {office}
+                <option value="">
+                  {formData.city.trim().length < 2
+                    ? 'Първо въведете град'
+                    : isLoadingEcontOffices
+                    ? 'Зареждане на офиси...'
+                    : econtOffices.length === 0
+                    ? 'Няма намерени офиси'
+                    : 'Изберете офис на Еконт'}
+                </option>
+
+                {econtOffices.map((office) => (
+                  <option key={office.id} value={office.id}>
+                    {office.label}
                   </option>
                 ))}
               </select>
+
               {errors.econtOffice && (
                 <p className={styles.error}>{errors.econtOffice}</p>
               )}
@@ -221,25 +242,36 @@ export default function CheckoutPage() {
               <label htmlFor="speedyOffice">
                 Офис на Спиди <span className={styles.requiredStar}>*</span>
               </label>
+
               <select
                 id="speedyOffice"
                 value={shipping.speedyOffice}
                 onChange={(e) => setSpeedyOffice(e.target.value)}
+                disabled={isLoadingSpeedyOffices || formData.city.trim().length < 2}
               >
-                <option value="">Изберете офис на Спиди</option>
-                {SPEEDY_OFFICES.map((office) => (
-                  <option key={office} value={office}>
-                    {office}
+                <option value="">
+                  {formData.city.trim().length < 2
+                    ? 'Първо въведете град'
+                    : isLoadingSpeedyOffices
+                    ? 'Зареждане на офиси...'
+                    : speedyOffices.length === 0
+                    ? 'Няма намерени офиси'
+                    : 'Изберете офис на Спиди'}
+                </option>
+
+                {speedyOffices.map((office) => (
+                  <option key={office.id} value={office.id}>
+                    {office.label}
                   </option>
                 ))}
               </select>
+
               {errors.speedyOffice && (
                 <p className={styles.error}>{errors.speedyOffice}</p>
               )}
             </div>
           )}
 
-          {/* ---- Плащане ---- */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на плащане <span className={styles.requiredStar}>*</span>
@@ -291,7 +323,6 @@ export default function CheckoutPage() {
           </p>
         </form>
 
-        {/* Дясна колона – обобщение */}
         <aside className={styles.summary}>
           <h2 className={styles.subheading}>Вашата поръчка</h2>
 
@@ -322,7 +353,6 @@ export default function CheckoutPage() {
         </aside>
       </div>
 
-      {/* ---------- MODAL STEP 2 ---------- */}
       {isConfirmOpen && (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <div className={styles.modal}>
