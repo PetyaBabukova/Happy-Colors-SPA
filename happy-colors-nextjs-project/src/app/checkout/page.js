@@ -21,6 +21,7 @@ export default function CheckoutPage() {
     setShippingMethod,
     setEcontOffice,
     setSpeedyOffice,
+    // dynamically fetched offices and loading state
     econtOffices,
     speedyOffices,
     officesLoading,
@@ -46,7 +47,9 @@ export default function CheckoutPage() {
     );
   }
 
-  // проверяваме дали има въведен град
+  // Determine if the user has entered a city. We trim whitespace so that a single space
+  // does not count as valid input. This flag is used to decide whether to allow
+  // office selection or prompt the user to enter a city first.
   const cityFilled = formData.city?.trim().length > 0;
 
   const paymentLabel =
@@ -65,23 +68,89 @@ export default function CheckoutPage() {
       ? 'Box Now'
       : '-';
 
-  // филтрираме примерните офиси по въведения град, ако няма динамични данни
+  // Determine which lists to render in the selects. If dynamic data has been
+  // loaded from the API it takes precedence; otherwise the fallback static
+  // arrays from checkoutManager.js are used. This logic is kept in the page
+  // component so it updates whenever `econtOffices` or `speedyOffices` change.
+  // When no dynamic offices are loaded, fall back to the static arrays. If a city
+  // has been entered, filter the static options by the city name to provide a
+  // more relevant list. Otherwise return an empty array to force a message
+  // prompting the user to enter a city first.
+  // Precompute a lowercase city for filtering. When no dynamic offices are available
+  // and the user has entered a city, we show the fallback lists without
+  // filtering by the entered city. Filtering the fallback offices by the
+  // latin spelling (e.g. "sofia") would hide all Bulgarian names (e.g. "София")
+  // due to alphabet differences, leading to empty lists. Instead, we only
+  // filter the fallback data by city when no city is required, so that a few
+  // example options always appear once a city is entered.
   const lowerCity = formData.city?.trim().toLowerCase() || '';
+  /*
+   * Transliteration helpers for matching Bulgarian city names regardless
+   * of whether the user types in Latin or Cyrillic. These simple maps
+   * convert characters between alphabets based on common phonetic rules.
+   */
+  const cyrToLatMap = {
+    а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
+    к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u',
+    ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu',
+    я: 'ya', ѝ: 'i', ъ: 'a'
+  };
+  const latToCyrMap = {
+    a: 'а', b: 'б', v: 'в', g: 'г', d: 'д', e: 'е', z: 'з', i: 'и', y: 'й', k: 'к',
+    l: 'л', m: 'м', n: 'н', o: 'о', p: 'п', r: 'р', s: 'с', t: 'т', u: 'у', f: 'ф',
+    h: 'х', c: 'ц', q: 'я', w: 'в', x: 'кс', j: 'й'
+  };
+  function cyrToLat(str = '') {
+    return str
+      .split('')
+      .map((ch) => cyrToLatMap[ch] || cyrToLatMap[ch.toLowerCase()] || ch)
+      .join('');
+  }
+  function latToCyr(str = '') {
+    return str
+      .split('')
+      .map((ch) => latToCyrMap[ch] || latToCyrMap[ch.toLowerCase()] || ch)
+      .join('');
+  }
+
+  // Determine the available Econt offices. If dynamic offices have been loaded
+  // from the API they are used directly. Otherwise we fall back to the static
+  // examples and filter them by the entered city. The filtering uses both
+  // case-insensitive and transliterated comparisons to match strings like
+  // "sofia" with "София".
   const availableEcontOffices =
     econtOffices && econtOffices.length > 0
       ? econtOffices
       : cityFilled
-      ? ECONT_OFFICES.filter((office) =>
-          office.toLowerCase().includes(lowerCity)
-        )
+      ? ECONT_OFFICES.filter((office) => {
+          const officeLower = office.toLowerCase();
+          const officeLat = cyrToLat(officeLower);
+          const cyrCity = latToCyr(lowerCity);
+          return (
+            officeLower.includes(lowerCity) ||
+            officeLower.includes(cyrCity) ||
+            officeLat.includes(lowerCity)
+          );
+        })
       : [];
+
+  // Determine the available Speedy offices. Similar logic to Econt: use
+  // dynamic data when available; otherwise filter the static list by the
+  // entered city using transliteration for better matching.
   const availableSpeedyOffices =
     speedyOffices && speedyOffices.length > 0
       ? speedyOffices
       : cityFilled
-      ? SPEEDY_OFFICES.filter((office) =>
-          office.toLowerCase().includes(lowerCity)
-        )
+      ? SPEEDY_OFFICES.filter((office) => {
+          const officeLower = office.toLowerCase();
+          const officeLat = cyrToLat(officeLower);
+          const cyrCity = latToCyr(lowerCity);
+          return (
+            officeLower.includes(lowerCity) ||
+            officeLower.includes(cyrCity) ||
+            officeLat.includes(lowerCity)
+          );
+        })
       : [];
 
   return (
@@ -175,7 +244,7 @@ export default function CheckoutPage() {
             {errors.address && <p className={styles.error}>{errors.address}</p>}
           </div>
 
-          {/* избор на доставчик */}
+          {/* ---- ДОСТАВКА (ново) ---- */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на доставка <span className={styles.requiredStar}>*</span>
@@ -218,7 +287,6 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* избор на офис на Еконт */}
           {shipping.shippingMethod === 'econt' && (
             <div className={styles.field}>
               <label htmlFor="econtOffice">
@@ -232,11 +300,28 @@ export default function CheckoutPage() {
                     onChange={(e) => setEcontOffice(e.target.value)}
                   >
                     <option value="">Изберете офис на Еконт</option>
-                    {availableEcontOffices.map((office) => (
-                      <option key={office} value={office}>
-                        {office}
+                  {availableEcontOffices.map((office) => {
+                    // When the list comes from the API it may contain
+                    // objects with `label`, `id`, or other fields. We derive
+                    // a display label and a stable key. If `office` is a
+                    // simple string we use it directly. Otherwise we look
+                    // for `label`, then `address` or `name`. The key falls
+                    // back to the label when no id is provided.
+                    let label = '';
+                    let key = '';
+                    if (typeof office === 'string') {
+                      label = office;
+                      key = office;
+                    } else if (office && typeof office === 'object') {
+                      label = office.label || office.address || office.name || '';
+                      key = office.id || label;
+                    }
+                    return (
+                      <option key={key} value={label}>
+                        {label}
                       </option>
-                    ))}
+                    );
+                  })}
                   </select>
                 ) : (
                   <select id="econtOffice" disabled>
@@ -252,20 +337,13 @@ export default function CheckoutPage() {
                 <p className={styles.error}>{errors.econtOffice}</p>
               )}
               {officesLoading && (
-                <p
-                  style={{
-                    marginTop: '4px',
-                    fontSize: '0.875em',
-                    color: '#666',
-                  }}
-                >
+                <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
                   Зареждат се офисите…
                 </p>
               )}
             </div>
           )}
 
-          {/* избор на офис на Спиди */}
           {shipping.shippingMethod === 'speedy' && (
             <div className={styles.field}>
               <label htmlFor="speedyOffice">
@@ -279,11 +357,22 @@ export default function CheckoutPage() {
                     onChange={(e) => setSpeedyOffice(e.target.value)}
                   >
                     <option value="">Изберете офис на Спиди</option>
-                    {availableSpeedyOffices.map((office) => (
-                      <option key={office} value={office}>
-                        {office}
-                      </option>
-                    ))}
+                    {availableSpeedyOffices.map((office) => {
+                      let label = '';
+                      let key = '';
+                      if (typeof office === 'string') {
+                        label = office;
+                        key = office;
+                      } else if (office && typeof office === 'object') {
+                        label = office.label || office.name || '';
+                        key = office.id || label;
+                      }
+                      return (
+                        <option key={key} value={label}>
+                          {label}
+                        </option>
+                      );
+                    })}
                   </select>
                 ) : (
                   <select id="speedyOffice" disabled>
@@ -299,26 +388,168 @@ export default function CheckoutPage() {
                 <p className={styles.error}>{errors.speedyOffice}</p>
               )}
               {officesLoading && (
-                <p
-                  style={{
-                    marginTop: '4px',
-                    fontSize: '0.875em',
-                    color: '#666',
-                  }}
-                >
+                <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
                   Зареждат се офисите…
                 </p>
               )}
             </div>
           )}
 
-          {/* ... останалата част (плащане, бележка, сумирано) се запазва без промяна ... */}
-          {/* кодът за плащане, бележка, бутон за изпращане и модала може да се остави както е във вашия файл */}
-          {/* ... */}
+          {/* ---- Плащане ---- */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>
+              Начин на плащане <span className={styles.requiredStar}>*</span>
+            </span>
+
+            <div className={styles.paymentOptions}>
+              <label className={styles.paymentOption}>
+                <input
+                  type="checkbox"
+                  checked={formData.paymentMethods.includes('card')}
+                  onChange={() => handlePaymentChange('card')}
+                />
+                <span>С банкова карта</span>
+              </label>
+
+              <label className={styles.paymentOption}>
+                <input
+                  type="checkbox"
+                  checked={formData.paymentMethods.includes('cod')}
+                  onChange={() => handlePaymentChange('cod')}
+                />
+                <span>Наложен платеж</span>
+              </label>
+            </div>
+
+            {errors.paymentMethods && (
+              <p className={styles.error}>{errors.paymentMethods}</p>
+            )}
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="note">Бележка към поръчката (по избор)</label>
+            <textarea
+              id="note"
+              name="note"
+              rows={3}
+              value={formData.note}
+              onChange={handleChange}
+            />
+          </div>
+
+          <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+            {isSubmitting ? 'Изпращане...' : 'Продължи'}
+          </button>
+
+          <p className={styles.requiredNote}>
+            Полетата, отбелязани със{' '}
+            <span className={styles.requiredStar}>*</span>, са задължителни.
+          </p>
         </form>
 
-        {/* Дясна колона – обобщение, модал и т.н. остават непроменени */}
+        {/* Дясна колона – обобщение */}
+        <aside className={styles.summary}>
+          <h2 className={styles.subheading}>Вашата поръчка</h2>
+
+          <ul className={styles.itemsList}>
+            {cartItems.map((item) => (
+              <li key={item._id} className={styles.itemRow}>
+                <div>
+                  <p className={styles.itemTitle}>{item.title}</p>
+                  <p className={styles.itemMeta}>
+                    Количество: {item.quantity} × {item.price.toFixed(2)} лв.
+                  </p>
+                </div>
+                <p className={styles.itemTotal}>
+                  {(item.quantity * item.price).toFixed(2)} лв.
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          <div className={styles.totalRow}>
+            <span>Общо:</span>
+            <strong>{totalPrice.toFixed(2)} лв.</strong>
+          </div>
+
+          <Link href="/cart" className={styles.backToCart}>
+            ← Върни се към количката
+          </Link>
+        </aside>
       </div>
+
+      {/* ---------- MODAL STEP 2 ---------- */}
+      {isConfirmOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <div className={styles.modal}>
+            <h2 className={styles.modalTitle}>Моля проверете данните за доставка</h2>
+
+            <div className={styles.modalBody}>
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Име:</span>
+                <span className={styles.modalValue}>{formData.name}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Телефон:</span>
+                <span className={styles.modalValue}>{formData.phone}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>E-mail:</span>
+                <span className={styles.modalValue}>{formData.email}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Град:</span>
+                <span className={styles.modalValue}>{formData.city}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Адрес:</span>
+                <span className={styles.modalValue}>{formData.address}</span>
+              </div>
+
+              {formData.note?.trim() ? (
+                <div className={styles.modalRow}>
+                  <span className={styles.modalLabel}>Бележка:</span>
+                  <span className={styles.modalValue}>{formData.note}</span>
+                </div>
+              ) : null}
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Доставка:</span>
+                <span className={styles.modalValue}>{shippingLabel}</span>
+              </div>
+
+              <div className={styles.modalRow}>
+                <span className={styles.modalLabel}>Плащане:</span>
+                <span className={styles.modalValue}>{paymentLabel}</span>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalBtnSecondary}
+                onClick={closeConfirm}
+                disabled={isSubmitting}
+              >
+                Редактирай
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalBtnPrimary}
+                onClick={confirmOrder}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Обработваме...' : 'Потвърждавам поръчката'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

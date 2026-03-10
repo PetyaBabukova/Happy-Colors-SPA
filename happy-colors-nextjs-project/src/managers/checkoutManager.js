@@ -9,6 +9,11 @@ import baseURL from '@/config';
 const ORDER_DRAFT_KEY = 'hc_order_draft';
 const SHIPPING_STORAGE_KEY = 'hc_shipping_choice';
 
+// TODO: реалните офиси могат да се зареждат от API/конфиг.
+// По подразбиране включваме няколко статични примера, които се
+// използват като резервен вариант, ако извличането на динамичните
+// списъци от куриерските API се провали. За нуждите на динамичната
+// интеграция вижте useEffect в useCheckoutManager.
 export const ECONT_OFFICES = [
   'София – Офис Център (пример)',
   'Пловдив – Офис 1 (пример)',
@@ -25,8 +30,10 @@ function isValidEmail(email) {
   return /^\S+@\S+\.\S+$/.test(String(email || '').trim());
 }
 
+// леко по-строга проверка, без да е “твърде” picky
 function isValidPhone(phone) {
   const clean = String(phone || '').replace(/\s+/g, '').trim();
+  // допуска +, цифри, минимум 8 цифри
   return /^\+?\d{8,15}$/.test(clean);
 }
 
@@ -42,23 +49,31 @@ export function useCheckoutManager() {
     city: '',
     address: '',
     note: '',
-    paymentMethods: [],
+    paymentMethods: [], // 'card' | 'cod' (визуално чекбокс, логически 1 избор)
   });
 
+  // доставка (вече е част от Step 1)
   const [shipping, setShipping] = useState({
-    shippingMethod: '',
+    shippingMethod: '', // 'econt' | 'speedy' | 'boxnow'
     econtOffice: '',
     speedyOffice: '',
     boxNow: false,
   });
 
+  // modal Step 2
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
+  // UI feedback
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // --- Dynamic office lists ---
+  // Lists of offices retrieved from our internal API routes. When the
+  // corresponding courier shipping method is selected, these arrays are
+  // populated via `useEffect`. If the network request fails, these lists
+  // remain empty and the fallback static arrays defined above are used.
   const [econtOffices, setEcontOffices] = useState([]);
   const [speedyOffices, setSpeedyOffices] = useState([]);
   const [officesLoading, setOfficesLoading] = useState(false);
@@ -67,6 +82,7 @@ export function useCheckoutManager() {
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   }, []);
@@ -77,10 +93,11 @@ export function useCheckoutManager() {
       const newMethods = isSelected ? [] : [method];
       return { ...prev, paymentMethods: newMethods };
     });
+
     setErrors((prev) => ({ ...prev, paymentMethods: '' }));
   }, []);
 
-  // избор на метод за доставка
+  // radio: econt/speedy/boxnow
   const setShippingMethod = useCallback((method) => {
     setShipping((prev) => {
       if (method === 'econt') {
@@ -99,6 +116,7 @@ export function useCheckoutManager() {
           boxNow: false,
         };
       }
+      // boxnow
       return {
         shippingMethod: 'boxnow',
         econtOffice: '',
@@ -106,6 +124,7 @@ export function useCheckoutManager() {
         boxNow: true,
       };
     });
+
     setErrors((prev) => ({ ...prev, shippingMethod: '' }));
   }, []);
 
@@ -131,9 +150,9 @@ export function useCheckoutManager() {
     setErrors((prev) => ({ ...prev, speedyOffice: '' }));
   }, []);
 
-  // валидация
   const validate = useCallback(() => {
     const newErrors = {};
+
     const name = formData.name.trim();
     const phone = formData.phone.trim();
     const city = formData.city.trim();
@@ -143,22 +162,29 @@ export function useCheckoutManager() {
     if (!name || name.length < 3 || name.length > 20) {
       newErrors.name = 'Моля, въведете име от 3 до 20 символа';
     }
+
     if (!phone || !isValidPhone(phone)) {
       newErrors.phone = 'Моля, въведете валиден телефонен номер';
     }
+
     if (!email || !isValidEmail(email)) {
       newErrors.email = 'Моля, въведете валиден e-mail';
     }
+
     if (!city) {
       newErrors.city = 'Моля, въведете град';
     }
+
+    // адресът остава минимум 10 (както каза)
     if (!address || address.length < 10) {
-      newErrors.address =
-        'Моля, въведете адрес за доставка - минимум 10 символа';
+      newErrors.address = 'Моля, въведете адрес за доставка - минимум 10 символа';
     }
+
     if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
       newErrors.paymentMethods = 'Моля, изберете начин на плащане';
     }
+
+    // доставка
     if (!shipping.shippingMethod) {
       newErrors.shippingMethod = 'Моля, изберете начин на доставка';
     } else if (shipping.shippingMethod === 'econt' && !shipping.econtOffice) {
@@ -166,20 +192,30 @@ export function useCheckoutManager() {
     } else if (shipping.shippingMethod === 'speedy' && !shipping.speedyOffice) {
       newErrors.speedyOffice = 'Моля, изберете офис на Спиди';
     }
+
     return newErrors;
   }, [formData, shipping]);
 
-  // зареждане на офиси при промяна на куриер и град
+  // Fetch offices when the selected shipping method or city changes.
+  // We watch the shipping method and city because the API allows
+  // narrowing by city name. The fetches occur only in the browser
+  // environment.
   useEffect(() => {
+    // Only run on client
     if (typeof window === 'undefined') return;
 
     async function fetchOffices() {
-      // зануляваме само списъците, без да пипаме shipping
+      // Reset lists before fetching
       if (shipping.shippingMethod === 'econt') {
+        // When switching to Econt, reset the list of offices so a fresh list can be loaded.
         setEcontOffices([]);
+        // Do not call setSpeedyOffice here; clearing the selected office is handled in setShippingMethod
       } else if (shipping.shippingMethod === 'speedy') {
+        // When switching to Speedy, reset the list of offices so a fresh list can be loaded.
         setSpeedyOffices([]);
+        // Do not call setEcontOffice here; clearing the selected office is handled in setShippingMethod
       }
+      // Do not call the API if no shipping method is selected or the city field is empty.
       const cityTrimmed = (formData.city || '').trim();
       if (!shipping.shippingMethod || !cityTrimmed) {
         return;
@@ -214,7 +250,7 @@ export function useCheckoutManager() {
     }
 
     fetchOffices();
-    // следим само метода и полето за град
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shipping.shippingMethod, formData.city]);
 
   const persistDraftAndShipping = useCallback(() => {
@@ -256,6 +292,8 @@ export function useCheckoutManager() {
         setIsConfirmOpen(false);
         return;
       }
+
+      // ✅ валидно → отваряме модала (Стъпка 2)
       setIsConfirmOpen(true);
     },
     [validate]
@@ -283,6 +321,7 @@ export function useCheckoutManager() {
         boxNow: Boolean(shipping.boxNow),
       };
 
+      // CARD → Stripe session
       if (paymentMethod === 'card') {
         const res = await fetch(`${baseURL}/payments/create-session`, {
           method: 'POST',
@@ -298,12 +337,14 @@ export function useCheckoutManager() {
           throw new Error('Липсва URL за плащане от Stripe.');
         }
 
+        // редирект към Stripe
         if (typeof window !== 'undefined') {
           window.location.href = data.url;
         }
         return;
       }
 
+      // COD → /orders
       const res = await fetch(`${baseURL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -317,6 +358,7 @@ export function useCheckoutManager() {
 
       setSubmitSuccess('Поръчката ви е приета. Ще се свържем с вас при първа възможност.');
 
+      // cleanup
       clearCart();
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(ORDER_DRAFT_KEY);
@@ -330,7 +372,9 @@ export function useCheckoutManager() {
       }, 3000);
     } catch (err) {
       console.error('Confirm order error:', err);
-      setSubmitError(err?.message || 'Възникна грешка. Моля, опитайте отново.');
+      setSubmitError(
+        err?.message || 'Възникна грешка. Моля, опитайте отново.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -347,21 +391,28 @@ export function useCheckoutManager() {
   return {
     cartItems,
     totalPrice,
+
     formData,
     errors,
     isSubmitting,
+
     shipping,
     setShippingMethod,
     setEcontOffice,
     setSpeedyOffice,
+
+    // dynamic offices
     econtOffices,
     speedyOffices,
     officesLoading,
+
     isConfirmOpen,
     closeConfirm,
     confirmOrder,
+
     submitError,
     submitSuccess,
+
     handleChange,
     handlePaymentChange,
     handleSubmit,
