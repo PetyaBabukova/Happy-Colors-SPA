@@ -1,5 +1,4 @@
-// happy-collors-nextjs-project/src/managers/checkoutManager.js
-
+// happy-colors-nextjs-project/src/managers/checkoutManager.js
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
@@ -10,6 +9,18 @@ import baseURL from '@/config';
 const ORDER_DRAFT_KEY = 'hc_order_draft';
 const SHIPPING_STORAGE_KEY = 'hc_shipping_choice';
 
+export const ECONT_OFFICES = [
+  'София – Офис Център (пример)',
+  'Пловдив – Офис 1 (пример)',
+  'Варна – Офис 1 (пример)',
+];
+
+export const SPEEDY_OFFICES = [
+  'София – Спиди Офис 1 (пример)',
+  'Пловдив – Спиди Офис 1 (пример)',
+  'Бургас – Спиди Офис 1 (пример)',
+];
+
 function isValidEmail(email) {
   return /^\S+@\S+\.\S+$/.test(String(email || '').trim());
 }
@@ -17,30 +28,6 @@ function isValidEmail(email) {
 function isValidPhone(phone) {
   const clean = String(phone || '').replace(/\s+/g, '').trim();
   return /^\+?\d{8,15}$/.test(clean);
-}
-
-async function fetchCourierOffices(carrier, city) {
-  const cleanCity = String(city || '').trim();
-
-  if (!cleanCity || cleanCity.length < 2) {
-    return [];
-  }
-
-  const url = `${baseURL}/delivery/${carrier}/offices?city=${encodeURIComponent(cleanCity)}`;
-
-  console.log('baseURL =>', baseURL);
-  console.log('delivery url =>', url);
-
-  const res = await fetch(url);
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(
-      data?.message || 'Грешка при зареждане на офисите за доставка.'
-    );
-  }
-
-  return Array.isArray(data?.offices) ? data.offices : [];
 }
 
 export function useCheckoutManager() {
@@ -65,33 +52,23 @@ export function useCheckoutManager() {
     boxNow: false,
   });
 
-  const [econtOffices, setEcontOffices] = useState([]);
-  const [speedyOffices, setSpeedyOffices] = useState([]);
-  const [isLoadingEcontOffices, setIsLoadingEcontOffices] = useState(false);
-  const [isLoadingSpeedyOffices, setIsLoadingSpeedyOffices] = useState(false);
-
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [econtOffices, setEcontOffices] = useState([]);
+  const [speedyOffices, setSpeedyOffices] = useState([]);
+  const [officesLoading, setOfficesLoading] = useState(false);
+
   const paymentMethod = formData.paymentMethods?.[0] || '';
-  const cityValue = formData.city.trim();
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
-
-    if (name === 'city') {
-      setShipping((prev) => ({
-        ...prev,
-        econtOffice: '',
-        speedyOffice: '',
-      }));
-    }
   }, []);
 
   const handlePaymentChange = useCallback((method) => {
@@ -100,30 +77,28 @@ export function useCheckoutManager() {
       const newMethods = isSelected ? [] : [method];
       return { ...prev, paymentMethods: newMethods };
     });
-
     setErrors((prev) => ({ ...prev, paymentMethods: '' }));
   }, []);
 
+  // избор на метод за доставка
   const setShippingMethod = useCallback((method) => {
     setShipping((prev) => {
       if (method === 'econt') {
         return {
           shippingMethod: 'econt',
-          econtOffice: '',
+          econtOffice: prev.econtOffice || '',
           speedyOffice: '',
           boxNow: false,
         };
       }
-
       if (method === 'speedy') {
         return {
           shippingMethod: 'speedy',
           econtOffice: '',
-          speedyOffice: '',
+          speedyOffice: prev.speedyOffice || '',
           boxNow: false,
         };
       }
-
       return {
         shippingMethod: 'boxnow',
         econtOffice: '',
@@ -131,13 +106,7 @@ export function useCheckoutManager() {
         boxNow: true,
       };
     });
-
-    setErrors((prev) => ({
-      ...prev,
-      shippingMethod: '',
-      econtOffice: '',
-      speedyOffice: '',
-    }));
+    setErrors((prev) => ({ ...prev, shippingMethod: '' }));
   }, []);
 
   const setEcontOffice = useCallback((value) => {
@@ -162,95 +131,9 @@ export function useCheckoutManager() {
     setErrors((prev) => ({ ...prev, speedyOffice: '' }));
   }, []);
 
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadEcontOffices() {
-      if (shipping.shippingMethod !== 'econt') {
-        return;
-      }
-
-      if (cityValue.length < 2) {
-        setEcontOffices([]);
-        return;
-      }
-
-      setIsLoadingEcontOffices(true);
-
-      try {
-        const offices = await fetchCourierOffices('econt', cityValue);
-
-        if (!isCancelled) {
-          setEcontOffices(offices);
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setEcontOffices([]);
-          setSubmitError(
-            err?.message || 'Не успяхме да заредим офисите на Еконт.'
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingEcontOffices(false);
-        }
-      }
-    }
-
-    const timer = setTimeout(loadEcontOffices, 350);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [shipping.shippingMethod, cityValue]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadSpeedyOffices() {
-      if (shipping.shippingMethod !== 'speedy') {
-        return;
-      }
-
-      if (cityValue.length < 2) {
-        setSpeedyOffices([]);
-        return;
-      }
-
-      setIsLoadingSpeedyOffices(true);
-
-      try {
-        const offices = await fetchCourierOffices('speedy', cityValue);
-
-        if (!isCancelled) {
-          setSpeedyOffices(offices);
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setSpeedyOffices([]);
-          setSubmitError(
-            err?.message || 'Не успяхме да заредим офисите на Спиди.'
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingSpeedyOffices(false);
-        }
-      }
-    }
-
-    const timer = setTimeout(loadSpeedyOffices, 350);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [shipping.shippingMethod, cityValue]);
-
+  // валидация
   const validate = useCallback(() => {
     const newErrors = {};
-
     const name = formData.name.trim();
     const phone = formData.phone.trim();
     const city = formData.city.trim();
@@ -260,40 +143,79 @@ export function useCheckoutManager() {
     if (!name || name.length < 3 || name.length > 20) {
       newErrors.name = 'Моля, въведете име от 3 до 20 символа';
     }
-
     if (!phone || !isValidPhone(phone)) {
       newErrors.phone = 'Моля, въведете валиден телефонен номер';
     }
-
     if (!email || !isValidEmail(email)) {
       newErrors.email = 'Моля, въведете валиден e-mail';
     }
-
     if (!city) {
       newErrors.city = 'Моля, въведете град';
     }
-
     if (!address || address.length < 10) {
-      newErrors.address = 'Моля, въведете адрес за доставка - минимум 10 символа';
+      newErrors.address =
+        'Моля, въведете адрес за доставка - минимум 10 символа';
     }
-
     if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
       newErrors.paymentMethods = 'Моля, изберете начин на плащане';
     }
-
     if (!shipping.shippingMethod) {
       newErrors.shippingMethod = 'Моля, изберете начин на доставка';
     } else if (shipping.shippingMethod === 'econt' && !shipping.econtOffice) {
       newErrors.econtOffice = 'Моля, изберете офис на Еконт';
-    } else if (
-      shipping.shippingMethod === 'speedy' &&
-      !shipping.speedyOffice
-    ) {
+    } else if (shipping.shippingMethod === 'speedy' && !shipping.speedyOffice) {
       newErrors.speedyOffice = 'Моля, изберете офис на Спиди';
     }
-
     return newErrors;
   }, [formData, shipping]);
+
+  // зареждане на офиси при промяна на куриер и град
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    async function fetchOffices() {
+      // зануляваме само списъците, без да пипаме shipping
+      if (shipping.shippingMethod === 'econt') {
+        setEcontOffices([]);
+      } else if (shipping.shippingMethod === 'speedy') {
+        setSpeedyOffices([]);
+      }
+      const cityTrimmed = (formData.city || '').trim();
+      if (!shipping.shippingMethod || !cityTrimmed) {
+        return;
+      }
+
+      const cityQuery = encodeURIComponent(cityTrimmed);
+      const url =
+        shipping.shippingMethod === 'econt'
+          ? `/api/offices/econt?city=${cityQuery}`
+          : shipping.shippingMethod === 'speedy'
+          ? `/api/offices/speedy?city=${cityQuery}`
+          : null;
+      if (!url) return;
+      setOfficesLoading(true);
+      try {
+        const res = await fetch(url);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data?.offices)) {
+          if (shipping.shippingMethod === 'econt') {
+            setEcontOffices(data.offices);
+          } else if (shipping.shippingMethod === 'speedy') {
+            setSpeedyOffices(data.offices);
+          }
+        } else {
+          console.warn('Failed to load offices', data);
+        }
+      } catch (err) {
+        console.error('Office fetch error', err);
+      } finally {
+        setOfficesLoading(false);
+      }
+    }
+
+    fetchOffices();
+    // следим само метода и полето за град
+  }, [shipping.shippingMethod, formData.city]);
 
   const persistDraftAndShipping = useCallback(() => {
     const draft = {
@@ -303,7 +225,7 @@ export function useCheckoutManager() {
       city: formData.city.trim(),
       address: formData.address.trim(),
       note: formData.note.trim(),
-      paymentMethod,
+      paymentMethod: paymentMethod,
     };
 
     if (typeof window !== 'undefined') {
@@ -334,7 +256,6 @@ export function useCheckoutManager() {
         setIsConfirmOpen(false);
         return;
       }
-
       setIsConfirmOpen(true);
     },
     [validate]
@@ -370,13 +291,9 @@ export function useCheckoutManager() {
         });
 
         const data = await res.json().catch(() => ({}));
-
         if (!res.ok) {
-          throw new Error(
-            data?.message || 'Грешка при стартиране на плащане с карта.'
-          );
+          throw new Error(data?.message || 'Грешка при стартиране на плащане с карта.');
         }
-
         if (!data?.url) {
           throw new Error('Липсва URL за плащане от Stripe.');
         }
@@ -394,7 +311,6 @@ export function useCheckoutManager() {
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         throw new Error(data?.message || 'Грешка при изпращане на поръчката.');
       }
@@ -402,7 +318,6 @@ export function useCheckoutManager() {
       setSubmitSuccess('Поръчката ви е приета. Ще се свържем с вас при първа възможност.');
 
       clearCart();
-
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(ORDER_DRAFT_KEY);
         window.localStorage.removeItem(SHIPPING_STORAGE_KEY);
@@ -415,9 +330,7 @@ export function useCheckoutManager() {
       }, 3000);
     } catch (err) {
       console.error('Confirm order error:', err);
-      setSubmitError(
-        err?.message || 'Възникна грешка. Моля, опитайте отново.'
-      );
+      setSubmitError(err?.message || 'Възникна грешка. Моля, опитайте отново.');
     } finally {
       setIsSubmitting(false);
     }
@@ -434,28 +347,21 @@ export function useCheckoutManager() {
   return {
     cartItems,
     totalPrice,
-
     formData,
     errors,
     isSubmitting,
-
     shipping,
     setShippingMethod,
     setEcontOffice,
     setSpeedyOffice,
-
     econtOffices,
     speedyOffices,
-    isLoadingEcontOffices,
-    isLoadingSpeedyOffices,
-
+    officesLoading,
     isConfirmOpen,
     closeConfirm,
     confirmOrder,
-
     submitError,
     submitSuccess,
-
     handleChange,
     handlePaymentChange,
     handleSubmit,
