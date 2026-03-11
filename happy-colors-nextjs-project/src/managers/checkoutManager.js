@@ -74,13 +74,17 @@ export function useCheckoutManager() {
 
   const handlePaymentChange = useCallback((method) => {
     setFormData((prev) => {
+      if (shipping.shippingMethod === 'boxnow' && method === 'cod') {
+        return { ...prev, paymentMethods: ['card'] };
+      }
+
       const isSelected = prev.paymentMethods.includes(method);
       const newMethods = isSelected ? [] : [method];
       return { ...prev, paymentMethods: newMethods };
     });
 
     setErrors((prev) => ({ ...prev, paymentMethods: '' }));
-  }, []);
+  }, [shipping.shippingMethod]);
 
   const setShippingMethod = useCallback((method) => {
     setShipping((prev) => {
@@ -110,12 +114,18 @@ export function useCheckoutManager() {
       };
     });
 
+    setFormData((prev) => ({
+      ...prev,
+      paymentMethods: method === 'boxnow' ? ['card'] : prev.paymentMethods,
+    }));
+
     setErrors((prev) => ({
       ...prev,
       shippingMethod: '',
       econtOffice: '',
       speedyOffice: '',
       address: '',
+      paymentMethods: '',
     }));
   }, []);
 
@@ -172,6 +182,10 @@ export function useCheckoutManager() {
       newErrors.paymentMethods = 'Моля, изберете начин на плащане';
     }
 
+    if (shipping.shippingMethod === 'boxnow' && paymentMethod === 'cod') {
+      newErrors.paymentMethods = 'За Box Now е позволено само плащане с банкова карта';
+    }
+
     if (!shipping.shippingMethod) {
       newErrors.shippingMethod = 'Моля, изберете начин на доставка';
     } else if (shipping.shippingMethod === 'econt' && !shipping.econtOffice) {
@@ -185,7 +199,7 @@ export function useCheckoutManager() {
     }
 
     return newErrors;
-  }, [formData, shipping]);
+  }, [formData, shipping, paymentMethod]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -299,6 +313,10 @@ export function useCheckoutManager() {
     setIsSubmitting(true);
 
     try {
+      if (shipping.shippingMethod === 'boxnow' && paymentMethod === 'cod') {
+        throw new Error('За Box Now е позволено само плащане с банкова карта.');
+      }
+
       const draft = persistDraftAndShipping();
 
       const payload = {

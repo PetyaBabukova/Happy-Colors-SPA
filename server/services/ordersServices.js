@@ -126,6 +126,10 @@ export async function handleOrder(rawData) {
     throw new OrderError('Бележката е прекалено дълга.', 400);
   }
 
+  if (shippingMethod === 'boxnow' && paymentMethod === 'cod') {
+  throw new Error('За Box Now е позволено само плащане с банкова карта.');
+}
+
   const forbiddenPattern = /<[^>]*>/g;
   const allFields = [
     safeName,

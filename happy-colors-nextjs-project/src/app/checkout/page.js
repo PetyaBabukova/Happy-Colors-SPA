@@ -142,6 +142,7 @@ export default function CheckoutPage() {
 
   const cityFilled = formData.city?.trim().length > 0;
   const shouldShowAddressField = shipping.shippingMethod === 'boxnow';
+  const isBoxNow = shipping.shippingMethod === 'boxnow';
 
   const paymentLabel =
     formData.paymentMethods?.[0] === 'card'
@@ -425,15 +426,23 @@ export default function CheckoutPage() {
                 <span>С банкова карта</span>
               </label>
 
-              <label className={styles.paymentOption}>
-                <input
-                  type="checkbox"
-                  checked={formData.paymentMethods.includes('cod')}
-                  onChange={() => handlePaymentChange('cod')}
-                />
-                <span>Наложен платеж</span>
-              </label>
+              {!isBoxNow && (
+                <label className={styles.paymentOption}>
+                  <input
+                    type="checkbox"
+                    checked={formData.paymentMethods.includes('cod')}
+                    onChange={() => handlePaymentChange('cod')}
+                  />
+                  <span>Наложен платеж</span>
+                </label>
+              )}
             </div>
+
+            {isBoxNow && (
+              <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
+                За Box Now е позволено само плащане с банкова карта.
+              </p>
+            )}
 
             {errors.paymentMethods && (
               <p className={styles.error}>{errors.paymentMethods}</p>

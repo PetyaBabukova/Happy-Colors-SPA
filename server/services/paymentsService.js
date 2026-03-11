@@ -1,4 +1,5 @@
-// server/services/paymentsService.js
+// server/services/paymentService.js
+
 import Stripe from 'stripe';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
@@ -38,13 +39,17 @@ function mapItems(cartItems) {
   return cartItems.map((item) => {
     const title = String(item.title ?? 'Продукт').trim();
     const quantity = Number(item.quantity);
-    const unitPrice = Number(item.price); // EUR
+    const unitPrice = Number(item.price);
     const unitAmount = Math.round(unitPrice * 100);
 
-    if (!title) throw new PaymentError('Невалидно име на продукт.', 400);
+    if (!title) {
+      throw new PaymentError('Невалидно име на продукт.', 400);
+    }
+
     if (!Number.isFinite(quantity) || quantity <= 0) {
       throw new PaymentError('Невалидно количество на продукт.', 400);
     }
+
     if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
       throw new PaymentError('Невалидна цена на продукт.', 400);
     }
@@ -68,20 +73,16 @@ function mapItems(cartItems) {
   });
 }
 
-/**
- * ✅ Общ финализиращ метод (ползва се и от confirm, и от webhook)
- * - session трябва да е paid
- * - paymentId/draftId идват от metadata
- * - създава Order от draft (само веднъж)
- * - маркира Payment paid + orderId (идемпотентно)
- * - праща имейли (admin + customer)
- */
 export async function finalizePaidCheckoutSession(session) {
   const sessionId = String(session?.id || '').trim();
-  if (!sessionId) throw new PaymentError('Липсва Stripe session id.', 400);
+  if (!sessionId) {
+    throw new PaymentError('Липсва Stripe session id.', 400);
+  }
 
   const isPaid = session?.payment_status === 'paid';
-  if (!isPaid) throw new PaymentError('Плащането не е потвърдено в Stripe.', 400);
+  if (!isPaid) {
+    throw new PaymentError('Плащането не е потвърдено в Stripe.', 400);
+  }
 
   const paymentId = String(session?.metadata?.paymentId || '').trim();
   const draftId = String(session?.metadata?.draftId || '').trim();
@@ -90,21 +91,21 @@ export async function finalizePaidCheckoutSession(session) {
     throw new PaymentError('Липсва metadata (paymentId/draftId) в Stripe session.', 500);
   }
 
-  // 1) Payment
   const payment = await Payment.findById(paymentId);
-  if (!payment) throw new PaymentError('Payment не е намерен.', 404);
+  if (!payment) {
+    throw new PaymentError('Payment не е намерен.', 404);
+  }
 
-  // sanity: ако имаме записан sessionId и не съвпада
   if (payment.stripeSessionId && payment.stripeSessionId !== sessionId) {
     throw new PaymentError('Несъответствие в Stripe session id.', 400);
   }
 
-  // 2) Draft
   const draft = await CheckoutDraft.findById(draftId).lean();
-  if (!draft) throw new PaymentError('Draft не е намерен.', 404);
+  if (!draft) {
+    throw new PaymentError('Draft не е намерен.', 404);
+  }
 
-  // 3) Amount/Currency checks
-  const sessionAmountTotal = Number(session?.amount_total ?? 0); // cents
+  const sessionAmountTotal = Number(session?.amount_total ?? 0);
   const sessionCurrency = String(session?.currency ?? '').toLowerCase();
 
   const expectedAmount = Math.round(Number(draft.totalPrice || 0) * 100);
@@ -113,19 +114,23 @@ export async function finalizePaidCheckoutSession(session) {
   if (sessionCurrency && sessionCurrency !== expectedCurrency) {
     throw new PaymentError('Валутата в Stripe не съвпада с очакваната.', 400);
   }
+
   if (sessionAmountTotal && expectedAmount && sessionAmountTotal !== expectedAmount) {
     throw new PaymentError('Сумата в Stripe не съвпада с очакваната.', 400);
   }
 
-  // 4) Ако вече има Order за този payment → идемпотентно връщаме
   const existingOrder = await Order.findOne({ paymentId: payment._id }).lean();
   if (existingOrder) {
     if (payment.status !== 'paid' || !payment.orderId) {
       payment.status = 'paid';
       payment.orderId = existingOrder._id;
       payment.stripeSessionId = sessionId;
+
       const pi0 = session?.payment_intent;
-      if (pi0) payment.stripePaymentIntentId = String(pi0);
+      if (pi0) {
+        payment.stripePaymentIntentId = String(pi0);
+      }
+
       await payment.save();
     }
 
@@ -136,13 +141,15 @@ export async function finalizePaidCheckoutSession(session) {
     };
   }
 
-  // 5) Маркираме payment paid (атомично)
   const pi = session?.payment_intent;
   const paymentUpdate = {
     status: 'paid',
     stripeSessionId: sessionId,
   };
-  if (pi) paymentUpdate.stripePaymentIntentId = String(pi);
+
+  if (pi) {
+    paymentUpdate.stripePaymentIntentId = String(pi);
+  }
 
   const updatedPayment = await Payment.findOneAndUpdate(
     { _id: paymentId, status: { $ne: 'paid' } },
@@ -152,7 +159,6 @@ export async function finalizePaidCheckoutSession(session) {
 
   const paymentForOrder = updatedPayment || payment;
 
-  // 6) Create Order
   const createdOrder = await Order.create({
     customer: draft.customer,
     shipping: draft.shipping,
@@ -163,7 +169,6 @@ export async function finalizePaidCheckoutSession(session) {
     paymentId: paymentForOrder._id,
   });
 
-  // 7) Link orderId to payment
   await Payment.findByIdAndUpdate(paymentId, {
     $set: {
       orderId: createdOrder._id,
@@ -173,12 +178,10 @@ export async function finalizePaidCheckoutSession(session) {
     },
   });
 
-  // 8) Mark draft used (best effort)
   try {
     await CheckoutDraft.findByIdAndUpdate(draftId, { $set: { status: 'used' } });
   } catch {}
 
-  // 9) Emails
   const itemsText = (draft.items || [])
     .map(
       (i) =>
@@ -196,7 +199,7 @@ export async function finalizePaidCheckoutSession(session) {
 Имейл: ${draft.customer?.email}
 Телефон: ${draft.customer?.phone}
 Град: ${draft.customer?.city}
-Адрес: ${draft.customer?.address}
+Адрес: ${draft.customer?.address || '-'}
 
 Доставка: ${draft.shipping?.shippingMethod || '-'}
 Еконт офис: ${draft.shipping?.econtOffice || '-'}
@@ -230,7 +233,11 @@ Order ID: ${createdOrder._id}
 Happy Colors
 `.trim();
 
-    await sendEmail({ to: customerEmail, subject: customerSubject, text: customerText });
+    await sendEmail({
+      to: customerEmail,
+      subject: customerSubject,
+      text: customerText,
+    });
   }
 
   return {
@@ -240,10 +247,6 @@ Happy Colors
   };
 }
 
-/**
- * Създава Stripe Checkout Session + създава Draft/Payment (pending) в DB.
- * ❗ НЕ създаваме Order тук.
- */
 export async function createCardPaymentSession(orderData = {}) {
   const stripeSecretKey = requireEnv('STRIPE_SECRET_KEY');
   const clientUrl = requireEnv('CLIENT_URL');
@@ -257,6 +260,7 @@ export async function createCardPaymentSession(orderData = {}) {
     city,
     address,
     note = '',
+    paymentMethod = 'card',
     cartItems = [],
     totalPrice,
     shippingMethod = '',
@@ -265,43 +269,56 @@ export async function createCardPaymentSession(orderData = {}) {
     boxNow = false,
   } = orderData;
 
-  if (!name || !email || !phone || !city) {
-  throw new PaymentError('Липсват задължителни полета.', 400);
-}
+  const safeName = String(name ?? '').trim();
+  const safeEmail = String(email ?? '').trim();
+  const safePhone = String(phone ?? '').trim();
+  const safeCity = String(city ?? '').trim();
+  const safeAddress = String(address ?? '').trim();
+  const safeShippingMethod = String(shippingMethod ?? '').trim();
+  const safeEcontOffice = String(econtOffice ?? '').trim();
+  const safeSpeedyOffice = String(speedyOffice ?? '').trim();
 
-if (!isValidEmail(email)) {
-  throw new PaymentError('Невалиден email формат.', 400);
-}
+  if (!safeName || !safeEmail || !safePhone || !safeCity) {
+    throw new PaymentError('Липсват задължителни полета.', 400);
+  }
 
-if (!shippingMethod) {
-  throw new PaymentError('Липсва информация за начина на доставка.', 400);
-}
+  if (!isValidEmail(safeEmail)) {
+    throw new PaymentError('Невалиден email формат.', 400);
+  }
 
-if (shippingMethod === 'econt' && !String(econtOffice || '').trim()) {
-  throw new PaymentError('Моля, изберете офис или автомат на Еконт.', 400);
-}
+  if (!safeShippingMethod) {
+    throw new PaymentError('Липсва информация за начина на доставка.', 400);
+  }
 
-if (shippingMethod === 'speedy' && !String(speedyOffice || '').trim()) {
-  throw new PaymentError('Моля, изберете офис или автомат на Спиди.', 400);
-}
+  if (safeShippingMethod === 'econt' && !safeEcontOffice) {
+    throw new PaymentError('Моля, изберете офис или автомат на Еконт.', 400);
+  }
 
-if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
-  throw new PaymentError('Моля, въведете адрес за доставка.', 400);
-}
+  if (safeShippingMethod === 'speedy' && !safeSpeedyOffice) {
+    throw new PaymentError('Моля, изберете офис или автомат на Спиди.', 400);
+  }
 
- const cleanCustomer = {
-  name: sanitizeText(name),
-  email: sanitizeText(email),
-  phone: sanitizeText(phone),
-  city: sanitizeText(city),
-  address: shippingMethod === 'boxnow' ? sanitizeText(address) : '',
-  note: sanitizeText(note),
-};
+  if (safeShippingMethod === 'boxnow' && !safeAddress) {
+    throw new PaymentError('Моля, въведете адрес за доставка.', 400);
+  }
+
+  if (safeShippingMethod === 'boxnow' && paymentMethod === 'cod') {
+    throw new PaymentError('За Box Now е позволено само плащане с банкова карта.', 400);
+  }
+
+  const cleanCustomer = {
+    name: sanitizeText(safeName),
+    email: sanitizeText(safeEmail),
+    phone: sanitizeText(safePhone),
+    city: sanitizeText(safeCity),
+    address: safeShippingMethod === 'boxnow' ? sanitizeText(safeAddress) : '',
+    note: sanitizeText(note),
+  };
 
   const cleanShipping = {
-    shippingMethod: sanitizeText(shippingMethod),
-    econtOffice: sanitizeText(econtOffice),
-    speedyOffice: sanitizeText(speedyOffice),
+    shippingMethod: sanitizeText(safeShippingMethod),
+    econtOffice: safeShippingMethod === 'econt' ? sanitizeText(safeEcontOffice) : '',
+    speedyOffice: safeShippingMethod === 'speedy' ? sanitizeText(safeSpeedyOffice) : '',
     boxNow: Boolean(boxNow),
   };
 
@@ -314,7 +331,6 @@ if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
   const draftItems = mapped.map((x) => x.draftItem);
   const lineItems = mapped.map((x) => x.stripeLineItem);
 
-  // 1) Draft
   const draft = await CheckoutDraft.create({
     customer: cleanCustomer,
     shipping: cleanShipping,
@@ -324,7 +340,6 @@ if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
     status: 'open',
   });
 
-  // 2) Payment (pending) — без sessionId на този етап
   const payment = await Payment.create({
     provider: 'stripe',
     amount: Math.round(safeTotalPrice * 100),
@@ -333,7 +348,6 @@ if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
     draftId: draft._id,
   });
 
-  // 3) Stripe session
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -348,7 +362,6 @@ if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
       },
     });
 
-    // ✅ CRITICAL FIX: никога не допускаме празен stripeSessionId
     const sessionId = String(session?.id || '').trim();
     if (!sessionId) {
       throw new PaymentError('Stripe не върна валиден session id.', 500);
@@ -359,10 +372,10 @@ if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
 
     return { url: session.url };
   } catch (err) {
-    // rollback
     try {
       await Payment.findByIdAndDelete(payment._id);
     } catch {}
+
     try {
       await CheckoutDraft.findByIdAndDelete(draft._id);
     } catch {}
@@ -374,17 +387,16 @@ if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
   }
 }
 
-/**
- * CONFIRM:
- * - взима session от Stripe
- * - ползва общия finalizePaidCheckoutSession
- */
 export async function confirmCardPaymentSession(sessionId = '') {
   const cleanSessionId = String(sessionId || '').trim();
-  if (!cleanSessionId) throw new PaymentError('Липсва session_id.', 400);
+  if (!cleanSessionId) {
+    throw new PaymentError('Липсва session_id.', 400);
+  }
 
   const stripe = getStripeClient();
-  if (!stripe) throw new PaymentError('Stripe не е конфигуриран на сървъра.', 500);
+  if (!stripe) {
+    throw new PaymentError('Stripe не е конфигуриран на сървъра.', 500);
+  }
 
   const session = await stripe.checkout.sessions.retrieve(cleanSessionId, {
     expand: ['payment_intent'],
