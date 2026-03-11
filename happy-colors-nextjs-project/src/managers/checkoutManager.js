@@ -14,16 +14,34 @@ const SHIPPING_STORAGE_KEY = 'hc_shipping_choice';
 // използват като резервен вариант, ако извличането на динамичните
 // списъци от куриерските API се провали. За нуждите на динамичната
 // интеграция вижте useEffect в useCheckoutManager.
+// Fallback list of Econt offices used when the API fails or returns no data.
+// These entries include a city name and an approximate address (rather than
+// the office name) to better simulate what users expect to see. Feel free
+// to adjust these examples to real addresses or remove them entirely once
+// you have reliable API integration.
+// Fallback Econt offices as objects. These contain only the street and number.
+// The `isAps` flag indicates whether the office is an automated locker.
+// Fallback Econt offices. Each object contains the full address string (as
+// provided by Econt) and a derived `street` property used for sorting. When
+// adding new entries ensure that `street` corresponds to the street/boulevard
+// portion of the address (without city or neighbourhood). The `isAps` flag
+// marks automated lockers.
 export const ECONT_OFFICES = [
-  'София – Офис Център (пример)',
-  'Пловдив – Офис 1 (пример)',
-  'Варна – Офис 1 (пример)',
+  { address: 'гр. София бул. Тодор Александров 8', street: 'Тодор Александров 8', isAps: true },
+  { address: 'гр. София ул. Капитан Райчо 56', street: 'Капитан Райчо 56', isAps: false },
+  { address: 'гр. София ул. Преслав 20', street: 'Преслав 20', isAps: false },
 ];
 
+// Fallback list of Speedy offices used when the API fails or returns no data.
+// These entries contain a city and an address, giving users more useful
+// information than just a branch name.
+// Fallback Speedy offices as objects. Each entry contains only the street and number.
+// Fallback Speedy offices. Similar structure to Econt: `address` holds the
+// full address string and `street` contains the street portion for sorting.
 export const SPEEDY_OFFICES = [
-  'София – Спиди Офис 1 (пример)',
-  'Пловдив – Спиди Офис 1 (пример)',
-  'Бургас – Спиди Офис 1 (пример)',
+  { address: 'Пловдив Брезовско Шосе 147', street: 'Брезовско Шосе 147', isAps: false },
+  { address: 'Пловдив Индустриална 5', street: 'Индустриална 5', isAps: false },
+  { address: 'Пловдив Опълченска 66', street: 'Опълченска 66', isAps: false },
 ];
 
 function isValidEmail(email) {
@@ -235,9 +253,14 @@ export function useCheckoutManager() {
         const data = await res.json().catch(() => ({}));
         if (res.ok && Array.isArray(data?.offices)) {
           if (shipping.shippingMethod === 'econt') {
-            setEcontOffices(data.offices);
+            // Keep Econt offices as objects so that we can access
+            // `address`, `isAps`, and identifiers on the client. We
+            // assign the array directly. Fallback filtering and mapping
+            // will occur in the page component.
+            setEcontOffices(Array.isArray(data.offices) ? data.offices : []);
           } else if (shipping.shippingMethod === 'speedy') {
-            setSpeedyOffices(data.offices);
+            // Keep Speedy offices as objects for the same reason.
+            setSpeedyOffices(Array.isArray(data.offices) ? data.offices : []);
           }
         } else {
           console.warn('Failed to load offices', data);

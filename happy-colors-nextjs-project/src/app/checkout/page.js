@@ -1,4 +1,5 @@
 // happy-colors-nextjs-project/src/app/checkout/page.js
+
 'use client';
 
 import Link from 'next/link';
@@ -9,6 +10,99 @@ import {
   ECONT_OFFICES,
   SPEEDY_OFFICES,
 } from '@/managers/checkoutManager';
+
+function normalizeSpaces(value = '') {
+  return String(value).replace(/\s+/g, ' ').trim();
+}
+
+function extractSortableStreetFromAddress(address = '') {
+  const normalized = normalizeSpaces(address);
+
+  if (!normalized) return '';
+
+  const markerMatch = normalized.match(
+    /\b(бул\.|булевард|ул\.|улица)\s+([^,]+)$/i
+  );
+
+  if (markerMatch?.[2]) {
+    return normalizeSpaces(markerMatch[2])
+      .replace(/\b(No|№)\s*\S+.*$/i, '')
+      .replace(/\bвх\.\s*\S+.*$/i, '')
+      .replace(/\bет\.\s*\S+.*$/i, '')
+      .replace(/\bап\.\s*\S+.*$/i, '')
+      .trim();
+  }
+
+  return normalized;
+}
+
+function getOfficeAddress(office) {
+  if (!office) return '';
+  if (typeof office === 'string') return normalizeSpaces(office);
+  return normalizeSpaces(office.address || '');
+}
+
+function compareOfficesByAddress(a, b) {
+  const addressA = getOfficeAddress(a);
+  const addressB = getOfficeAddress(b);
+
+  const streetA = extractSortableStreetFromAddress(addressA);
+  const streetB = extractSortableStreetFromAddress(addressB);
+
+  const numA = streetA.match(/^\d+/);
+  const numB = streetB.match(/^\d+/);
+
+  if (numA && numB) {
+    const aNum = Number(numA[0]);
+    const bNum = Number(numB[0]);
+
+    if (aNum !== bNum) {
+      return aNum - bNum;
+    }
+  } else if (numA && !numB) {
+    return -1;
+  } else if (!numA && numB) {
+    return 1;
+  }
+
+  const byStreet = streetA.localeCompare(streetB, 'bg', {
+    sensitivity: 'base',
+    numeric: true,
+  });
+
+  if (byStreet !== 0) {
+    return byStreet;
+  }
+
+  return addressA.localeCompare(addressB, 'bg', {
+    sensitivity: 'base',
+    numeric: true,
+  });
+}
+
+function getOfficeOptionLabel(office, lockerPrefix) {
+  const address = getOfficeAddress(office);
+
+  if (!address) return '';
+
+  if (typeof office === 'object' && office?.isAps) {
+    return `${lockerPrefix} | ${address}`;
+  }
+
+  return address;
+}
+
+function getOfficeOptionValue(office) {
+  return getOfficeAddress(office);
+}
+
+function getOfficeOptionKey(office, idx) {
+  if (typeof office === 'object' && office?.id != null) {
+    return String(office.id);
+  }
+
+  return `${getOfficeAddress(office)}-${idx}`;
+}
 
 export default function CheckoutPage() {
   const {
@@ -21,7 +115,6 @@ export default function CheckoutPage() {
     setShippingMethod,
     setEcontOffice,
     setSpeedyOffice,
-    // dynamically fetched offices and loading state
     econtOffices,
     speedyOffices,
     officesLoading,
@@ -47,9 +140,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Determine if the user has entered a city. We trim whitespace so that a single space
-  // does not count as valid input. This flag is used to decide whether to allow
-  // office selection or prompt the user to enter a city first.
   const cityFilled = formData.city?.trim().length > 0;
 
   const paymentLabel =
@@ -68,97 +158,28 @@ export default function CheckoutPage() {
       ? 'Box Now'
       : '-';
 
-  // Determine which lists to render in the selects. If dynamic data has been
-  // loaded from the API it takes precedence; otherwise the fallback static
-  // arrays from checkoutManager.js are used. This logic is kept in the page
-  // component so it updates whenever `econtOffices` or `speedyOffices` change.
-  // When no dynamic offices are loaded, fall back to the static arrays. If a city
-  // has been entered, filter the static options by the city name to provide a
-  // more relevant list. Otherwise return an empty array to force a message
-  // prompting the user to enter a city first.
-  // Precompute a lowercase city for filtering. When no dynamic offices are available
-  // and the user has entered a city, we show the fallback lists without
-  // filtering by the entered city. Filtering the fallback offices by the
-  // latin spelling (e.g. "sofia") would hide all Bulgarian names (e.g. "София")
-  // due to alphabet differences, leading to empty lists. Instead, we only
-  // filter the fallback data by city when no city is required, so that a few
-  // example options always appear once a city is entered.
-  const lowerCity = formData.city?.trim().toLowerCase() || '';
-  /*
-   * Transliteration helpers for matching Bulgarian city names regardless
-   * of whether the user types in Latin or Cyrillic. These simple maps
-   * convert characters between alphabets based on common phonetic rules.
-   */
-  const cyrToLatMap = {
-    а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
-    к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u',
-    ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu',
-    я: 'ya', ѝ: 'i', ъ: 'a'
-  };
-  const latToCyrMap = {
-    a: 'а', b: 'б', v: 'в', g: 'г', d: 'д', e: 'е', z: 'з', i: 'и', y: 'й', k: 'к',
-    l: 'л', m: 'м', n: 'н', o: 'о', p: 'п', r: 'р', s: 'с', t: 'т', u: 'у', f: 'ф',
-    h: 'х', c: 'ц', q: 'я', w: 'в', x: 'кс', j: 'й'
-  };
-  function cyrToLat(str = '') {
-    return str
-      .split('')
-      .map((ch) => cyrToLatMap[ch] || cyrToLatMap[ch.toLowerCase()] || ch)
-      .join('');
-  }
-  function latToCyr(str = '') {
-    return str
-      .split('')
-      .map((ch) => latToCyrMap[ch] || latToCyrMap[ch.toLowerCase()] || ch)
-      .join('');
-  }
-
-  // Determine the available Econt offices. If dynamic offices have been loaded
-  // from the API they are used directly. Otherwise we fall back to the static
-  // examples and filter them by the entered city. The filtering uses both
-  // case-insensitive and transliterated comparisons to match strings like
-  // "sofia" with "София".
   const availableEcontOffices =
     econtOffices && econtOffices.length > 0
       ? econtOffices
       : cityFilled
-      ? ECONT_OFFICES.filter((office) => {
-          const officeLower = office.toLowerCase();
-          const officeLat = cyrToLat(officeLower);
-          const cyrCity = latToCyr(lowerCity);
-          return (
-            officeLower.includes(lowerCity) ||
-            officeLower.includes(cyrCity) ||
-            officeLat.includes(lowerCity)
-          );
-        })
+      ? ECONT_OFFICES
       : [];
 
-  // Determine the available Speedy offices. Similar logic to Econt: use
-  // dynamic data when available; otherwise filter the static list by the
-  // entered city using transliteration for better matching.
   const availableSpeedyOffices =
     speedyOffices && speedyOffices.length > 0
       ? speedyOffices
       : cityFilled
-      ? SPEEDY_OFFICES.filter((office) => {
-          const officeLower = office.toLowerCase();
-          const officeLat = cyrToLat(officeLower);
-          const cyrCity = latToCyr(lowerCity);
-          return (
-            officeLower.includes(lowerCity) ||
-            officeLower.includes(cyrCity) ||
-            officeLat.includes(lowerCity)
-          );
-        })
+      ? SPEEDY_OFFICES
       : [];
+
+  const sortedEcontOffices = [...availableEcontOffices].sort(compareOfficesByAddress);
+  const sortedSpeedyOffices = [...availableSpeedyOffices].sort(compareOfficesByAddress);
 
   return (
     <section className={styles.checkoutContainer}>
       <h1 className={styles.heading}>Завършване на поръчката</h1>
 
       <div className={styles.columns}>
-        {/* Лява колона – данни за клиента + доставка */}
         <form className={styles.form} onSubmit={handleSubmit}>
           <h2 className={styles.subheading}>Данни за доставка</h2>
 
@@ -244,7 +265,6 @@ export default function CheckoutPage() {
             {errors.address && <p className={styles.error}>{errors.address}</p>}
           </div>
 
-          {/* ---- ДОСТАВКА (ново) ---- */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на доставка <span className={styles.requiredStar}>*</span>
@@ -292,6 +312,7 @@ export default function CheckoutPage() {
               <label htmlFor="econtOffice">
                 Офис на Еконт <span className={styles.requiredStar}>*</span>
               </label>
+
               {cityFilled ? (
                 availableEcontOffices.length > 0 ? (
                   <select
@@ -300,28 +321,18 @@ export default function CheckoutPage() {
                     onChange={(e) => setEcontOffice(e.target.value)}
                   >
                     <option value="">Изберете офис на Еконт</option>
-                  {availableEcontOffices.map((office) => {
-                    // When the list comes from the API it may contain
-                    // objects with `label`, `id`, or other fields. We derive
-                    // a display label and a stable key. If `office` is a
-                    // simple string we use it directly. Otherwise we look
-                    // for `label`, then `address` or `name`. The key falls
-                    // back to the label when no id is provided.
-                    let label = '';
-                    let key = '';
-                    if (typeof office === 'string') {
-                      label = office;
-                      key = office;
-                    } else if (office && typeof office === 'object') {
-                      label = office.label || office.address || office.name || '';
-                      key = office.id || label;
-                    }
-                    return (
-                      <option key={key} value={label}>
-                        {label}
-                      </option>
-                    );
-                  })}
+
+                    {sortedEcontOffices.map((office, idx) => {
+                      const label = getOfficeOptionLabel(office, '24/7 Еконтомат');
+                      const value = getOfficeOptionValue(office);
+                      const key = getOfficeOptionKey(office, idx);
+
+                      return (
+                        <option key={key} value={value}>
+                          {label}
+                        </option>
+                      );
+                    })}
                   </select>
                 ) : (
                   <select id="econtOffice" disabled>
@@ -333,9 +344,11 @@ export default function CheckoutPage() {
                   <option value="">Първо въведете град</option>
                 </select>
               )}
+
               {errors.econtOffice && (
                 <p className={styles.error}>{errors.econtOffice}</p>
               )}
+
               {officesLoading && (
                 <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
                   Зареждат се офисите…
@@ -349,6 +362,7 @@ export default function CheckoutPage() {
               <label htmlFor="speedyOffice">
                 Офис на Спиди <span className={styles.requiredStar}>*</span>
               </label>
+
               {cityFilled ? (
                 availableSpeedyOffices.length > 0 ? (
                   <select
@@ -357,18 +371,14 @@ export default function CheckoutPage() {
                     onChange={(e) => setSpeedyOffice(e.target.value)}
                   >
                     <option value="">Изберете офис на Спиди</option>
-                    {availableSpeedyOffices.map((office) => {
-                      let label = '';
-                      let key = '';
-                      if (typeof office === 'string') {
-                        label = office;
-                        key = office;
-                      } else if (office && typeof office === 'object') {
-                        label = office.label || office.name || '';
-                        key = office.id || label;
-                      }
+
+                    {sortedSpeedyOffices.map((office, idx) => {
+                      const label = getOfficeOptionLabel(office, '24/7 Автомат');
+                      const value = getOfficeOptionValue(office);
+                      const key = getOfficeOptionKey(office, idx);
+
                       return (
-                        <option key={key} value={label}>
+                        <option key={key} value={value}>
                           {label}
                         </option>
                       );
@@ -384,9 +394,11 @@ export default function CheckoutPage() {
                   <option value="">Първо въведете град</option>
                 </select>
               )}
+
               {errors.speedyOffice && (
                 <p className={styles.error}>{errors.speedyOffice}</p>
               )}
+
               {officesLoading && (
                 <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
                   Зареждат се офисите…
@@ -395,7 +407,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ---- Плащане ---- */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на плащане <span className={styles.requiredStar}>*</span>
@@ -447,7 +458,6 @@ export default function CheckoutPage() {
           </p>
         </form>
 
-        {/* Дясна колона – обобщение */}
         <aside className={styles.summary}>
           <h2 className={styles.subheading}>Вашата поръчка</h2>
 
@@ -478,7 +488,6 @@ export default function CheckoutPage() {
         </aside>
       </div>
 
-      {/* ---------- MODAL STEP 2 ---------- */}
       {isConfirmOpen && (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <div className={styles.modal}>
