@@ -141,6 +141,7 @@ export default function CheckoutPage() {
   }
 
   const cityFilled = formData.city?.trim().length > 0;
+  const shouldShowAddressField = shipping.shippingMethod === 'boxnow';
 
   const paymentLabel =
     formData.paymentMethods?.[0] === 'card'
@@ -155,7 +156,7 @@ export default function CheckoutPage() {
       : shipping.shippingMethod === 'speedy'
       ? `Спиди – ${shipping.speedyOffice || '(не е избран офис)'}`
       : shipping.shippingMethod === 'boxnow'
-      ? 'Box Now'
+      ? `Box Now – ${formData.address || '(не е въведен адрес)'}`
       : '-';
 
   const availableEcontOffices =
@@ -252,20 +253,6 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="address">
-              Адрес за доставка <span className={styles.requiredStar}>*</span>
-            </label>
-            <input
-              id="address"
-              name="address"
-              type="text"
-              value={formData.address}
-              onChange={handleChange}
-            />
-            {errors.address && <p className={styles.error}>{errors.address}</p>}
-          </div>
-
-          <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на доставка <span className={styles.requiredStar}>*</span>
             </span>
@@ -278,7 +265,7 @@ export default function CheckoutPage() {
                   checked={shipping.shippingMethod === 'econt'}
                   onChange={() => setShippingMethod('econt')}
                 />
-                <span>Еконт (офис)</span>
+                <span>Доставка до офис или автомат на Еконт</span>
               </label>
 
               <label className={styles.radioOption}>
@@ -288,7 +275,7 @@ export default function CheckoutPage() {
                   checked={shipping.shippingMethod === 'speedy'}
                   onChange={() => setShippingMethod('speedy')}
                 />
-                <span>Спиди (офис)</span>
+                <span>Доставка до офис или автомат на Спиди</span>
               </label>
 
               <label className={styles.radioOption}>
@@ -298,7 +285,7 @@ export default function CheckoutPage() {
                   checked={shipping.shippingMethod === 'boxnow'}
                   onChange={() => setShippingMethod('boxnow')}
                 />
-                <span>Box Now</span>
+                <span>Доставка до автомат на Box Now</span>
               </label>
             </div>
 
@@ -310,7 +297,7 @@ export default function CheckoutPage() {
           {shipping.shippingMethod === 'econt' && (
             <div className={styles.field}>
               <label htmlFor="econtOffice">
-                Офис на Еконт <span className={styles.requiredStar}>*</span>
+                Офис или автомат на Еконт <span className={styles.requiredStar}>*</span>
               </label>
 
               {cityFilled ? (
@@ -320,7 +307,7 @@ export default function CheckoutPage() {
                     value={shipping.econtOffice}
                     onChange={(e) => setEcontOffice(e.target.value)}
                   >
-                    <option value="">Изберете офис на Еконт</option>
+                    <option value="">Изберете офис или автомат на Еконт</option>
 
                     {sortedEcontOffices.map((office, idx) => {
                       const label = getOfficeOptionLabel(office, '24/7 Еконтомат');
@@ -360,7 +347,7 @@ export default function CheckoutPage() {
           {shipping.shippingMethod === 'speedy' && (
             <div className={styles.field}>
               <label htmlFor="speedyOffice">
-                Офис на Спиди <span className={styles.requiredStar}>*</span>
+                Офис или автомат на Спиди <span className={styles.requiredStar}>*</span>
               </label>
 
               {cityFilled ? (
@@ -370,7 +357,7 @@ export default function CheckoutPage() {
                     value={shipping.speedyOffice}
                     onChange={(e) => setSpeedyOffice(e.target.value)}
                   >
-                    <option value="">Изберете офис на Спиди</option>
+                    <option value="">Изберете офис или автомат на Спиди</option>
 
                     {sortedSpeedyOffices.map((office, idx) => {
                       const label = getOfficeOptionLabel(office, '24/7 Автомат');
@@ -404,6 +391,22 @@ export default function CheckoutPage() {
                   Зареждат се офисите…
                 </p>
               )}
+            </div>
+          )}
+
+          {shouldShowAddressField && (
+            <div className={styles.field}>
+              <label htmlFor="address">
+                Адрес за доставка <span className={styles.requiredStar}>*</span>
+              </label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+              />
+              {errors.address && <p className={styles.error}>{errors.address}</p>}
             </div>
           )}
 
@@ -514,10 +517,12 @@ export default function CheckoutPage() {
                 <span className={styles.modalValue}>{formData.city}</span>
               </div>
 
-              <div className={styles.modalRow}>
-                <span className={styles.modalLabel}>Адрес:</span>
-                <span className={styles.modalValue}>{formData.address}</span>
-              </div>
+              {shipping.shippingMethod === 'boxnow' && (
+                <div className={styles.modalRow}>
+                  <span className={styles.modalLabel}>Адрес:</span>
+                  <span className={styles.modalValue}>{formData.address}</span>
+                </div>
+              )}
 
               {formData.note?.trim() ? (
                 <div className={styles.modalRow}>

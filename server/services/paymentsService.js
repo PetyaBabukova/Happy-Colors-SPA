@@ -265,24 +265,38 @@ export async function createCardPaymentSession(orderData = {}) {
     boxNow = false,
   } = orderData;
 
-  if (!name || !email || !phone || !city || !address) {
-    throw new PaymentError('Липсват задължителни полета.', 400);
-  }
-  if (!isValidEmail(email)) {
-    throw new PaymentError('Невалиден email формат.', 400);
-  }
-  if (!shippingMethod) {
-    throw new PaymentError('Липсва информация за начина на доставка.', 400);
-  }
+  if (!name || !email || !phone || !city) {
+  throw new PaymentError('Липсват задължителни полета.', 400);
+}
 
-  const cleanCustomer = {
-    name: sanitizeText(name),
-    email: sanitizeText(email),
-    phone: sanitizeText(phone),
-    city: sanitizeText(city),
-    address: sanitizeText(address),
-    note: sanitizeText(note),
-  };
+if (!isValidEmail(email)) {
+  throw new PaymentError('Невалиден email формат.', 400);
+}
+
+if (!shippingMethod) {
+  throw new PaymentError('Липсва информация за начина на доставка.', 400);
+}
+
+if (shippingMethod === 'econt' && !String(econtOffice || '').trim()) {
+  throw new PaymentError('Моля, изберете офис или автомат на Еконт.', 400);
+}
+
+if (shippingMethod === 'speedy' && !String(speedyOffice || '').trim()) {
+  throw new PaymentError('Моля, изберете офис или автомат на Спиди.', 400);
+}
+
+if (shippingMethod === 'boxnow' && !String(address || '').trim()) {
+  throw new PaymentError('Моля, въведете адрес за доставка.', 400);
+}
+
+ const cleanCustomer = {
+  name: sanitizeText(name),
+  email: sanitizeText(email),
+  phone: sanitizeText(phone),
+  city: sanitizeText(city),
+  address: shippingMethod === 'boxnow' ? sanitizeText(address) : '',
+  note: sanitizeText(note),
+};
 
   const cleanShipping = {
     shippingMethod: sanitizeText(shippingMethod),

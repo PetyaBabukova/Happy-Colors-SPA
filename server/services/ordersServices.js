@@ -1,5 +1,3 @@
-// server/services/ordersServices.js
-
 import Order from '../models/Order.js';
 import { sendEmail } from '../helpers/sendEmail.js';
 
@@ -15,12 +13,12 @@ class OrderError extends Error {
 // ----------------------
 
 function sanitizeText(input) {
-  return String(input).replace(/<\/?[^>]+(>|$)/g, '').trim();
+  return String(input ?? '').replace(/<\/?[^>]+(>|$)/g, '').trim();
 }
 
 function isValidEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(String(email).trim());
+  return regex.test(String(email ?? '').trim());
 }
 
 function isValidPaymentMethod(method) {
@@ -37,7 +35,7 @@ export async function handleOrder(rawData) {
     email,
     phone = '',
     city,
-    address,
+    address = '',
     note = '',
     paymentMethod,
     cartItems = [],
@@ -48,11 +46,21 @@ export async function handleOrder(rawData) {
     boxNow = false,
   } = rawData || {};
 
+  const safeName = String(name ?? '').trim();
+  const safeEmail = String(email ?? '').trim();
+  const safePhone = String(phone ?? '').trim();
+  const safeCity = String(city ?? '').trim();
+  const safeAddress = String(address ?? '').trim();
+  const safeNote = String(note ?? '').trim();
+  const safeShippingMethod = String(shippingMethod ?? '').trim();
+  const safeEcontOffice = String(econtOffice ?? '').trim();
+  const safeSpeedyOffice = String(speedyOffice ?? '').trim();
+
   // ----------------------
   // 1) Basic validations
   // ----------------------
 
-  if (!name || !email || !phone || !city || !address || !paymentMethod) {
+  if (!safeName || !safeEmail || !safePhone || !safeCity || !paymentMethod) {
     throw new OrderError('Липсват задължителни полета.', 400);
   }
 
@@ -60,7 +68,7 @@ export async function handleOrder(rawData) {
     throw new OrderError('Количката е празна или невалидна.', 400);
   }
 
-  if (!isValidEmail(email)) {
+  if (!isValidEmail(safeEmail)) {
     throw new OrderError('Невалиден email формат.', 400);
   }
 
@@ -76,45 +84,59 @@ export async function handleOrder(rawData) {
     );
   }
 
-  if (!shippingMethod) {
+  if (!safeShippingMethod) {
     throw new OrderError('Липсва информация за начина на доставка.', 400);
+  }
+
+  if (safeShippingMethod === 'econt' && !safeEcontOffice) {
+    throw new OrderError('Моля, изберете офис или автомат на Еконт.', 400);
+  }
+
+  if (safeShippingMethod === 'speedy' && !safeSpeedyOffice) {
+    throw new OrderError('Моля, изберете офис или автомат на Спиди.', 400);
+  }
+
+  if (safeShippingMethod === 'boxnow' && !safeAddress) {
+    throw new OrderError('Моля, въведете адрес за доставка.', 400);
   }
 
   // ----------------------
   // 2) Length & security checks
   // ----------------------
 
-  if (name.trim().length < 3 || name.trim().length > 50) {
+  if (safeName.length < 3 || safeName.length > 50) {
     throw new OrderError('Името трябва да е между 3 и 50 символа.', 400);
   }
 
-  if (phone.trim().length > 20) {
+  if (safePhone.length > 20) {
     throw new OrderError('Телефонът е прекалено дълъг.', 400);
   }
 
-  if (city.trim().length < 2 || city.trim().length > 50) {
+  if (safeCity.length < 2 || safeCity.length > 50) {
     throw new OrderError('Градът трябва да е между 2 и 50 символа.', 400);
   }
 
-  if (address.trim().length < 5 || address.trim().length > 200) {
-    throw new OrderError('Адресът трябва да е между 5 и 200 символа.', 400);
+  if (safeShippingMethod === 'boxnow') {
+    if (safeAddress.length < 5 || safeAddress.length > 200) {
+      throw new OrderError('Адресът трябва да е между 5 и 200 символа.', 400);
+    }
   }
 
-  if (note && note.trim().length > 500) {
+  if (safeNote && safeNote.length > 500) {
     throw new OrderError('Бележката е прекалено дълга.', 400);
   }
 
   const forbiddenPattern = /<[^>]*>/g;
   const allFields = [
-    name,
-    email,
-    phone,
-    city,
-    address,
-    note,
-    shippingMethod,
-    econtOffice,
-    speedyOffice,
+    safeName,
+    safeEmail,
+    safePhone,
+    safeCity,
+    safeAddress,
+    safeNote,
+    safeShippingMethod,
+    safeEcontOffice,
+    safeSpeedyOffice,
   ];
 
   if (allFields.some((v) => forbiddenPattern.test(String(v)))) {
@@ -126,18 +148,18 @@ export async function handleOrder(rawData) {
   // ----------------------
 
   const cleanCustomer = {
-    name: sanitizeText(name),
-    email: sanitizeText(email),
-    phone: sanitizeText(phone),
-    city: sanitizeText(city),
-    address: sanitizeText(address),
-    note: sanitizeText(note),
+    name: sanitizeText(safeName),
+    email: sanitizeText(safeEmail),
+    phone: sanitizeText(safePhone),
+    city: sanitizeText(safeCity),
+    address: safeShippingMethod === 'boxnow' ? sanitizeText(safeAddress) : '',
+    note: sanitizeText(safeNote),
   };
 
   const cleanShipping = {
-    shippingMethod: sanitizeText(shippingMethod),
-    econtOffice: sanitizeText(econtOffice),
-    speedyOffice: sanitizeText(speedyOffice),
+    shippingMethod: sanitizeText(safeShippingMethod),
+    econtOffice: safeShippingMethod === 'econt' ? sanitizeText(safeEcontOffice) : '',
+    speedyOffice: safeShippingMethod === 'speedy' ? sanitizeText(safeSpeedyOffice) : '',
     boxNow: Boolean(boxNow),
   };
 
@@ -151,7 +173,7 @@ export async function handleOrder(rawData) {
     productId: item._id,
     title: String(item.title || ''),
     quantity: Number(item.quantity || 0),
-    unitPrice: Number(item.price || 0), // EUR
+    unitPrice: Number(item.price || 0),
   }));
 
   // ----------------------
@@ -187,7 +209,7 @@ export async function handleOrder(rawData) {
 Имейл: ${cleanCustomer.email}
 Телефон: ${cleanCustomer.phone}
 Град: ${cleanCustomer.city}
-Адрес: ${cleanCustomer.address}
+Адрес: ${cleanCustomer.address || '-'}
 
 Начин на плащане: Наложен платеж
 
@@ -203,7 +225,6 @@ ${itemsText}
 Обща сума: ${safeTotalPrice.toFixed(2)} €
 `.trim();
 
-  // Admin mail
   try {
     await sendEmail({ subject: adminSubject, text: adminText });
   } catch (e) {
@@ -214,7 +235,6 @@ ${itemsText}
     );
   }
 
-  // Customer mail
   const customerSubject = 'Поръчката ви е приета (Happy Colors)';
   const customerText = `
 Здравейте, ${cleanCustomer.name}!
