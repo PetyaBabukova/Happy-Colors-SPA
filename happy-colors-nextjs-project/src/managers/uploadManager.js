@@ -1,4 +1,5 @@
 // src/managers/uploadManager.js
+const bucketName = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME;
 
 // Качва едно изображение към Next API /api/upload-image и връща публичния URL.
 export async function uploadImageToBucket(file) {
@@ -49,7 +50,7 @@ export async function uploadImageToBucket(file) {
     console.error('No imageUrl in /api/upload-image response:', data);
     throw new Error('Възникна грешка при качването на изображението.');
   }
-
+console.log("Bucket:", process.env.NEXT_PUBLIC_GCS_BUCKET_NAME);
   return data.imageUrl;
 }
 
@@ -65,6 +66,6 @@ export async function uploadImagesToBucket(files = []) {
     const imageUrl = await uploadImageToBucket(file);
     uploadedImageUrls.push(imageUrl);
   }
-
+console.log("Bucket:", process.env.NEXT_PUBLIC_GCS_BUCKET_NAME);
   return uploadedImageUrls;
 }

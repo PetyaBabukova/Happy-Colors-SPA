@@ -139,3 +139,4 @@ dist
 /server/keys/
 .env.local
 !.env.example
+*.json
