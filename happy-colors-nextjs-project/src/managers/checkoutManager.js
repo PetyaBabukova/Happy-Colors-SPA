@@ -1,5 +1,4 @@
-// happy-collors-nextjs-project/src/managers/checkoutManager.js
-
+// happy-colors-nextjs-project/src/managers/checkoutManager.js
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
@@ -10,6 +9,18 @@ import baseURL from '@/config';
 const ORDER_DRAFT_KEY = 'hc_order_draft';
 const SHIPPING_STORAGE_KEY = 'hc_shipping_choice';
 
+export const ECONT_OFFICES = [
+  { address: 'гр. София бул. Тодор Александров 8', street: 'Тодор Александров 8', isAps: true },
+  { address: 'гр. София ул. Капитан Райчо 56', street: 'Капитан Райчо 56', isAps: false },
+  { address: 'гр. София ул. Преслав 20', street: 'Преслав 20', isAps: false },
+];
+
+export const SPEEDY_OFFICES = [
+  { address: 'Пловдив Брезовско Шосе 147', street: 'Брезовско Шосе 147', isAps: false },
+  { address: 'Пловдив Индустриална 5', street: 'Индустриална 5', isAps: false },
+  { address: 'Пловдив Опълченска 66', street: 'Опълченска 66', isAps: false },
+];
+
 function isValidEmail(email) {
   return /^\S+@\S+\.\S+$/.test(String(email || '').trim());
 }
@@ -17,30 +28,6 @@ function isValidEmail(email) {
 function isValidPhone(phone) {
   const clean = String(phone || '').replace(/\s+/g, '').trim();
   return /^\+?\d{8,15}$/.test(clean);
-}
-
-async function fetchCourierOffices(carrier, city) {
-  const cleanCity = String(city || '').trim();
-
-  if (!cleanCity || cleanCity.length < 2) {
-    return [];
-  }
-
-  const url = `${baseURL}/delivery/${carrier}/offices?city=${encodeURIComponent(cleanCity)}`;
-
-  console.log('baseURL =>', baseURL);
-  console.log('delivery url =>', url);
-
-  const res = await fetch(url);
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(
-      data?.message || 'Грешка при зареждане на офисите за доставка.'
-    );
-  }
-
-  return Array.isArray(data?.offices) ? data.offices : [];
 }
 
 export function useCheckoutManager() {
@@ -65,51 +52,46 @@ export function useCheckoutManager() {
     boxNow: false,
   });
 
-  const [econtOffices, setEcontOffices] = useState([]);
-  const [speedyOffices, setSpeedyOffices] = useState([]);
-  const [isLoadingEcontOffices, setIsLoadingEcontOffices] = useState(false);
-  const [isLoadingSpeedyOffices, setIsLoadingSpeedyOffices] = useState(false);
-
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [econtOffices, setEcontOffices] = useState([]);
+  const [speedyOffices, setSpeedyOffices] = useState([]);
+  const [officesLoading, setOfficesLoading] = useState(false);
+
   const paymentMethod = formData.paymentMethods?.[0] || '';
-  const cityValue = formData.city.trim();
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
-
-    if (name === 'city') {
-      setShipping((prev) => ({
-        ...prev,
-        econtOffice: '',
-        speedyOffice: '',
-      }));
-    }
   }, []);
 
   const handlePaymentChange = useCallback((method) => {
     setFormData((prev) => {
+      if (shipping.shippingMethod === 'boxnow' && method === 'cod') {
+        return { ...prev, paymentMethods: ['card'] };
+      }
+
       const isSelected = prev.paymentMethods.includes(method);
       const newMethods = isSelected ? [] : [method];
       return { ...prev, paymentMethods: newMethods };
     });
 
     setErrors((prev) => ({ ...prev, paymentMethods: '' }));
-  }, []);
+  }, [shipping.shippingMethod]);
 
   const setShippingMethod = useCallback((method) => {
     setShipping((prev) => {
       if (method === 'econt') {
         return {
           shippingMethod: 'econt',
-          econtOffice: '',
+          econtOffice: prev.econtOffice || '',
           speedyOffice: '',
           boxNow: false,
         };
@@ -119,7 +101,7 @@ export function useCheckoutManager() {
         return {
           shippingMethod: 'speedy',
           econtOffice: '',
-          speedyOffice: '',
+          speedyOffice: prev.speedyOffice || '',
           boxNow: false,
         };
       }
@@ -132,11 +114,18 @@ export function useCheckoutManager() {
       };
     });
 
+    setFormData((prev) => ({
+      ...prev,
+      paymentMethods: method === 'boxnow' ? ['card'] : prev.paymentMethods,
+    }));
+
     setErrors((prev) => ({
       ...prev,
       shippingMethod: '',
       econtOffice: '',
       speedyOffice: '',
+      address: '',
+      paymentMethods: '',
     }));
   }, []);
 
@@ -148,6 +137,7 @@ export function useCheckoutManager() {
       speedyOffice: '',
       boxNow: false,
     }));
+
     setErrors((prev) => ({ ...prev, econtOffice: '' }));
   }, []);
 
@@ -159,94 +149,9 @@ export function useCheckoutManager() {
       speedyOffice: value,
       boxNow: false,
     }));
+
     setErrors((prev) => ({ ...prev, speedyOffice: '' }));
   }, []);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadEcontOffices() {
-      if (shipping.shippingMethod !== 'econt') {
-        return;
-      }
-
-      if (cityValue.length < 2) {
-        setEcontOffices([]);
-        return;
-      }
-
-      setIsLoadingEcontOffices(true);
-
-      try {
-        const offices = await fetchCourierOffices('econt', cityValue);
-
-        if (!isCancelled) {
-          setEcontOffices(offices);
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setEcontOffices([]);
-          setSubmitError(
-            err?.message || 'Не успяхме да заредим офисите на Еконт.'
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingEcontOffices(false);
-        }
-      }
-    }
-
-    const timer = setTimeout(loadEcontOffices, 350);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [shipping.shippingMethod, cityValue]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadSpeedyOffices() {
-      if (shipping.shippingMethod !== 'speedy') {
-        return;
-      }
-
-      if (cityValue.length < 2) {
-        setSpeedyOffices([]);
-        return;
-      }
-
-      setIsLoadingSpeedyOffices(true);
-
-      try {
-        const offices = await fetchCourierOffices('speedy', cityValue);
-
-        if (!isCancelled) {
-          setSpeedyOffices(offices);
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setSpeedyOffices([]);
-          setSubmitError(
-            err?.message || 'Не успяхме да заредим офисите на Спиди.'
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingSpeedyOffices(false);
-        }
-      }
-    }
-
-    const timer = setTimeout(loadSpeedyOffices, 350);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [shipping.shippingMethod, cityValue]);
 
   const validate = useCallback(() => {
     const newErrors = {};
@@ -273,27 +178,84 @@ export function useCheckoutManager() {
       newErrors.city = 'Моля, въведете град';
     }
 
-    if (!address || address.length < 10) {
-      newErrors.address = 'Моля, въведете адрес за доставка - минимум 10 символа';
-    }
-
     if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
       newErrors.paymentMethods = 'Моля, изберете начин на плащане';
+    }
+
+    if (shipping.shippingMethod === 'boxnow' && paymentMethod === 'cod') {
+      newErrors.paymentMethods = 'За Box Now е позволено само плащане с банкова карта';
     }
 
     if (!shipping.shippingMethod) {
       newErrors.shippingMethod = 'Моля, изберете начин на доставка';
     } else if (shipping.shippingMethod === 'econt' && !shipping.econtOffice) {
       newErrors.econtOffice = 'Моля, изберете офис на Еконт';
-    } else if (
-      shipping.shippingMethod === 'speedy' &&
-      !shipping.speedyOffice
-    ) {
+    } else if (shipping.shippingMethod === 'speedy' && !shipping.speedyOffice) {
       newErrors.speedyOffice = 'Моля, изберете офис на Спиди';
+    } else if (shipping.shippingMethod === 'boxnow') {
+      if (!address || address.length < 10) {
+        newErrors.address = 'Моля, въведете адрес за доставка - минимум 10 символа';
+      }
     }
 
     return newErrors;
-  }, [formData, shipping]);
+  }, [formData, shipping, paymentMethod]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    async function fetchOffices() {
+      if (shipping.shippingMethod === 'econt') {
+        setEcontOffices([]);
+      } else if (shipping.shippingMethod === 'speedy') {
+        setSpeedyOffices([]);
+      }
+
+      const cityTrimmed = (formData.city || '').trim();
+
+      if (
+        !shipping.shippingMethod ||
+        shipping.shippingMethod === 'boxnow' ||
+        !cityTrimmed
+      ) {
+        return;
+      }
+
+      const cityQuery = encodeURIComponent(cityTrimmed);
+
+      const url =
+        shipping.shippingMethod === 'econt'
+          ? `/api/offices/econt?city=${cityQuery}`
+          : shipping.shippingMethod === 'speedy'
+          ? `/api/offices/speedy?city=${cityQuery}`
+          : null;
+
+      if (!url) return;
+
+      setOfficesLoading(true);
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && Array.isArray(data?.offices)) {
+          if (shipping.shippingMethod === 'econt') {
+            setEcontOffices(Array.isArray(data.offices) ? data.offices : []);
+          } else if (shipping.shippingMethod === 'speedy') {
+            setSpeedyOffices(Array.isArray(data.offices) ? data.offices : []);
+          }
+        } else {
+          console.warn('Failed to load offices', data);
+        }
+      } catch (err) {
+        console.error('Office fetch error', err);
+      } finally {
+        setOfficesLoading(false);
+      }
+    }
+
+    fetchOffices();
+  }, [shipping.shippingMethod, formData.city]);
 
   const persistDraftAndShipping = useCallback(() => {
     const draft = {
@@ -301,7 +263,7 @@ export function useCheckoutManager() {
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       city: formData.city.trim(),
-      address: formData.address.trim(),
+      address: shipping.shippingMethod === 'boxnow' ? formData.address.trim() : '',
       note: formData.note.trim(),
       paymentMethod,
     };
@@ -329,6 +291,7 @@ export function useCheckoutManager() {
       setSubmitSuccess('');
 
       const newErrors = validate();
+
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
         setIsConfirmOpen(false);
@@ -350,6 +313,10 @@ export function useCheckoutManager() {
     setIsSubmitting(true);
 
     try {
+      if (shipping.shippingMethod === 'boxnow' && paymentMethod === 'cod') {
+        throw new Error('За Box Now е позволено само плащане с банкова карта.');
+      }
+
       const draft = persistDraftAndShipping();
 
       const payload = {
@@ -372,9 +339,7 @@ export function useCheckoutManager() {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(
-            data?.message || 'Грешка при стартиране на плащане с карта.'
-          );
+          throw new Error(data?.message || 'Грешка при стартиране на плащане с карта.');
         }
 
         if (!data?.url) {
@@ -384,6 +349,7 @@ export function useCheckoutManager() {
         if (typeof window !== 'undefined') {
           window.location.href = data.url;
         }
+
         return;
       }
 
@@ -434,28 +400,21 @@ export function useCheckoutManager() {
   return {
     cartItems,
     totalPrice,
-
     formData,
     errors,
     isSubmitting,
-
     shipping,
     setShippingMethod,
     setEcontOffice,
     setSpeedyOffice,
-
     econtOffices,
     speedyOffices,
-    isLoadingEcontOffices,
-    isLoadingSpeedyOffices,
-
+    officesLoading,
     isConfirmOpen,
     closeConfirm,
     confirmOrder,
-
     submitError,
     submitSuccess,
-
     handleChange,
     handlePaymentChange,
     handleSubmit,

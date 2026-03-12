@@ -5,7 +5,104 @@
 import Link from 'next/link';
 import styles from './checkout.module.css';
 import MessageBox from '@/components/ui/MessageBox';
-import { useCheckoutManager } from '@/managers/checkoutManager';
+import {
+  useCheckoutManager,
+  ECONT_OFFICES,
+  SPEEDY_OFFICES,
+} from '@/managers/checkoutManager';
+
+function normalizeSpaces(value = '') {
+  return String(value).replace(/\s+/g, ' ').trim();
+}
+
+function extractSortableStreetFromAddress(address = '') {
+  const normalized = normalizeSpaces(address);
+
+  if (!normalized) return '';
+
+  const markerMatch = normalized.match(
+    /\b(бул\.|булевард|ул\.|улица)\s+([^,]+)$/i
+  );
+
+  if (markerMatch?.[2]) {
+    return normalizeSpaces(markerMatch[2])
+      .replace(/\b(No|№)\s*\S+.*$/i, '')
+      .replace(/\bвх\.\s*\S+.*$/i, '')
+      .replace(/\bет\.\s*\S+.*$/i, '')
+      .replace(/\bап\.\s*\S+.*$/i, '')
+      .trim();
+  }
+
+  return normalized;
+}
+
+function getOfficeAddress(office) {
+  if (!office) return '';
+  if (typeof office === 'string') return normalizeSpaces(office);
+  return normalizeSpaces(office.address || '');
+}
+
+function compareOfficesByAddress(a, b) {
+  const addressA = getOfficeAddress(a);
+  const addressB = getOfficeAddress(b);
+
+  const streetA = extractSortableStreetFromAddress(addressA);
+  const streetB = extractSortableStreetFromAddress(addressB);
+
+  const numA = streetA.match(/^\d+/);
+  const numB = streetB.match(/^\d+/);
+
+  if (numA && numB) {
+    const aNum = Number(numA[0]);
+    const bNum = Number(numB[0]);
+
+    if (aNum !== bNum) {
+      return aNum - bNum;
+    }
+  } else if (numA && !numB) {
+    return -1;
+  } else if (!numA && numB) {
+    return 1;
+  }
+
+  const byStreet = streetA.localeCompare(streetB, 'bg', {
+    sensitivity: 'base',
+    numeric: true,
+  });
+
+  if (byStreet !== 0) {
+    return byStreet;
+  }
+
+  return addressA.localeCompare(addressB, 'bg', {
+    sensitivity: 'base',
+    numeric: true,
+  });
+}
+
+function getOfficeOptionLabel(office, lockerPrefix) {
+  const address = getOfficeAddress(office);
+
+  if (!address) return '';
+
+  if (typeof office === 'object' && office?.isAps) {
+    return `${lockerPrefix} | ${address}`;
+  }
+
+  return address;
+}
+
+function getOfficeOptionValue(office) {
+  return getOfficeAddress(office);
+}
+
+function getOfficeOptionKey(office, idx) {
+  if (typeof office === 'object' && office?.id != null) {
+    return String(office.id);
+  }
+
+  return `${getOfficeAddress(office)}-${idx}`;
+}
 
 export default function CheckoutPage() {
   const {
@@ -20,8 +117,7 @@ export default function CheckoutPage() {
     setSpeedyOffice,
     econtOffices,
     speedyOffices,
-    isLoadingEcontOffices,
-    isLoadingSpeedyOffices,
+    officesLoading,
     isConfirmOpen,
     closeConfirm,
     confirmOrder,
@@ -44,6 +140,10 @@ export default function CheckoutPage() {
     );
   }
 
+  const cityFilled = formData.city?.trim().length > 0;
+  const shouldShowAddressField = shipping.shippingMethod === 'boxnow';
+  const isBoxNow = shipping.shippingMethod === 'boxnow';
+
   const paymentLabel =
     formData.paymentMethods?.[0] === 'card'
       ? 'С банкова карта'
@@ -51,24 +151,31 @@ export default function CheckoutPage() {
       ? 'Наложен платеж'
       : '-';
 
-  const selectedEcontOfficeLabel =
-    econtOffices.find((office) => office.id === shipping.econtOffice)?.label || '';
-
-  const selectedSpeedyOfficeLabel =
-    speedyOffices.find((office) => office.id === shipping.speedyOffice)?.label || '';
-
   const shippingLabel =
     shipping.shippingMethod === 'econt'
-      ? `Еконт – ${
-          selectedEcontOfficeLabel || '(не е избран офис)'
-        }`
+      ? `Еконт – ${shipping.econtOffice || '(не е избран офис)'}`
       : shipping.shippingMethod === 'speedy'
-      ? `Спиди – ${
-          selectedSpeedyOfficeLabel || '(не е избран офис)'
-        }`
+      ? `Спиди – ${shipping.speedyOffice || '(не е избран офис)'}`
       : shipping.shippingMethod === 'boxnow'
-      ? 'Box Now'
+      ? `Box Now – ${formData.address || '(не е въведен адрес)'}`
       : '-';
+
+  const availableEcontOffices =
+    econtOffices && econtOffices.length > 0
+      ? econtOffices
+      : cityFilled
+      ? ECONT_OFFICES
+      : [];
+
+  const availableSpeedyOffices =
+    speedyOffices && speedyOffices.length > 0
+      ? speedyOffices
+      : cityFilled
+      ? SPEEDY_OFFICES
+      : [];
+
+  const sortedEcontOffices = [...availableEcontOffices].sort(compareOfficesByAddress);
+  const sortedSpeedyOffices = [...availableSpeedyOffices].sort(compareOfficesByAddress);
 
   return (
     <section className={styles.checkoutContainer}>
@@ -147,20 +254,6 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="address">
-              Адрес за доставка <span className={styles.requiredStar}>*</span>
-            </label>
-            <input
-              id="address"
-              name="address"
-              type="text"
-              value={formData.address}
-              onChange={handleChange}
-            />
-            {errors.address && <p className={styles.error}>{errors.address}</p>}
-          </div>
-
-          <div className={styles.field}>
             <span className={styles.fieldLabel}>
               Начин на доставка <span className={styles.requiredStar}>*</span>
             </span>
@@ -173,7 +266,7 @@ export default function CheckoutPage() {
                   checked={shipping.shippingMethod === 'econt'}
                   onChange={() => setShippingMethod('econt')}
                 />
-                <span>Еконт (офис)</span>
+                <span>Доставка до офис или автомат на Еконт</span>
               </label>
 
               <label className={styles.radioOption}>
@@ -183,7 +276,7 @@ export default function CheckoutPage() {
                   checked={shipping.shippingMethod === 'speedy'}
                   onChange={() => setShippingMethod('speedy')}
                 />
-                <span>Спиди (офис)</span>
+                <span>Доставка до офис или автомат на Спиди</span>
               </label>
 
               <label className={styles.radioOption}>
@@ -193,7 +286,7 @@ export default function CheckoutPage() {
                   checked={shipping.shippingMethod === 'boxnow'}
                   onChange={() => setShippingMethod('boxnow')}
                 />
-                <span>Box Now</span>
+                <span>Доставка до автомат на Box Now</span>
               </label>
             </div>
 
@@ -205,34 +298,49 @@ export default function CheckoutPage() {
           {shipping.shippingMethod === 'econt' && (
             <div className={styles.field}>
               <label htmlFor="econtOffice">
-                Офис на Еконт <span className={styles.requiredStar}>*</span>
+                Офис или автомат на Еконт <span className={styles.requiredStar}>*</span>
               </label>
 
-              <select
-                id="econtOffice"
-                value={shipping.econtOffice}
-                onChange={(e) => setEcontOffice(e.target.value)}
-                disabled={isLoadingEcontOffices || formData.city.trim().length < 2}
-              >
-                <option value="">
-                  {formData.city.trim().length < 2
-                    ? 'Първо въведете град'
-                    : isLoadingEcontOffices
-                    ? 'Зареждане на офиси...'
-                    : econtOffices.length === 0
-                    ? 'Няма намерени офиси'
-                    : 'Изберете офис на Еконт'}
-                </option>
+              {cityFilled ? (
+                availableEcontOffices.length > 0 ? (
+                  <select
+                    id="econtOffice"
+                    value={shipping.econtOffice}
+                    onChange={(e) => setEcontOffice(e.target.value)}
+                  >
+                    <option value="">Изберете офис или автомат на Еконт</option>
 
-                {econtOffices.map((office) => (
-                  <option key={office.id} value={office.id}>
-                    {office.label}
-                  </option>
-                ))}
-              </select>
+                    {sortedEcontOffices.map((office, idx) => {
+                      const label = getOfficeOptionLabel(office, '24/7 Еконтомат');
+                      const value = getOfficeOptionValue(office);
+                      const key = getOfficeOptionKey(office, idx);
+
+                      return (
+                        <option key={key} value={value}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <select id="econtOffice" disabled>
+                    <option value="">Няма офиси за този град</option>
+                  </select>
+                )
+              ) : (
+                <select id="econtOffice" disabled>
+                  <option value="">Първо въведете град</option>
+                </select>
+              )}
 
               {errors.econtOffice && (
                 <p className={styles.error}>{errors.econtOffice}</p>
+              )}
+
+              {officesLoading && (
+                <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
+                  Зареждат се офисите…
+                </p>
               )}
             </div>
           )}
@@ -240,35 +348,66 @@ export default function CheckoutPage() {
           {shipping.shippingMethod === 'speedy' && (
             <div className={styles.field}>
               <label htmlFor="speedyOffice">
-                Офис на Спиди <span className={styles.requiredStar}>*</span>
+                Офис или автомат на Спиди <span className={styles.requiredStar}>*</span>
               </label>
 
-              <select
-                id="speedyOffice"
-                value={shipping.speedyOffice}
-                onChange={(e) => setSpeedyOffice(e.target.value)}
-                disabled={isLoadingSpeedyOffices || formData.city.trim().length < 2}
-              >
-                <option value="">
-                  {formData.city.trim().length < 2
-                    ? 'Първо въведете град'
-                    : isLoadingSpeedyOffices
-                    ? 'Зареждане на офиси...'
-                    : speedyOffices.length === 0
-                    ? 'Няма намерени офиси'
-                    : 'Изберете офис на Спиди'}
-                </option>
+              {cityFilled ? (
+                availableSpeedyOffices.length > 0 ? (
+                  <select
+                    id="speedyOffice"
+                    value={shipping.speedyOffice}
+                    onChange={(e) => setSpeedyOffice(e.target.value)}
+                  >
+                    <option value="">Изберете офис или автомат на Спиди</option>
 
-                {speedyOffices.map((office) => (
-                  <option key={office.id} value={office.id}>
-                    {office.label}
-                  </option>
-                ))}
-              </select>
+                    {sortedSpeedyOffices.map((office, idx) => {
+                      const label = getOfficeOptionLabel(office, '24/7 Автомат');
+                      const value = getOfficeOptionValue(office);
+                      const key = getOfficeOptionKey(office, idx);
+
+                      return (
+                        <option key={key} value={value}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <select id="speedyOffice" disabled>
+                    <option value="">Няма офиси за този град</option>
+                  </select>
+                )
+              ) : (
+                <select id="speedyOffice" disabled>
+                  <option value="">Първо въведете град</option>
+                </select>
+              )}
 
               {errors.speedyOffice && (
                 <p className={styles.error}>{errors.speedyOffice}</p>
               )}
+
+              {officesLoading && (
+                <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
+                  Зареждат се офисите…
+                </p>
+              )}
+            </div>
+          )}
+
+          {shouldShowAddressField && (
+            <div className={styles.field}>
+              <label htmlFor="address">
+                Адрес за доставка <span className={styles.requiredStar}>*</span>
+              </label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+              />
+              {errors.address && <p className={styles.error}>{errors.address}</p>}
             </div>
           )}
 
@@ -287,15 +426,23 @@ export default function CheckoutPage() {
                 <span>С банкова карта</span>
               </label>
 
-              <label className={styles.paymentOption}>
-                <input
-                  type="checkbox"
-                  checked={formData.paymentMethods.includes('cod')}
-                  onChange={() => handlePaymentChange('cod')}
-                />
-                <span>Наложен платеж</span>
-              </label>
+              {!isBoxNow && (
+                <label className={styles.paymentOption}>
+                  <input
+                    type="checkbox"
+                    checked={formData.paymentMethods.includes('cod')}
+                    onChange={() => handlePaymentChange('cod')}
+                  />
+                  <span>Наложен платеж</span>
+                </label>
+              )}
             </div>
+
+            {isBoxNow && (
+              <p style={{ marginTop: '4px', fontSize: '0.875em', color: '#666' }}>
+                За Box Now е позволено само плащане с банкова карта.
+              </p>
+            )}
 
             {errors.paymentMethods && (
               <p className={styles.error}>{errors.paymentMethods}</p>
@@ -379,10 +526,12 @@ export default function CheckoutPage() {
                 <span className={styles.modalValue}>{formData.city}</span>
               </div>
 
-              <div className={styles.modalRow}>
-                <span className={styles.modalLabel}>Адрес:</span>
-                <span className={styles.modalValue}>{formData.address}</span>
-              </div>
+              {shipping.shippingMethod === 'boxnow' && (
+                <div className={styles.modalRow}>
+                  <span className={styles.modalLabel}>Адрес:</span>
+                  <span className={styles.modalValue}>{formData.address}</span>
+                </div>
+              )}
 
               {formData.note?.trim() ? (
                 <div className={styles.modalRow}>
