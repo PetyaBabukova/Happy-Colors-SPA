@@ -58,8 +58,8 @@ export default function Header() {
             </li>
 
             <li><Link href="/aboutus" onClick={() => setMobileMenuOpen(false)}>За мен</Link></li>
-            <li><Link href="/blog" onClick={() => setMobileMenuOpen(false)}>Блог</Link></li>
-            <li><Link href="/partners" onClick={() => setMobileMenuOpen(false)}>За партньори</Link></li>
+            {/* <li><Link href="/blog" onClick={() => setMobileMenuOpen(false)}>Блог</Link></li> */}
+            {/* <li><Link href="/partners" onClick={() => setMobileMenuOpen(false)}>За партньори</Link></li> */}
             <li><Link href="/contacts" onClick={() => setMobileMenuOpen(false)}>Контакти</Link></li>
           </ul>
 
