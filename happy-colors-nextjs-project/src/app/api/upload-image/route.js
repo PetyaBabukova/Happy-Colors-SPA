@@ -8,10 +8,18 @@ import fs from 'fs/promises';
 
 export const runtime = 'nodejs';
 
+// Next.js automatically loads .env.local from the project root
+// Debug: Log all GCS-related env variables
+console.log('🔍 Environment variables check:');
+console.log('GCS_BUCKET_NAME:', process.env.GCS_BUCKET_NAME);
+console.log('NEXT_PUBLIC_GCS_BUCKET_NAME:', process.env.NEXT_PUBLIC_GCS_BUCKET_NAME);
+console.log('All env keys:', Object.keys(process.env).filter(k => k.includes('GCS')));
+
 const bucketName = process.env.GCS_BUCKET_NAME;
 
 if (!bucketName) {
-  console.error('GCS_BUCKET_NAME is not set in environment variables.');
+  console.error('❌ GCS_BUCKET_NAME is not set in environment variables.');
+  console.error('Available env vars:', Object.keys(process.env).slice(0, 10));
 }
 
 const storage = new Storage();
@@ -51,7 +59,6 @@ export async function POST(request) {
     const bucket = storage.bucket(bucketName);
     const destination = fileName;
 
-    // качваме файла в GCS от temp файла
     await bucket.upload(tempFilePath, {
       destination,
       resumable: false,
@@ -60,14 +67,12 @@ export async function POST(request) {
       },
     });
 
-    // НЕ пипаме ACL (uniform bucket-level access е включен)
-    // ако искаш файловете да са публични, това се настройва на ниво bucket през GCP конзолата
-
     await fs.unlink(tempFilePath).catch(() => {});
 
     const publicUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
 
     return NextResponse.json({ imageUrl: publicUrl }, { status: 200 });
+
   } catch (err) {
     console.error('Error in /api/upload-image:', err);
     return NextResponse.json(
