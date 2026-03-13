@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import styles from './header.module.css';
 import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductContext';
+import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -10,6 +11,9 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading } = useAuth();
   const { visibleCategories } = useProducts();
+  const { getTotalItems } = useCart();
+
+  const cartItemCount = getTotalItems();
 
   // Показваме loader или нищо само докато върви заявката за user
   if (loading) return null;
@@ -82,8 +86,11 @@ export default function Header() {
             null
           )}
 
-          <Link href="/cart">
+          <Link href="/cart" className={styles.cartIconWrapper}>
             <Image className={styles.basketGreen} src="/basket_green.svg" alt="Количка" width={32} height={32} />
+            {cartItemCount > 0 && (
+              <span className={styles.cartBadge}>{cartItemCount}</span>
+            )}
           </Link>
         </nav>
       </header>
