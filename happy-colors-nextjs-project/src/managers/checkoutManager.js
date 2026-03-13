@@ -362,10 +362,13 @@ export function useCheckoutManager() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data?.message || 'Грешка при изпращане на поръчката.');
+        throw new Error(
+          data?.message || 
+          'Поръчката не беше приета по технически причини.\nМоля опитайте по-късно или се свържете с нас.'
+        );
       }
 
-      setSubmitSuccess('Поръчката ви е приета. Ще се свържем с вас при първа възможност.');
+      setSubmitSuccess('Поръчката е приета. Благодаря!');
 
       clearCart();
 

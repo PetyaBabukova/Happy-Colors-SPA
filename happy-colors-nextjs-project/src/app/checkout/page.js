@@ -479,11 +479,11 @@ export default function CheckoutPage() {
                 <div>
                   <p className={styles.itemTitle}>{item.title}</p>
                   <p className={styles.itemMeta}>
-                    Количество: {item.quantity} × {item.price.toFixed(2)} лв.
+                    Количество: {item.quantity} × {item.price.toFixed(2)} €
                   </p>
                 </div>
                 <p className={styles.itemTotal}>
-                  {(item.quantity * item.price).toFixed(2)} лв.
+                  {(item.quantity * item.price).toFixed(2)} €
                 </p>
               </li>
             ))}
@@ -491,7 +491,7 @@ export default function CheckoutPage() {
 
           <div className={styles.totalRow}>
             <span>Общо:</span>
-            <strong>{totalPrice.toFixed(2)} лв.</strong>
+            <strong>{totalPrice.toFixed(2)} € </strong>
           </div>
 
           <Link href="/cart" className={styles.backToCart}>

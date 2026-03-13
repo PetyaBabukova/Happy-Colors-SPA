@@ -182,18 +182,29 @@ export async function finalizePaidCheckoutSession(session) {
     await CheckoutDraft.findByIdAndUpdate(draftId, { $set: { status: 'used' } });
   } catch {}
 
-  const itemsText = (draft.items || [])
-    .map(
-      (i) =>
-        `- ${i.title} (ID: ${i.productId}) | количество: ${i.quantity} | цена: ${Number(
-          i.unitPrice
-        ).toFixed(2)} €`
-    )
-    .join('\n');
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
 
-  const adminSubject = `Платена поръчка (карта) от ${draft.customer?.name} (Happy Colors)`;
+  const itemsText = (draft.items || [])
+    .map((i) => {
+      const productId = i.productId ? String(i.productId) : '-';
+      const productLink = `${clientUrl}/products/${productId}`;
+      return `- ${i.title}\n  ${productLink}\n  ID: ${productId} | количество: ${i.quantity} | цена: ${Number(
+        i.unitPrice
+      ).toFixed(2)} €`;
+    })
+    .join('\n\n');
+
+  const customerNote = draft.customer?.note ? draft.customer.note : 'няма';
+
+  const stripePaymentLink = pi 
+    ? `https://dashboard.stripe.com/payments/${String(pi)}`
+    : '-';
+
+  const adminSubject = `Нова поръчка #${createdOrder._id} от ${draft.customer?.name} (Happy Colors)`;
   const adminText = `
 Платена поръчка (Stripe)
+
+Order ID: ${createdOrder._id}
 
 Име: ${draft.customer?.name}
 Имейл: ${draft.customer?.email}
@@ -201,10 +212,17 @@ export async function finalizePaidCheckoutSession(session) {
 Град: ${draft.customer?.city}
 Адрес: ${draft.customer?.address || '-'}
 
+Бележка от клиента: ${customerNote}
+
 Доставка: ${draft.shipping?.shippingMethod || '-'}
 Еконт офис: ${draft.shipping?.econtOffice || '-'}
 Спиди офис: ${draft.shipping?.speedyOffice || '-'}
 Box Now: ${draft.shipping?.boxNow ? 'Да' : 'Не'}
+
+Начин на плащане: Банкова карта (Stripe)
+
+Stripe payment:
+${stripePaymentLink}
 
 Stripe Session ID: ${sessionId}
 PaymentIntent ID: ${pi ? String(pi) : '-'}
@@ -213,7 +231,6 @@ PaymentIntent ID: ${pi ? String(pi) : '-'}
 ${itemsText || '(няма продукти)'}
 
 Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
-Order ID: ${createdOrder._id}
 `.trim();
 
   await sendEmail({ subject: adminSubject, text: adminText });
@@ -224,9 +241,9 @@ Order ID: ${createdOrder._id}
     const customerText = `
 Здравейте, ${draft.customer?.name || ''}!
 
-Поръчката ви е приета. Ще се свържем с вас при първа възможност.
+Вашата поръчка ID: ${createdOrder._id} е получена.
+Благодарим Ви! Ще се свържем с Вас при първа възможност.
 
-Номер на поръчка: ${createdOrder._id}
 Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
 
 Поздрави,

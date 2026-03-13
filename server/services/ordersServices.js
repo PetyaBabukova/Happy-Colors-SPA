@@ -197,23 +197,32 @@ export async function handleOrder(rawData) {
   // 6) Emails (admin + customer)
   // ----------------------
 
-  const adminSubject = `Нова поръчка от ${cleanCustomer.name} (Happy Colors)`;
+  const adminSubject = `Нова поръчка #${order._id} от ${cleanCustomer.name} (Happy Colors)`;
+
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
 
   const itemsText = mappedItems
     .map((item) => {
       const productId = item.productId ? String(item.productId) : '-';
-      return `- ${item.title} | ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
+      const productLink = `${clientUrl}/products/${productId}`;
+      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
     })
-    .join('\n');
+    .join('\n\n');
+
+  const customerNote = cleanCustomer.note ? cleanCustomer.note : 'няма';
 
   const adminText = `
 Нова поръчка от Happy Colors
+
+Order ID: ${order._id}
 
 Име: ${cleanCustomer.name}
 Имейл: ${cleanCustomer.email}
 Телефон: ${cleanCustomer.phone}
 Град: ${cleanCustomer.city}
 Адрес: ${cleanCustomer.address || '-'}
+
+Бележка от клиента: ${customerNote}
 
 Начин на плащане: Наложен платеж
 
@@ -243,7 +252,8 @@ ${itemsText}
   const customerText = `
 Здравейте, ${cleanCustomer.name}!
 
-Поръчката ви е приета. Ще се свържем с вас при първа възможност.
+Вашата поръчка ID: ${order._id} е получена.
+Благодарим Ви! Ще се свържем с Вас при първа възможност.
 
 Поздрави,
 Happy Colors
