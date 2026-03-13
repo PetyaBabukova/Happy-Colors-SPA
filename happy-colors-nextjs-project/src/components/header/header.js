@@ -75,9 +75,11 @@ export default function Header() {
               Здравей, {user.username} | <Link href="/users/logout">Изход</Link>
             </p>
           ) : (
-            <p className={styles.userGreeting}>
-              <Link href="/users/register">Регистрация</Link> | <Link href="/users/login">Вход</Link>
-            </p>
+            // Скрито за гости - само администратор може да регистрира потребители
+            // <p className={styles.userGreeting}>
+            //   <Link href="/users/register">Регистрация</Link> | <Link href="/users/login">Вход</Link>
+            // </p>
+            null
           )}
 
           <Link href="/cart">
