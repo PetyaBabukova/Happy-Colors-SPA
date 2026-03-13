@@ -10,6 +10,22 @@ import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import styles from './details.module.css';
 
+const deliveryContent = `
+Начини на доставка:
+• офис на Еконт или Спиди
+• автомат на Еконт или Спиди
+• автомат на Box Now
+Към момента не предлагаме доставка до личен адрес.
+Цена на доставката:
+За поръчки на стойност над 50 евро доставката е безплатна.
+За поръчки под тази стойност цената на доставката се определя според тарифите на куриерската фирма.
+Срок за изпращане:
+Наличните продукти се изпращат в рамките на до 1 работен ден.
+Срокът за получаване зависи от куриерската фирма и локацията на получателя.
+Неналични продукти:
+Ако продуктът не е наличен, можете да изпратите запитване чрез контактната форма на сайта.
+`;
+
 export default function ProductDetails({ product }) {
 	const { user } = useAuth();
 	const { addToCart } = useCart();
@@ -29,6 +45,7 @@ export default function ProductDetails({ product }) {
 	}, [product]);
 
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
+	const [activeTab, setActiveTab] = useState('description');
 
 	const isAvailable = product?.availability !== 'unavailable';
 
@@ -80,45 +97,84 @@ export default function ProductDetails({ product }) {
 				</div>
 
 				<ul className={styles.productDetailsBodyTabsContainer}>
-					<li className={styles.productDetailsBodyTab}><a href="/">описание</a></li>
-					<li className={styles.productDetailsBodyTab}><a href="/">доставка и плащане</a></li>
+					<li
+						className={`${styles.productDetailsBodyTab} ${
+							activeTab === 'description' ? styles.activeTab : ''
+						}`}
+					>
+						<a
+							href="#"
+							onClick={(e) => {
+								e.preventDefault();
+								setActiveTab('description');
+							}}
+						>
+							описание
+						</a>
+					</li>
+
+					<li
+						className={`${styles.productDetailsBodyTab} ${
+							activeTab === 'delivery' ? styles.activeTab : ''
+						}`}
+					>
+						<a
+							href="#"
+							onClick={(e) => {
+								e.preventDefault();
+								setActiveTab('delivery');
+							}}
+						>
+							доставка и плащане
+						</a>
+					</li>
 				</ul>
 
 				<div className={styles.productDescriptionBody}>
-					<p>{product.description}</p>
-				</div>
-
-				<p className={isAvailable ? styles.available : styles.unavailable}>
-					<b>Наличност:</b> {availabilityLabel}
-				</p>
-
-				<p><b>Цена:</b> {product.price} €</p>
-
-				<div className={styles.actionButtonsContainer}>
-					{isAvailable ? (
-						<button onClick={handleAddToCart} className={styles.actionBtn}>
-							Добави в количката
-						</button>
-					) : (
-						<button
-							onClick={handleInquiry}
-							className={styles.actionBtn}
-						>
-							Попитай
-						</button>
+					{activeTab === 'description' && (
+						<p>{product.description}</p>
 					)}
 
-					{canEdit && (
-						<div className={styles.ownerActions}>
-							<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>
-								Редактирай
-							</Link>
-							<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>
-								Изтрий
-							</Link>
+					{activeTab === 'delivery' && (
+						<p style={{ whiteSpace: 'pre-line' }}>{deliveryContent}</p>
+					)}
+				</div>
+
+				{activeTab === 'description' && (
+					<>
+						<p className={isAvailable ? styles.available : styles.unavailable}>
+							<b>Наличност:</b> {availabilityLabel}
+						</p>
+
+						<p><b>Цена:</b> {product.price} €</p>
+
+						<div className={styles.actionButtonsContainer}>
+							{isAvailable ? (
+								<button onClick={handleAddToCart} className={styles.actionBtn}>
+									Добави в количката
+								</button>
+							) : (
+								<button
+									onClick={handleInquiry}
+									className={styles.actionBtn}
+								>
+									Попитай
+								</button>
+							)}
+
+							{canEdit && (
+								<div className={styles.ownerActions}>
+									<Link href={`/products/${product._id}/edit`} className={styles.actionBtn}>
+										Редактирай
+									</Link>
+									<Link href={`/products/${product._id}/delete`} className={styles.actionBtn}>
+										Изтрий
+									</Link>
+								</div>
+							)}
 						</div>
-					)}
-				</div>
+					</>
+				)}
 			</div>
 
 			<div className={styles.productDetailsImagesContainer}>
@@ -128,8 +184,7 @@ export default function ProductDetails({ product }) {
 							type="button"
 							onClick={showPrevImage}
 							aria-label="Предишно изображение"
-							    className={`${styles.imageNavBtn} ${styles.imageNavBtnLeft}`}
-
+							className={`${styles.imageNavBtn} ${styles.imageNavBtnLeft}`}
 						>
 							‹
 						</button>
@@ -142,8 +197,7 @@ export default function ProductDetails({ product }) {
 							type="button"
 							onClick={showNextImage}
 							aria-label="Следващо изображение"
-							    className={`${styles.imageNavBtn} ${styles.imageNavBtnRight}`}
-
+							className={`${styles.imageNavBtn} ${styles.imageNavBtnRight}`}
 						>
 							›
 						</button>

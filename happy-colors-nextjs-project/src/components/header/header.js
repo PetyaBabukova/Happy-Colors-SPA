@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import styles from './header.module.css';
 import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductContext';
+import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -10,6 +11,9 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading } = useAuth();
   const { visibleCategories } = useProducts();
+  const { getTotalItems } = useCart();
+
+  const cartItemCount = getTotalItems();
 
   // Показваме loader или нищо само докато върви заявката за user
   if (loading) return null;
@@ -58,8 +62,8 @@ export default function Header() {
             </li>
 
             <li><Link href="/aboutus" onClick={() => setMobileMenuOpen(false)}>За мен</Link></li>
-            <li><Link href="/blog" onClick={() => setMobileMenuOpen(false)}>Блог</Link></li>
-            <li><Link href="/partners" onClick={() => setMobileMenuOpen(false)}>За партньори</Link></li>
+            {/* <li><Link href="/blog" onClick={() => setMobileMenuOpen(false)}>Блог</Link></li> */}
+            {/* <li><Link href="/partners" onClick={() => setMobileMenuOpen(false)}>За партньори</Link></li> */}
             <li><Link href="/contacts" onClick={() => setMobileMenuOpen(false)}>Контакти</Link></li>
           </ul>
 
@@ -75,13 +79,18 @@ export default function Header() {
               Здравей, {user.username} | <Link href="/users/logout">Изход</Link>
             </p>
           ) : (
-            <p className={styles.userGreeting}>
-              <Link href="/users/register">Регистрация</Link> | <Link href="/users/login">Вход</Link>
-            </p>
+            // Скрито за гости - само администратор може да регистрира потребители
+            // <p className={styles.userGreeting}>
+            //   <Link href="/users/register">Регистрация</Link> | <Link href="/users/login">Вход</Link>
+            // </p>
+            null
           )}
 
-          <Link href="/cart">
+          <Link href="/cart" className={styles.cartIconWrapper}>
             <Image className={styles.basketGreen} src="/basket_green.svg" alt="Количка" width={32} height={32} />
+            {cartItemCount > 0 && (
+              <span className={styles.cartBadge}>{cartItemCount}</span>
+            )}
           </Link>
         </nav>
       </header>

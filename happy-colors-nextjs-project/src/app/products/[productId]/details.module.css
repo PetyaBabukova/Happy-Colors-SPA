@@ -97,7 +97,7 @@
   width: 100%;
 }
 
-.actionBtn:hover {
+.actionBtn:hover, .activeTab {
   background-color: var(--light-green);
   color: white;
 }
@@ -173,6 +173,8 @@
   color: var(--dark-orange);
   font-weight: 600;
 }
+
+
 
 .imageNavBtn {
   position: absolute;
