@@ -1,4 +1,3 @@
-// happy-colors-nextjs-project/src/managers/checkoutManager.js
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
@@ -363,23 +362,31 @@ export function useCheckoutManager() {
 
       if (!res.ok) {
         throw new Error(
-          data?.message || 
+          data?.message ||
           'Поръчката не беше приета по технически причини.\nМоля опитайте по-късно или се свържете с нас.'
         );
       }
 
-      setSubmitSuccess('Поръчката е приета. Благодаря!');
-
-      clearCart();
+      setIsConfirmOpen(false);
+      setSubmitSuccess(
+        'Поръчката е приета, благодаря! Ще се свържа с вас при първа възможност!'
+      );
 
       if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(ORDER_DRAFT_KEY);
-        window.localStorage.removeItem(SHIPPING_STORAGE_KEY);
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
       }
 
-      setIsConfirmOpen(false);
-
       setTimeout(() => {
+        clearCart();
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem(ORDER_DRAFT_KEY);
+          window.localStorage.removeItem(SHIPPING_STORAGE_KEY);
+        }
+
         router.push('/products');
       }, 3000);
     } catch (err) {

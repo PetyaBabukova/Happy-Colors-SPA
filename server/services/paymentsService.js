@@ -1,5 +1,3 @@
-// server/services/paymentService.js
-
 import Stripe from 'stripe';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
@@ -29,6 +27,22 @@ function sanitizeText(input) {
 function isValidEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(String(email ?? '').trim());
+}
+
+function getPaymentIntentId(paymentIntent) {
+  if (!paymentIntent) {
+    return '';
+  }
+
+  if (typeof paymentIntent === 'string') {
+    return String(paymentIntent).trim();
+  }
+
+  if (typeof paymentIntent === 'object' && paymentIntent.id) {
+    return String(paymentIntent.id).trim();
+  }
+
+  return '';
 }
 
 function mapItems(cartItems) {
@@ -126,9 +140,9 @@ export async function finalizePaidCheckoutSession(session) {
       payment.orderId = existingOrder._id;
       payment.stripeSessionId = sessionId;
 
-      const pi0 = session?.payment_intent;
-      if (pi0) {
-        payment.stripePaymentIntentId = String(pi0);
+      const existingPaymentIntentId = getPaymentIntentId(session?.payment_intent);
+      if (existingPaymentIntentId) {
+        payment.stripePaymentIntentId = existingPaymentIntentId;
       }
 
       await payment.save();
@@ -142,13 +156,15 @@ export async function finalizePaidCheckoutSession(session) {
   }
 
   const pi = session?.payment_intent;
+  const paymentIntentId = getPaymentIntentId(pi);
+
   const paymentUpdate = {
     status: 'paid',
     stripeSessionId: sessionId,
   };
 
-  if (pi) {
-    paymentUpdate.stripePaymentIntentId = String(pi);
+  if (paymentIntentId) {
+    paymentUpdate.stripePaymentIntentId = paymentIntentId;
   }
 
   const updatedPayment = await Payment.findOneAndUpdate(
@@ -174,7 +190,7 @@ export async function finalizePaidCheckoutSession(session) {
       orderId: createdOrder._id,
       status: 'paid',
       stripeSessionId: sessionId,
-      ...(pi ? { stripePaymentIntentId: String(pi) } : {}),
+      ...(paymentIntentId ? { stripePaymentIntentId: paymentIntentId } : {}),
     },
   });
 
@@ -196,8 +212,8 @@ export async function finalizePaidCheckoutSession(session) {
 
   const customerNote = draft.customer?.note ? draft.customer.note : 'няма';
 
-  const stripePaymentLink = pi 
-    ? `https://dashboard.stripe.com/payments/${String(pi)}`
+  const stripePaymentLink = paymentIntentId
+    ? `https://dashboard.stripe.com/payments/${paymentIntentId}`
     : '-';
 
   const adminSubject = `Нова поръчка #${createdOrder._id} от ${draft.customer?.name} (Happy Colors)`;
@@ -225,7 +241,7 @@ Stripe payment:
 ${stripePaymentLink}
 
 Stripe Session ID: ${sessionId}
-PaymentIntent ID: ${pi ? String(pi) : '-'}
+PaymentIntent ID: ${paymentIntentId || '-'}
 
 Поръчани продукти:
 ${itemsText || '(няма продукти)'}
