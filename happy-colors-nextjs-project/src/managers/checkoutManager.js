@@ -367,11 +367,17 @@ export function useCheckoutManager() {
         );
       }
 
+      setIsConfirmOpen(false);
       setSubmitSuccess(
         'Поръчката е приета, благодаря! Ще се свържа с вас при първа възможност!'
       );
 
-      setIsConfirmOpen(false);
+      if (typeof window !== 'undefined') {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      }
 
       setTimeout(() => {
         clearCart();
