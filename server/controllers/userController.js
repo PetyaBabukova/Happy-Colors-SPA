@@ -1,8 +1,8 @@
-// server/controllers/userController.js
-
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { loginUser, registerUser } from '../services/userService.js';
+import { createRateLimiter } from '../middlewares/rateLimit.js';
+import { AUTH_COOKIE_NAME, getJwtSecret } from '../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -13,17 +13,19 @@ const ROUTES = {
   ME: '/me',
 };
 
-const COOKIE_NAME = 'token';
+const loginLimiter = createRateLimiter({
+  keyPrefix: 'users-login',
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Твърде много опити за вход. Моля, опитайте отново след малко.',
+});
 
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret || String(secret).trim() === '') {
-    throw new Error('JWT_SECRET липсва в environment variables.');
-  }
-
-  return secret;
-}
+const registerLimiter = createRateLimiter({
+  keyPrefix: 'users-register',
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Твърде много опити за регистрация. Моля, опитайте отново след малко.',
+});
 
 function getCookieConfig() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -48,7 +50,7 @@ function getClearCookieConfig() {
   };
 }
 
-router.post(ROUTES.REGISTER, async (req, res) => {
+router.post(ROUTES.REGISTER, registerLimiter, async (req, res) => {
   try {
     const user = await registerUser(req.body);
     res.status(201).json(user);
@@ -64,11 +66,11 @@ router.post(ROUTES.REGISTER, async (req, res) => {
   }
 });
 
-router.post(ROUTES.LOGIN, async (req, res) => {
+router.post(ROUTES.LOGIN, loginLimiter, async (req, res) => {
   try {
     const { token, user } = await loginUser(req.body.email, req.body.password);
 
-    res.cookie(COOKIE_NAME, token, getCookieConfig());
+    res.cookie(AUTH_COOKIE_NAME, token, getCookieConfig());
     res.status(200).json(user);
   } catch (err) {
     if (err.message === 'JWT_SECRET липсва в environment variables.') {
@@ -80,12 +82,12 @@ router.post(ROUTES.LOGIN, async (req, res) => {
 });
 
 router.post(ROUTES.LOGOUT, (req, res) => {
-  res.clearCookie(COOKIE_NAME, getClearCookieConfig());
+  res.clearCookie(AUTH_COOKIE_NAME, getClearCookieConfig());
   res.status(204).end();
 });
 
 router.get(ROUTES.ME, (req, res) => {
-  const token = req.cookies?.[COOKIE_NAME];
+  const token = req.cookies?.[AUTH_COOKIE_NAME];
 
   if (!token) {
     return res.status(401).json({ message: 'No token' });
