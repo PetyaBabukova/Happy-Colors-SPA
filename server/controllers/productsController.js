@@ -1,7 +1,4 @@
-// server/controllers/productsController.js
-
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import {
   createProduct,
   getAllProducts,
@@ -10,38 +7,9 @@ import {
   editProduct,
 } from '../services/productsServices.js';
 import { deleteProductImage } from '../services/productImagesService.js';
+import { requireAuth } from '../middlewares/auth.js';
 
 const router = express.Router();
-const COOKIE_NAME = 'token';
-
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret || String(secret).trim() === '') {
-    throw new Error('JWT_SECRET липсва в environment variables.');
-  }
-
-  return secret;
-}
-
-function getAuthenticatedUserId(req) {
-  const token = req.cookies?.[COOKIE_NAME];
-
-  if (!token) {
-    const error = new Error('Missing authentication token');
-    error.statusCode = 401;
-    throw error;
-  }
-
-  try {
-    const decoded = jwt.verify(token, getJwtSecret());
-    return decoded._id;
-  } catch (err) {
-    const error = new Error('Invalid token');
-    error.statusCode = 401;
-    throw error;
-  }
-}
 
 router.get('/', async (req, res) => {
   try {
@@ -67,12 +35,11 @@ router.get('/:productId', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
-    const ownerId = getAuthenticatedUserId(req);
     const productData = {
       ...req.body,
-      owner: ownerId,
+      owner: req.user._id,
     };
 
     const product = await createProduct(productData);
@@ -86,72 +53,49 @@ router.post('/', async (req, res) => {
       message = firstError?.message || 'Invalid input';
     }
 
-    if (err.message === 'JWT_SECRET липсва в environment variables.') {
-      statusCode = 500;
-      message = 'Проблем в конфигурацията на сървъра.';
-    }
-
     res.status(statusCode).json({ message });
   }
 });
 
-router.delete('/:productId', async (req, res) => {
+router.delete('/:productId', requireAuth, async (req, res) => {
   try {
-    const ownerId = getAuthenticatedUserId(req);
-    await deleteProduct(req.params.productId, ownerId);
+    await deleteProduct(req.params.productId, req.user._id);
     res.status(204).end();
   } catch (err) {
     const statusCode = err.statusCode || 403;
-    const message =
-      err.message === 'JWT_SECRET липсва в environment variables.'
-        ? 'Проблем в конфигурацията на сървъра.'
-        : err.message;
-
-    res.status(statusCode).json({ message });
+    res.status(statusCode).json({ message: err.message });
   }
 });
 
-router.put('/:productId', async (req, res) => {
+router.put('/:productId', requireAuth, async (req, res) => {
   try {
-    const ownerId = getAuthenticatedUserId(req);
     const updatedProduct = await editProduct(
       req.params.productId,
       req.body,
-      ownerId
+      req.user._id
     );
 
     res.status(200).json(updatedProduct);
   } catch (err) {
     const statusCode = err.statusCode || 403;
-    const message =
-      err.message === 'JWT_SECRET липсва в environment variables.'
-        ? 'Проблем в конфигурацията на сървъра.'
-        : err.message;
-
-    res.status(statusCode).json({ message });
+    res.status(statusCode).json({ message: err.message });
   }
 });
 
-router.delete('/:productId/image', async (req, res) => {
+router.delete('/:productId/image', requireAuth, async (req, res) => {
   try {
-    const ownerId = getAuthenticatedUserId(req);
     const { imageUrl } = req.body;
 
     const result = await deleteProductImage(
       req.params.productId,
       imageUrl,
-      ownerId
+      req.user._id
     );
 
     res.status(200).json(result);
   } catch (err) {
     const statusCode = err.statusCode || 403;
-    const message =
-      err.message === 'JWT_SECRET липсва в environment variables.'
-        ? 'Проблем в конфигурацията на сървъра.'
-        : err.message;
-
-    res.status(statusCode).json({ message });
+    res.status(statusCode).json({ message: err.message });
   }
 });
 

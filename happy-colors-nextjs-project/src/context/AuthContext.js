@@ -1,7 +1,14 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import baseURL from '@/config';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
+import baseUrl from '@/config';
 
 const AuthContext = createContext(null);
 
@@ -9,49 +16,37 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(undefined);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetch(`${baseUrl}/users/me`, {
+        credentials: 'include',
+      });
 
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`${baseURL}/users/me`, {
-          credentials: 'include',
-        });
-
-        if (!res.ok) {
-          throw new Error('Not authenticated');
-        }
-
-        const userData = await res.json();
-
-        if (isMounted) {
-          setUser(userData);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+      if (!res.ok) {
+        throw new Error('Not authenticated');
       }
-    };
 
-    fetchUser();
-
-    return () => {
-      isMounted = false;
-    };
+      const userData = await res.json();
+      setUser(userData);
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   const value = useMemo(
     () => ({
       user,
       setUser,
       loading,
+      refreshUser,
     }),
-    [user, loading]
+    [user, loading, refreshUser]
   );
 
   return (

@@ -1,0 +1,46 @@
+const stores = new Map();
+
+function getClientIp(req) {
+  const forwardedFor = req.headers['x-forwarded-for'];
+
+  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+    return forwardedFor.split(',')[0].trim();
+  }
+
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+}
+
+export function createRateLimiter({
+  keyPrefix = 'global',
+  windowMs = 15 * 60 * 1000,
+  max = 10,
+  message = 'Твърде много заявки. Моля, опитайте отново по-късно.',
+} = {}) {
+  return function rateLimitMiddleware(req, res, next) {
+    const now = Date.now();
+    const clientIp = getClientIp(req);
+    const key = `${keyPrefix}:${clientIp}`;
+
+    const existing = stores.get(key);
+
+    if (!existing || now > existing.resetAt) {
+      stores.set(key, {
+        count: 1,
+        resetAt: now + windowMs,
+      });
+
+      return next();
+    }
+
+    existing.count += 1;
+
+    if (existing.count > max) {
+      const retryAfterSeconds = Math.ceil((existing.resetAt - now) / 1000);
+
+      res.setHeader('Retry-After', String(retryAfterSeconds));
+      return res.status(429).json({ message });
+    }
+
+    return next();
+  };
+}

@@ -7,16 +7,38 @@ import contactsController from './controllers/contactsController.js';
 import ordersController from './controllers/ordersController.js';
 import paymentsController from './controllers/paymentsController.js';
 import deliveryController from './controllers/deliveryController.js';
+import { createRateLimiter } from './middlewares/rateLimit.js';
 
 const router = express.Router();
+
+const contactsLimiter = createRateLimiter({
+  keyPrefix: 'contacts',
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: 'Твърде много изпратени съобщения. Моля, опитайте отново след малко.',
+});
+
+const ordersLimiter = createRateLimiter({
+  keyPrefix: 'orders',
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: 'Твърде много опити за създаване на поръчка. Моля, опитайте отново след малко.',
+});
+
+const paymentsLimiter = createRateLimiter({
+  keyPrefix: 'payments',
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: 'Твърде много опити за плащане. Моля, опитайте отново след малко.',
+});
 
 router.use('/users', userController);
 router.use('/products', productsController);
 router.use('/categories', categoryController);
 router.use('/search', searchController);
-router.use('/contacts', contactsController);
-router.use('/orders', ordersController);
-router.use('/payments', paymentsController);
+router.use('/contacts', contactsLimiter, contactsController);
+router.use('/orders', ordersLimiter, ordersController);
+router.use('/payments', paymentsLimiter, paymentsController);
 router.use('/delivery', deliveryController);
 
 export default router;

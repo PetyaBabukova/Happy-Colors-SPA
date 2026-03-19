@@ -1,5 +1,3 @@
-// server/server.js
-
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -10,31 +8,23 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-// ESM еквивалент на __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Зареждаме .env от външната папка със secrets
 const envPath = path.resolve(__dirname, '../../Happy-Colors-SECRETS/.env');
 dotenv.config({ path: envPath });
-
-console.log('🔐 ENV loaded from:', envPath);
-console.log('CLIENT_URL:', process.env.CLIENT_URL);
-console.log('STRIPE_SECRET_KEY exists:', Boolean(process.env.STRIPE_SECRET_KEY));
 
 const app = express();
 const PORT = process.env.PORT || 3030;
 const MONGO_URI = process.env.MONGO_URI;
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
-// Проверка дали имаме MONGO_URI
 if (!MONGO_URI) {
-  console.error('❌ MONGO_URI is missing. Please check your .env configuration.');
+  console.error('❌ MONGO_URI is missing.');
   process.exit(1);
 }
 
-// Свързваме се с MongoDB Atlas
 mongoose.set('strictQuery', true);
-
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
@@ -43,23 +33,23 @@ mongoose
     process.exit(1);
   });
 
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
 app.use(cookieParser());
 
-// ⚠️ КРИТИЧНО за Stripe webhook: raw body трябва да е ПРЕДИ express.json()
 app.use('/payments/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: CLIENT_URL,
     credentials: true,
   })
 );
 
-// Routes
 app.use(routes);
 
 app.get('/', (req, res) => {
@@ -67,5 +57,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}...`);
+  console.log(`Server listening on port ${PORT}...`);
 });
