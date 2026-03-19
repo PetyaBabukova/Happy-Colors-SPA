@@ -1,5 +1,3 @@
-// server/services/paymentsService.js
-
 import Stripe from 'stripe';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
@@ -95,6 +93,13 @@ function normalizeCartItemProductId(item) {
 
 function normalizeCartItemQuantity(item) {
   return Number(item?.quantity || 0);
+}
+
+function logEmailFailure(context, error) {
+  console.error(`Email failure [${context}]`, {
+    code: error?.code || 'UNKNOWN',
+    message: error?.message || 'Unknown email error',
+  });
 }
 
 async function mapItems(cartItems) {
@@ -334,7 +339,11 @@ ${itemsText || '(няма продукти)'}
 Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
 `.trim();
 
-  await sendEmail({ subject: adminSubject, text: adminText });
+  try {
+    await sendEmail({ subject: adminSubject, text: adminText });
+  } catch (e) {
+    logEmailFailure('payments.admin', e);
+  }
 
   const customerEmail = String(draft.customer?.email || '').trim();
   if (customerEmail && isValidEmail(customerEmail)) {
@@ -352,11 +361,15 @@ ${customerProductsText}
 Happy Colors
 `.trim();
 
-    await sendEmail({
-      to: customerEmail,
-      subject: customerSubject,
-      text: customerText,
-    });
+    try {
+      await sendEmail({
+        to: customerEmail,
+        subject: customerSubject,
+        text: customerText,
+      });
+    } catch (e) {
+      logEmailFailure('payments.customer', e);
+    }
   }
 
   return {
