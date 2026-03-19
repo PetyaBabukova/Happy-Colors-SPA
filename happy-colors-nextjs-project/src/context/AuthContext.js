@@ -1,41 +1,62 @@
 'use client';
-import { createContext, useContext, useState, useEffect } from 'react';
-import baseUrl from '@/config';
 
-const AuthContext = createContext();
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import baseURL from '@/config';
+
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(undefined);
   const [loading, setLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false); // 🟢 нов флаг
 
   useEffect(() => {
-    setIsClient(true); // 🟢 безопасно да рендерираме
+    let isMounted = true;
 
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${baseUrl}/users/me`, {
+        const res = await fetch(`${baseURL}/users/me`, {
           credentials: 'include',
         });
 
-        if (!res.ok) throw new Error('Not authenticated');
+        if (!res.ok) {
+          throw new Error('Not authenticated');
+        }
+
         const userData = await res.json();
-        setUser(userData);
+
+        if (isMounted) {
+          setUser(userData);
+        }
       } catch (err) {
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  if (!isClient) return null; // 🛑 избягваме SSR рендериране
+  const value = useMemo(
+    () => ({
+      user,
+      setUser,
+      loading,
+    }),
+    [user, loading]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={value}>
+      {children}
     </AuthContext.Provider>
   );
 };
