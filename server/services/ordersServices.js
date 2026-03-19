@@ -1,5 +1,3 @@
-// server/services/ordersServices.js
-
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import { sendEmail } from '../helpers/sendEmail.js';
@@ -75,6 +73,13 @@ function normalizeCartItemProductId(item) {
 
 function normalizeCartItemQuantity(item) {
   return Number(item?.quantity || 0);
+}
+
+function logEmailFailure(context, error) {
+  console.error(`Email failure [${context}]`, {
+    code: error?.code || 'UNKNOWN',
+    message: error?.message || 'Unknown email error',
+  });
 }
 
 async function buildOrderItemsFromDatabase(cartItems) {
@@ -351,11 +356,7 @@ ${itemsText}
   try {
     await sendEmail({ subject: adminSubject, text: adminText });
   } catch (e) {
-    console.error('Грешка при изпращане на admin имейл:', e);
-    throw new OrderError(
-      'Поръчката е записана, но не успяхме да изпратим имейл.',
-      500
-    );
+    logEmailFailure('orders.admin', e);
   }
 
   const customerSubject = 'Поръчката ви е приета (Happy Colors)';
@@ -379,7 +380,7 @@ Happy Colors
       text: customerText,
     });
   } catch (e) {
-    console.error('Грешка при изпращане на customer имейл:', e);
+    logEmailFailure('orders.customer', e);
   }
 
   return {
