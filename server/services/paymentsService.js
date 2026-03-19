@@ -3,6 +3,7 @@
 import Stripe from 'stripe';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
+import Product from '../models/Product.js';
 import CheckoutDraft from '../models/CheckoutDraft.js';
 import { getStripeClient } from '../utils/stripeClient.js';
 import { sendEmail } from '../helpers/sendEmail.js';
@@ -47,88 +48,107 @@ function getPaymentIntentId(paymentIntent) {
   return '';
 }
 
-function getClientUrl() {
-  return process.env.CLIENT_URL || 'http://localhost:3000';
+function getDeliveryProviderLabel(shippingMethod) {
+  switch (shippingMethod) {
+    case 'econt':
+      return 'Еконт';
+    case 'speedy':
+      return 'Спиди';
+    case 'boxnow':
+      return 'Box Now';
+    default:
+      return '-';
+  }
 }
 
-function getProductLink(productId) {
-  const clientUrl = getClientUrl();
-  return `${clientUrl}/products/${String(productId || '').trim()}`;
+function getDeliveryDetailsText(shipping, customer) {
+  const providerLabel = getDeliveryProviderLabel(shipping?.shippingMethod);
+
+  if (shipping?.shippingMethod === 'econt') {
+    return `Доставчик: ${providerLabel}\nОфис/автомат: ${shipping?.econtOffice || '-'}`;
+  }
+
+  if (shipping?.shippingMethod === 'speedy') {
+    return `Доставчик: ${providerLabel}\nОфис/автомат: ${shipping?.speedyOffice || '-'}`;
+  }
+
+  if (shipping?.shippingMethod === 'boxnow') {
+    return `Доставчик: ${providerLabel}\nАдрес: ${customer?.address || '-'}`;
+  }
+
+  return `Доставчик: ${providerLabel}`;
 }
 
-function getAdminItemsText(items = []) {
-  return items
-    .map((item) => {
-      const productId = item.productId ? String(item.productId) : '-';
-      const productLink = productId !== '-' ? getProductLink(productId) : '-';
-
-      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(
-        item.unitPrice
-      ).toFixed(2)} €`;
-    })
-    .join('\n\n');
-}
-
-function getCustomerProductsText(items = []) {
+function buildCustomerProductsText(items, clientUrl) {
   return items
     .map((item) => {
       const productId = item.productId ? String(item.productId) : '';
-      const productLink = productId ? getProductLink(productId) : '-';
-
-      return `- ${item.title}\n  ${productLink}`;
+      const productLink = productId ? `${clientUrl}/products/${productId}` : clientUrl;
+      return `- ${item.title}\n${productLink}`;
     })
     .join('\n\n');
 }
 
-function getShippingProviderLabel(shipping) {
-  if (shipping.shippingMethod === 'econt') {
-    return 'Еконт';
-  }
-
-  if (shipping.shippingMethod === 'speedy') {
-    return 'Спиди';
-  }
-
-  if (shipping.shippingMethod === 'boxnow') {
-    return 'Box Now';
-  }
-
-  return '-';
+function normalizeCartItemProductId(item) {
+  return String(item?._id || item?.productId || '').trim();
 }
 
-function getShippingLocationLabel(shipping, customerAddress = '') {
-  if (shipping.shippingMethod === 'econt') {
-    return shipping.econtOffice || '-';
-  }
-
-  if (shipping.shippingMethod === 'speedy') {
-    return shipping.speedyOffice || '-';
-  }
-
-  if (shipping.shippingMethod === 'boxnow') {
-    return customerAddress || '-';
-  }
-
-  return '-';
+function normalizeCartItemQuantity(item) {
+  return Number(item?.quantity || 0);
 }
 
-function mapItems(cartItems) {
+async function mapItems(cartItems) {
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     throw new PaymentError('Липсват продукти в поръчката.', 400);
   }
 
-  return cartItems.map((item) => {
-    const title = String(item.title ?? 'Продукт').trim();
-    const quantity = Number(item.quantity);
-    const unitPrice = Number(item.price);
+  const normalizedItems = cartItems.map((item) => ({
+    productId: normalizeCartItemProductId(item),
+    quantity: normalizeCartItemQuantity(item),
+  }));
+
+  if (normalizedItems.some((item) => !item.productId)) {
+    throw new PaymentError('Липсва продукт в поръчката.', 400);
+  }
+
+  if (
+    normalizedItems.some(
+      (item) => !Number.isInteger(item.quantity) || item.quantity <= 0
+    )
+  ) {
+    throw new PaymentError('Невалидно количество на продукт.', 400);
+  }
+
+  const uniqueProductIds = [...new Set(normalizedItems.map((item) => item.productId))];
+
+  const products = await Product.find({ _id: { $in: uniqueProductIds } }).lean();
+
+  if (products.length !== uniqueProductIds.length) {
+    throw new PaymentError('Един или повече продукти не съществуват.', 404);
+  }
+
+  const productMap = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+
+  return normalizedItems.map((item) => {
+    const product = productMap.get(item.productId);
+
+    if (!product) {
+      throw new PaymentError('Един или повече продукти не съществуват.', 404);
+    }
+
+    const title = String(product.title ?? 'Продукт').trim();
+    const unitPrice = Number(product.price);
+    const quantity = item.quantity;
     const unitAmount = Math.round(unitPrice * 100);
 
     if (!title) {
       throw new PaymentError('Невалидно име на продукт.', 400);
     }
 
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      throw new PaymentError('Невалидно количество на продукт.', 400);
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      throw new PaymentError('Невалидна цена на продукт.', 400);
     }
 
     if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
@@ -137,7 +157,7 @@ function mapItems(cartItems) {
 
     return {
       draftItem: {
-        productId: item._id,
+        productId: String(product._id),
         title,
         quantity,
         unitPrice,
@@ -265,18 +285,24 @@ export async function finalizePaidCheckoutSession(session) {
     await CheckoutDraft.findByIdAndUpdate(draftId, { $set: { status: 'used' } });
   } catch {}
 
-  const adminItemsText = getAdminItemsText(draft.items || []);
-  const customerProductsText = getCustomerProductsText(draft.items || []);
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+
+  const itemsText = (draft.items || [])
+    .map((i) => {
+      const productId = i.productId ? String(i.productId) : '-';
+      const productLink = `${clientUrl}/products/${productId}`;
+      return `- ${i.title}\n  ${productLink}\n  ID: ${productId} | количество: ${i.quantity} | цена: ${Number(
+        i.unitPrice
+      ).toFixed(2)} €`;
+    })
+    .join('\n\n');
+
+  const customerProductsText = buildCustomerProductsText(draft.items || [], clientUrl);
   const customerNote = draft.customer?.note ? draft.customer.note : 'няма';
   const stripePaymentLink = paymentIntentId
     ? `https://dashboard.stripe.com/payments/${paymentIntentId}`
     : '-';
-
-  const shippingProviderLabel = getShippingProviderLabel(draft.shipping || {});
-  const shippingLocationLabel = getShippingLocationLabel(
-    draft.shipping || {},
-    draft.customer?.address || ''
-  );
+  const deliveryDetailsText = getDeliveryDetailsText(draft.shipping, draft.customer);
 
   const adminSubject = `Поръчка от ${draft.customer?.name}`;
   const adminText = `
@@ -292,10 +318,9 @@ Order ID: ${createdOrder._id}
 
 Бележка от клиента: ${customerNote}
 
-Начин на плащане: Банкова карта (Stripe)
+${deliveryDetailsText}
 
-Доставчик: ${shippingProviderLabel}
-Адрес/Офис: ${shippingLocationLabel}
+Начин на плащане: Банкова карта (Stripe)
 
 Stripe payment:
 ${stripePaymentLink}
@@ -304,7 +329,7 @@ Stripe Session ID: ${sessionId}
 PaymentIntent ID: ${paymentIntentId || '-'}
 
 Поръчани продукти:
-${adminItemsText || '(няма продукти)'}
+${itemsText || '(няма продукти)'}
 
 Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
 `.trim();
@@ -317,14 +342,11 @@ ${adminItemsText || '(няма продукти)'}
     const customerText = `
 Здравейте, ${draft.customer?.name || ''}!
 
-Благодарим Ви! Поръчката Ви е приета успешно.
+Поръчката ви е приета. Можете да видите поръчания продукт тук:
 
-Поръчани продукти:
 ${customerProductsText}
 
-Ще се свържем с Вас при първа възможност.
-
-Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
+Благодарим Ви! Ще се свържем с Вас при първа възможност.
 
 Поздрави,
 Happy Colors
@@ -359,7 +381,6 @@ export async function createCardPaymentSession(orderData = {}) {
     note = '',
     paymentMethod = 'card',
     cartItems = [],
-    totalPrice,
     shippingMethod = '',
     econtOffice = '',
     speedyOffice = '',
@@ -419,14 +440,18 @@ export async function createCardPaymentSession(orderData = {}) {
     boxNow: Boolean(boxNow),
   };
 
-  const safeTotalPrice = Number(totalPrice || 0);
+  const mapped = await mapItems(cartItems);
+  const draftItems = mapped.map((x) => x.draftItem);
+  const lineItems = mapped.map((x) => x.stripeLineItem);
+
+  const safeTotalPrice = draftItems.reduce(
+    (sum, item) => sum + Number(item.unitPrice) * Number(item.quantity),
+    0
+  );
+
   if (!Number.isFinite(safeTotalPrice) || safeTotalPrice <= 0) {
     throw new PaymentError('Невалидна обща сума.', 400);
   }
-
-  const mapped = mapItems(cartItems);
-  const draftItems = mapped.map((x) => x.draftItem);
-  const lineItems = mapped.map((x) => x.stripeLineItem);
 
   const draft = await CheckoutDraft.create({
     customer: cleanCustomer,

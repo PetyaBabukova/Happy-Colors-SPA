@@ -1,6 +1,7 @@
 // server/services/ordersServices.js
 
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 import { sendEmail } from '../helpers/sendEmail.js';
 
 class OrderError extends Error {
@@ -27,67 +28,119 @@ function isValidPaymentMethod(method) {
   return ['card', 'cod'].includes(method);
 }
 
-function getClientUrl() {
-  return process.env.CLIENT_URL || 'http://localhost:3000';
+function getDeliveryProviderLabel(shippingMethod) {
+  switch (shippingMethod) {
+    case 'econt':
+      return 'Еконт';
+    case 'speedy':
+      return 'Спиди';
+    case 'boxnow':
+      return 'Box Now';
+    default:
+      return '-';
+  }
 }
 
-function getProductLink(productId) {
-  const clientUrl = getClientUrl();
-  return `${clientUrl}/products/${String(productId || '').trim()}`;
+function getDeliveryDetailsText(cleanShipping, cleanCustomer) {
+  const providerLabel = getDeliveryProviderLabel(cleanShipping.shippingMethod);
+
+  if (cleanShipping.shippingMethod === 'econt') {
+    return `Доставчик: ${providerLabel}\nОфис/автомат: ${cleanShipping.econtOffice || '-'}`;
+  }
+
+  if (cleanShipping.shippingMethod === 'speedy') {
+    return `Доставчик: ${providerLabel}\nОфис/автомат: ${cleanShipping.speedyOffice || '-'}`;
+  }
+
+  if (cleanShipping.shippingMethod === 'boxnow') {
+    return `Доставчик: ${providerLabel}\nАдрес: ${cleanCustomer.address || '-'}`;
+  }
+
+  return `Доставчик: ${providerLabel}`;
 }
 
-function getCustomerProductsText(items = []) {
+function buildCustomerProductsText(items, clientUrl) {
   return items
     .map((item) => {
       const productId = item.productId ? String(item.productId) : '';
-      const productLink = productId ? getProductLink(productId) : '-';
-
-      return `- ${item.title}\n  ${productLink}`;
+      const productLink = productId ? `${clientUrl}/products/${productId}` : clientUrl;
+      return `- ${item.title}\n${productLink}`;
     })
     .join('\n\n');
 }
 
-function getAdminItemsText(items = []) {
-  return items
-    .map((item) => {
-      const productId = item.productId ? String(item.productId) : '-';
-      const productLink = productId !== '-' ? getProductLink(productId) : '-';
-
-      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
-    })
-    .join('\n\n');
+function normalizeCartItemProductId(item) {
+  return String(item?._id || item?.productId || '').trim();
 }
 
-function getShippingProviderLabel(shipping) {
-  if (shipping.shippingMethod === 'econt') {
-    return 'Еконт';
-  }
-
-  if (shipping.shippingMethod === 'speedy') {
-    return 'Спиди';
-  }
-
-  if (shipping.shippingMethod === 'boxnow') {
-    return 'Box Now';
-  }
-
-  return '-';
+function normalizeCartItemQuantity(item) {
+  return Number(item?.quantity || 0);
 }
 
-function getShippingLocationLabel(shipping, customerAddress = '') {
-  if (shipping.shippingMethod === 'econt') {
-    return shipping.econtOffice || '-';
+async function buildOrderItemsFromDatabase(cartItems) {
+  if (!Array.isArray(cartItems) || cartItems.length === 0) {
+    throw new OrderError('Количката е празна или невалидна.', 400);
   }
 
-  if (shipping.shippingMethod === 'speedy') {
-    return shipping.speedyOffice || '-';
+  const normalizedItems = cartItems.map((item) => ({
+    productId: normalizeCartItemProductId(item),
+    quantity: normalizeCartItemQuantity(item),
+  }));
+
+  if (normalizedItems.some((item) => !item.productId)) {
+    throw new OrderError('Липсва продукт в количката.', 400);
   }
 
-  if (shipping.shippingMethod === 'boxnow') {
-    return customerAddress || '-';
+  if (
+    normalizedItems.some(
+      (item) => !Number.isInteger(item.quantity) || item.quantity <= 0
+    )
+  ) {
+    throw new OrderError('Невалидно количество на продукт.', 400);
   }
 
-  return '-';
+  const uniqueProductIds = [...new Set(normalizedItems.map((item) => item.productId))];
+
+  const products = await Product.find({ _id: { $in: uniqueProductIds } }).lean();
+
+  if (products.length !== uniqueProductIds.length) {
+    throw new OrderError('Един или повече продукти не съществуват.', 404);
+  }
+
+  const productMap = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+
+  const mappedItems = normalizedItems.map((item) => {
+    const product = productMap.get(item.productId);
+
+    if (!product) {
+      throw new OrderError('Един или повече продукти не съществуват.', 404);
+    }
+
+    const unitPrice = Number(product.price);
+
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      throw new OrderError(`Невалидна цена за продукт "${product.title}".`, 400);
+    }
+
+    return {
+      productId: String(product._id),
+      title: String(product.title || ''),
+      quantity: item.quantity,
+      unitPrice,
+    };
+  });
+
+  const totalPrice = mappedItems.reduce(
+    (sum, item) => sum + item.unitPrice * item.quantity,
+    0
+  );
+
+  return {
+    mappedItems,
+    totalPrice,
+  };
 }
 
 // ----------------------
@@ -104,7 +157,6 @@ export async function handleOrder(rawData) {
     note = '',
     paymentMethod,
     cartItems = [],
-    totalPrice,
     shippingMethod = '',
     econtOffice = '',
     speedyOffice = '',
@@ -231,18 +283,14 @@ export async function handleOrder(rawData) {
     boxNow: Boolean(boxNow),
   };
 
-  const safeTotalPrice = Number(totalPrice || 0);
-
   // ----------------------
-  // 4) Map items
+  // 4) Build items from DB
   // ----------------------
 
-  const mappedItems = cartItems.map((item) => ({
-    productId: item._id,
-    title: String(item.title || ''),
-    quantity: Number(item.quantity || 0),
-    unitPrice: Number(item.price || 0),
-  }));
+  const {
+    mappedItems,
+    totalPrice: safeTotalPrice,
+  } = await buildOrderItemsFromDatabase(cartItems);
 
   // ----------------------
   // 5) Create Order (COD only)
@@ -263,14 +311,19 @@ export async function handleOrder(rawData) {
 
   const adminSubject = `Поръчка от ${cleanCustomer.name}`;
 
-  const adminItemsText = getAdminItemsText(mappedItems);
-  const customerProductsText = getCustomerProductsText(mappedItems);
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+
+  const itemsText = mappedItems
+    .map((item) => {
+      const productId = item.productId ? String(item.productId) : '-';
+      const productLink = `${clientUrl}/products/${productId}`;
+      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
+    })
+    .join('\n\n');
+
+  const customerProductsText = buildCustomerProductsText(mappedItems, clientUrl);
   const customerNote = cleanCustomer.note ? cleanCustomer.note : 'няма';
-  const shippingProviderLabel = getShippingProviderLabel(cleanShipping);
-  const shippingLocationLabel = getShippingLocationLabel(
-    cleanShipping,
-    cleanCustomer.address
-  );
+  const deliveryDetailsText = getDeliveryDetailsText(cleanShipping, cleanCustomer);
 
   const adminText = `
 Нова поръчка от Happy Colors
@@ -287,11 +340,10 @@ Order ID: ${order._id}
 
 Начин на плащане: Наложен платеж
 
-Доставчик: ${shippingProviderLabel}
-Адрес/Офис: ${shippingLocationLabel}
+${deliveryDetailsText}
 
 Поръчани продукти:
-${adminItemsText}
+${itemsText}
 
 Обща сума: ${safeTotalPrice.toFixed(2)} €
 `.trim();
@@ -310,12 +362,11 @@ ${adminItemsText}
   const customerText = `
 Здравейте, ${cleanCustomer.name}!
 
-Благодарим Ви! Поръчката Ви е приета успешно.
+Поръчката ви е приета. Можете да видите поръчания продукт тук:
 
-Поръчани продукти:
 ${customerProductsText}
 
-Ще се свържем с Вас при първа възможност.
+Благодарим Ви! Ще се свържем с Вас при първа възможност.
 
 Поздрави,
 Happy Colors
@@ -330,10 +381,6 @@ Happy Colors
   } catch (e) {
     console.error('Грешка при изпращане на customer имейл:', e);
   }
-
-  // ----------------------
-  // 7) Response
-  // ----------------------
 
   return {
     message: 'Поръчката беше изпратена успешно.',
