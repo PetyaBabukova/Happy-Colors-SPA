@@ -1,3 +1,5 @@
+// server/services/ordersServices.js
+
 import Order from '../models/Order.js';
 import { sendEmail } from '../helpers/sendEmail.js';
 
@@ -23,6 +25,69 @@ function isValidEmail(email) {
 
 function isValidPaymentMethod(method) {
   return ['card', 'cod'].includes(method);
+}
+
+function getClientUrl() {
+  return process.env.CLIENT_URL || 'http://localhost:3000';
+}
+
+function getProductLink(productId) {
+  const clientUrl = getClientUrl();
+  return `${clientUrl}/products/${String(productId || '').trim()}`;
+}
+
+function getCustomerProductsText(items = []) {
+  return items
+    .map((item) => {
+      const productId = item.productId ? String(item.productId) : '';
+      const productLink = productId ? getProductLink(productId) : '-';
+
+      return `- ${item.title}\n  ${productLink}`;
+    })
+    .join('\n\n');
+}
+
+function getAdminItemsText(items = []) {
+  return items
+    .map((item) => {
+      const productId = item.productId ? String(item.productId) : '-';
+      const productLink = productId !== '-' ? getProductLink(productId) : '-';
+
+      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
+    })
+    .join('\n\n');
+}
+
+function getShippingProviderLabel(shipping) {
+  if (shipping.shippingMethod === 'econt') {
+    return 'Еконт';
+  }
+
+  if (shipping.shippingMethod === 'speedy') {
+    return 'Спиди';
+  }
+
+  if (shipping.shippingMethod === 'boxnow') {
+    return 'Box Now';
+  }
+
+  return '-';
+}
+
+function getShippingLocationLabel(shipping, customerAddress = '') {
+  if (shipping.shippingMethod === 'econt') {
+    return shipping.econtOffice || '-';
+  }
+
+  if (shipping.shippingMethod === 'speedy') {
+    return shipping.speedyOffice || '-';
+  }
+
+  if (shipping.shippingMethod === 'boxnow') {
+    return customerAddress || '-';
+  }
+
+  return '-';
 }
 
 // ----------------------
@@ -76,7 +141,6 @@ export async function handleOrder(rawData) {
     throw new OrderError('Невалиден начин на плащане.', 400);
   }
 
-  // ✅ card НЕ минава през /orders
   if (paymentMethod === 'card') {
     throw new OrderError(
       'Плащането с карта се обработва през Stripe. Моля използвайте card checkout flow.',
@@ -127,8 +191,8 @@ export async function handleOrder(rawData) {
   }
 
   if (shippingMethod === 'boxnow' && paymentMethod === 'cod') {
-  throw new Error('За Box Now е позволено само плащане с банкова карта.');
-}
+    throw new Error('За Box Now е позволено само плащане с банкова карта.');
+  }
 
   const forbiddenPattern = /<[^>]*>/g;
   const allFields = [
@@ -197,19 +261,16 @@ export async function handleOrder(rawData) {
   // 6) Emails (admin + customer)
   // ----------------------
 
-  const adminSubject = `Нова поръчка #${order._id} от ${cleanCustomer.name} (Happy Colors)`;
+  const adminSubject = `Поръчка от ${cleanCustomer.name}`;
 
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
-
-  const itemsText = mappedItems
-    .map((item) => {
-      const productId = item.productId ? String(item.productId) : '-';
-      const productLink = `${clientUrl}/products/${productId}`;
-      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(item.unitPrice).toFixed(2)} €`;
-    })
-    .join('\n\n');
-
+  const adminItemsText = getAdminItemsText(mappedItems);
+  const customerProductsText = getCustomerProductsText(mappedItems);
   const customerNote = cleanCustomer.note ? cleanCustomer.note : 'няма';
+  const shippingProviderLabel = getShippingProviderLabel(cleanShipping);
+  const shippingLocationLabel = getShippingLocationLabel(
+    cleanShipping,
+    cleanCustomer.address
+  );
 
   const adminText = `
 Нова поръчка от Happy Colors
@@ -226,14 +287,11 @@ Order ID: ${order._id}
 
 Начин на плащане: Наложен платеж
 
-Доставка:
-- Метод: ${cleanShipping.shippingMethod || '-'}
-- Еконт офис: ${cleanShipping.econtOffice || '-'}
-- Спиди офис: ${cleanShipping.speedyOffice || '-'}
-- Box Now: ${cleanShipping.boxNow ? 'Да' : 'Не'}
+Доставчик: ${shippingProviderLabel}
+Адрес/Офис: ${shippingLocationLabel}
 
 Поръчани продукти:
-${itemsText}
+${adminItemsText}
 
 Обща сума: ${safeTotalPrice.toFixed(2)} €
 `.trim();
@@ -252,8 +310,12 @@ ${itemsText}
   const customerText = `
 Здравейте, ${cleanCustomer.name}!
 
-Вашата поръчка ID: ${order._id} е получена.
-Благодарим Ви! Ще се свържем с Вас при първа възможност.
+Благодарим Ви! Поръчката Ви е приета успешно.
+
+Поръчани продукти:
+${customerProductsText}
+
+Ще се свържем с Вас при първа възможност.
 
 Поздрави,
 Happy Colors

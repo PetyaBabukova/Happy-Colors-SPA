@@ -1,3 +1,5 @@
+// server/services/paymentsService.js
+
 import Stripe from 'stripe';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
@@ -43,6 +45,71 @@ function getPaymentIntentId(paymentIntent) {
   }
 
   return '';
+}
+
+function getClientUrl() {
+  return process.env.CLIENT_URL || 'http://localhost:3000';
+}
+
+function getProductLink(productId) {
+  const clientUrl = getClientUrl();
+  return `${clientUrl}/products/${String(productId || '').trim()}`;
+}
+
+function getAdminItemsText(items = []) {
+  return items
+    .map((item) => {
+      const productId = item.productId ? String(item.productId) : '-';
+      const productLink = productId !== '-' ? getProductLink(productId) : '-';
+
+      return `- ${item.title}\n  ${productLink}\n  ID: ${productId} | количество: ${item.quantity} | цена: ${Number(
+        item.unitPrice
+      ).toFixed(2)} €`;
+    })
+    .join('\n\n');
+}
+
+function getCustomerProductsText(items = []) {
+  return items
+    .map((item) => {
+      const productId = item.productId ? String(item.productId) : '';
+      const productLink = productId ? getProductLink(productId) : '-';
+
+      return `- ${item.title}\n  ${productLink}`;
+    })
+    .join('\n\n');
+}
+
+function getShippingProviderLabel(shipping) {
+  if (shipping.shippingMethod === 'econt') {
+    return 'Еконт';
+  }
+
+  if (shipping.shippingMethod === 'speedy') {
+    return 'Спиди';
+  }
+
+  if (shipping.shippingMethod === 'boxnow') {
+    return 'Box Now';
+  }
+
+  return '-';
+}
+
+function getShippingLocationLabel(shipping, customerAddress = '') {
+  if (shipping.shippingMethod === 'econt') {
+    return shipping.econtOffice || '-';
+  }
+
+  if (shipping.shippingMethod === 'speedy') {
+    return shipping.speedyOffice || '-';
+  }
+
+  if (shipping.shippingMethod === 'boxnow') {
+    return customerAddress || '-';
+  }
+
+  return '-';
 }
 
 function mapItems(cartItems) {
@@ -198,25 +265,20 @@ export async function finalizePaidCheckoutSession(session) {
     await CheckoutDraft.findByIdAndUpdate(draftId, { $set: { status: 'used' } });
   } catch {}
 
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
-
-  const itemsText = (draft.items || [])
-    .map((i) => {
-      const productId = i.productId ? String(i.productId) : '-';
-      const productLink = `${clientUrl}/products/${productId}`;
-      return `- ${i.title}\n  ${productLink}\n  ID: ${productId} | количество: ${i.quantity} | цена: ${Number(
-        i.unitPrice
-      ).toFixed(2)} €`;
-    })
-    .join('\n\n');
-
+  const adminItemsText = getAdminItemsText(draft.items || []);
+  const customerProductsText = getCustomerProductsText(draft.items || []);
   const customerNote = draft.customer?.note ? draft.customer.note : 'няма';
-
   const stripePaymentLink = paymentIntentId
     ? `https://dashboard.stripe.com/payments/${paymentIntentId}`
     : '-';
 
-  const adminSubject = `Нова поръчка #${createdOrder._id} от ${draft.customer?.name} (Happy Colors)`;
+  const shippingProviderLabel = getShippingProviderLabel(draft.shipping || {});
+  const shippingLocationLabel = getShippingLocationLabel(
+    draft.shipping || {},
+    draft.customer?.address || ''
+  );
+
+  const adminSubject = `Поръчка от ${draft.customer?.name}`;
   const adminText = `
 Платена поръчка (Stripe)
 
@@ -230,12 +292,10 @@ Order ID: ${createdOrder._id}
 
 Бележка от клиента: ${customerNote}
 
-Доставка: ${draft.shipping?.shippingMethod || '-'}
-Еконт офис: ${draft.shipping?.econtOffice || '-'}
-Спиди офис: ${draft.shipping?.speedyOffice || '-'}
-Box Now: ${draft.shipping?.boxNow ? 'Да' : 'Не'}
-
 Начин на плащане: Банкова карта (Stripe)
+
+Доставчик: ${shippingProviderLabel}
+Адрес/Офис: ${shippingLocationLabel}
 
 Stripe payment:
 ${stripePaymentLink}
@@ -244,7 +304,7 @@ Stripe Session ID: ${sessionId}
 PaymentIntent ID: ${paymentIntentId || '-'}
 
 Поръчани продукти:
-${itemsText || '(няма продукти)'}
+${adminItemsText || '(няма продукти)'}
 
 Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
 `.trim();
@@ -257,8 +317,12 @@ ${itemsText || '(няма продукти)'}
     const customerText = `
 Здравейте, ${draft.customer?.name || ''}!
 
-Вашата поръчка ID: ${createdOrder._id} е получена.
-Благодарим Ви! Ще се свържем с Вас при първа възможност.
+Благодарим Ви! Поръчката Ви е приета успешно.
+
+Поръчани продукти:
+${customerProductsText}
+
+Ще се свържем с Вас при първа възможност.
 
 Обща сума: ${Number(draft.totalPrice || 0).toFixed(2)} €
 
