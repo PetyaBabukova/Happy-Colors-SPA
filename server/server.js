@@ -17,7 +17,25 @@ dotenv.config({ path: envPath });
 const app = express();
 const PORT = process.env.PORT || 3030;
 const MONGO_URI = process.env.MONGO_URI;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+
+function getAllowedOrigins() {
+  const configuredOrigins = String(process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const fallbackClientUrl = String(process.env.CLIENT_URL || '').trim();
+
+  const defaults = [
+    fallbackClientUrl,
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ].filter(Boolean);
+
+  return [...new Set([...configuredOrigins, ...defaults])];
+}
+
+const allowedOrigins = getAllowedOrigins();
 
 if (!MONGO_URI) {
   console.error('❌ MONGO_URI is missing.');
@@ -38,6 +56,7 @@ app.disable('x-powered-by');
 
 app.use(cookieParser());
 
+// ⚠️ Stripe webhook raw body must stay before express.json()
 app.use('/payments/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.urlencoded({ extended: false }));
@@ -45,7 +64,21 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: CLIENT_URL,
+    origin(origin, callback) {
+      // Allow requests without Origin:
+      // - server-to-server
+      // - curl / Postman
+      // - some local/dev scenarios
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
