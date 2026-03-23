@@ -9,9 +9,8 @@ import MessageBox from '@/components/ui/MessageBox';
 import styles from './delete.module.css';
 import baseURL from '@/config';
 
-
 export default function DeleteProductPage({ params }) {
-  const { productId } = use(params); // 🟢 това е разликата
+  const { productId } = use(params);
   const { user, loading } = useAuth();
   const { triggerCategoriesReload } = useProducts();
   const router = useRouter();
@@ -51,7 +50,7 @@ export default function DeleteProductPage({ params }) {
 
   return (
     <div className={styles.deleteContainer}>
-      <h2>Сигурни ли сте, че искате да изтриете "{product?.title}"?</h2>
+      <h2>Сигурни ли сте, че искате да изтриете &quot;{product?.title}&quot;?</h2>
       <div className={styles.buttons}>
         <button className={styles.deleteBtn} onClick={handleDelete}>Да</button>
         <button className={styles.cancelBtn} onClick={() => router.push(`/products/${productId}`)}>Отказ</button>
