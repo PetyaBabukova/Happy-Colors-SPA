@@ -22,13 +22,19 @@ export const AuthProvider = ({ children }) => {
         credentials: 'include',
       });
 
+      if (res.status === 401) {
+        setUser(null);
+        return;
+      }
+
       if (!res.ok) {
-        throw new Error('Not authenticated');
+        throw new Error('Failed to fetch authenticated user');
       }
 
       const userData = await res.json();
       setUser(userData);
     } catch (err) {
+      console.error('Auth refresh error:', err);
       setUser(null);
     } finally {
       setLoading(false);
