@@ -10,7 +10,7 @@ export async function handleContactForm({
 }) {
   const baseClientUrl = process.env.CLIENT_URL || '';
   const fallbackUrl =
-    productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : null;
+    productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : '';
 
   const cleanProductUrl =
     typeof productUrl === 'string' && productUrl.trim() ? productUrl.trim() : '';
@@ -30,13 +30,8 @@ ${finalProductUrl ? `Продукт: ${finalProductUrl}` : ''}
 ${message}
 `.trim();
 
-  try {
-    await sendEmail({
-      subject,
-      text,
-    });
-  } catch (error) {
-    console.error('Грешка при контактна форма:', error);
-    throw new Error('Грешка при изпращане на съобщението.');
-  }
+  await sendEmail({
+    subject,
+    text,
+  });
 }
