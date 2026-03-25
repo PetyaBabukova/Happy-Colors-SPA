@@ -71,7 +71,7 @@ h6 { font-size: 1.2em; }
 p {
  text-align: left;
   color: var(--dark-green);
-  margin-bottom: 1.5em;
+  margin-bottom: 0.2em;
   line-height: 1.5em;
 }
 ul, ol {
@@ -196,7 +196,7 @@ button:hover {
   }
 
   main{
-    max-width: 80%;
+    max-width: 90%;
   }
 
   h1{
