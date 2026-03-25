@@ -31,7 +31,7 @@ export async function sendEmail({ to, subject, text, html }) {
     from: EMAIL,
     to: to || EMAIL,
     subject,
-    text,
+    ...(text ? { text } : {}),
     ...(html ? { html } : {}),
   };
 
