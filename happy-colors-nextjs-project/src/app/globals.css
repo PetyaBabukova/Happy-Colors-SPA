@@ -9,6 +9,7 @@
 
   --light-green: #4bd0ae;
   --lighter-green: #E4F8F3;
+  --lightest-green: #f0f9f7;
   --light-green-transparent: rgba(75, 208, 174, 0.15);
   --dark-green: #01664d;
 
@@ -29,6 +30,7 @@
 
 html{
   box-sizing: border-box;
+  background-color: var(--lighter-green);
 }
 
 *, *::before, *::after{
@@ -55,6 +57,8 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: lighter;
   margin-bottom: 0.5em;
   color: var(--dark-green);
+    line-height: 1.2;
+  text-align: center;
 }
 
 h1 { font-size: 3.4em; }
@@ -64,6 +68,12 @@ h4 { font-size: 1.8em; }
 h5 { font-size: 1.4em; }
 h6 { font-size: 1.2em; }
 
+p {
+ text-align: left;
+  color: var(--dark-green);
+  margin-bottom: 0.2em;
+  line-height: 1.5em;
+}
 ul, ol {
   padding-bottom: 1.5em;
   color: var(--dark-green);
@@ -176,10 +186,36 @@ button:hover {
   box-shadow: 0 0 0.4em var(--dark-orange);
 }
 
+
+
 @media (max-width: 768px) {
   header {
     padding: 0;
     display: flex;
     width: 100%;
   }
+
+  main{
+    max-width: 90%;
+  }
+
+  h1{
+    font-size: 2.5em;
+  }
+  h2{
+    font-size: 2em;
+  }
+  h3{
+    font-size: 1.5em;
+  }
+
+  h4{
+    font-size: 1.2em;
+  }
+
+  p{
+    font-size: 1em;
+  }
+
+
 }

@@ -32,7 +32,7 @@ function getCookieConfig() {
 
   return {
     httpOnly: true,
-    sameSite: 'Lax',
+    sameSite: isProduction ? 'None' : 'Lax',
     secure: isProduction,
     path: '/',
     maxAge: 24 * 60 * 60 * 1000,
@@ -44,7 +44,7 @@ function getClearCookieConfig() {
 
   return {
     httpOnly: true,
-    sameSite: 'Lax',
+    sameSite: isProduction ? 'None' : 'Lax',
     secure: isProduction,
     path: '/',
   };

@@ -60,7 +60,7 @@ export default function Home() {
 				</div> */}
 			</section>
 
-			<section className={styles.shoppingCategories}>
+			{/* <section className={styles.shoppingCategories}>
 
 				<article className={styles.shoppingCategory}>
 					<Link href="/products/toys">
@@ -126,7 +126,11 @@ export default function Home() {
 					</Link>
 				</article>
 
-			</section>
+			</section> */}
+
+			<footer className={styles.footer}>
+				<p>© 2026 Happy Colors. Всички права запазени.</p>
+			</footer>
 		</>
 	);
 }
