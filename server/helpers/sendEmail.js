@@ -1,8 +1,8 @@
 import nodemailer from 'nodemailer';
 
 const SMTP_HOST = 'smtp.gmail.com';
-const SMTP_PORT = 465;
-
+const PRIMARY_PORT = 465;
+const SECONDARY_PORT = 587;
 const DEFAULT_TIMEOUT_MS = 20_000;
 const MAX_RETRIES = 2;
 
@@ -24,11 +24,11 @@ function getCredentials() {
   return { fromEmail, pass };
 }
 
-function createTransporter(fromEmail, pass) {
-  return nodemailer.createTransport({
+function buildTransportOptions({ fromEmail, pass, port, secure }) {
+  return {
     host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: true,
+    port,
+    secure,
     auth: {
       user: fromEmail,
       pass,
@@ -41,20 +41,41 @@ function createTransporter(fromEmail, pass) {
       servername: SMTP_HOST,
       rejectUnauthorized: true,
     },
-  });
+  };
 }
 
-function getTransporter() {
+function createTransporters(fromEmail, pass) {
+  return [
+    nodemailer.createTransport(
+      buildTransportOptions({
+        fromEmail,
+        pass,
+        port: PRIMARY_PORT,
+        secure: true,
+      })
+    ),
+    nodemailer.createTransport(
+      buildTransportOptions({
+        fromEmail,
+        pass,
+        port: SECONDARY_PORT,
+        secure: false,
+      })
+    ),
+  ];
+}
+
+function getTransporters() {
   const { fromEmail, pass } = getCredentials();
   const credentialsKey = `${fromEmail}:${pass}`;
 
   if (!cachedTransporter || cachedCredentialsKey !== credentialsKey) {
-    cachedTransporter = createTransporter(fromEmail, pass);
+    cachedTransporter = createTransporters(fromEmail, pass);
     cachedCredentialsKey = credentialsKey;
   }
 
   return {
-    transporter: cachedTransporter,
+    transporters: cachedTransporter,
     fromEmail,
   };
 }
@@ -76,40 +97,38 @@ async function sendWithRetry(mailOptions) {
   let lastError;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
-    try {
-      const { transporter } = getTransporter();
-      return await transporter.sendMail(mailOptions);
-    } catch (error) {
-      lastError = error;
+    const { transporters } = getTransporters();
 
-      console.error('Email send attempt failed:', {
-        attempt,
-        to: mailOptions.to,
-        subject: mailOptions.subject,
-        code: error?.code || 'UNKNOWN',
-        message: error?.message || 'Unknown email error',
-      });
+    for (const transporter of transporters) {
+      try {
+        return await transporter.sendMail(mailOptions);
+      } catch (error) {
+        lastError = error;
 
-      if (!isTransientEmailError(error) || attempt === MAX_RETRIES) {
-        break;
+        console.error('Email send attempt failed:', {
+          attempt,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          code: error?.code || 'UNKNOWN',
+          message: error?.message || 'Unknown email error',
+        });
+
+        if (!isTransientEmailError(error)) {
+          throw error;
+        }
       }
-
-      cachedTransporter = null;
-      cachedCredentialsKey = '';
-      await sleep(750 * attempt);
     }
+
+    cachedTransporter = null;
+    cachedCredentialsKey = '';
+    await sleep(750 * attempt);
   }
 
   throw lastError;
 }
 
-/**
- * sendEmail({ to?, subject, text })
- * - Ако "to" липсва -> праща към CONTACT_EMAIL (admin)
- * - Ако "to" е подаден -> праща към него
- */
 export async function sendEmail({ to, subject, text }) {
-  const { fromEmail } = getTransporter();
+  const { fromEmail } = getTransporters();
 
   const mailOptions = {
     from: fromEmail,

@@ -8,13 +8,14 @@ export async function handleContactForm({
   productId,
   productUrl,
 }) {
-  // ✅ Ако имаме директен URL (от клиента) – ползваме него.
-  // Иначе – опитваме да сглобим от CLIENT_URL (ако е сетнат).
   const baseClientUrl = process.env.CLIENT_URL || '';
   const fallbackUrl =
     productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : null;
 
-  const finalProductUrl = productUrl || fallbackUrl;
+  const cleanProductUrl =
+    typeof productUrl === 'string' && productUrl.trim() ? productUrl.trim() : null;
+
+  const finalProductUrl = cleanProductUrl || fallbackUrl || null;
 
   const subject = finalProductUrl
     ? `Запитване относно продукт: ${finalProductUrl}`
@@ -24,11 +25,17 @@ export async function handleContactForm({
 Име: ${name}
 Имейл: ${email}
 Телефон: ${phone || '-'}
-
 ${finalProductUrl ? `Продукт: ${finalProductUrl}\n` : ''}
 Съобщение:
 ${message}
-  `;
+`.trim();
 
-  await sendEmail({ subject, text });
+  try {
+    await sendEmail({ subject, text });
+  } catch (error) {
+    console.error('Грешка при контактна форма:', error);
+    throw new Error(
+      'Съобщението не можа да бъде изпратено в момента. Моля, опитайте отново по-късно.'
+    );
+  }
 }
