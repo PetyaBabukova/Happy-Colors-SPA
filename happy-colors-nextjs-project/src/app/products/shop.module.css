@@ -46,6 +46,7 @@
   padding: 1em;
   border: 1px solid var(--light-green);
   border-radius: 0.5em;
+  background-color: var(--lightest-green);
 }
 
 .productImageContainer {
@@ -94,4 +95,6 @@
     height: 100%;
     object-fit: cover;
   }
+
+
 }

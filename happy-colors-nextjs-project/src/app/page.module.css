@@ -24,7 +24,7 @@
 .leftHiroSection svg{
   display: inline-block;
   color: var(--dark-orange);
-    max-width: 1rem;
+  max-width: 1rem;
 
 }
 
@@ -53,15 +53,12 @@
 
 .rightHiroSection h1 {
   max-width: 15ch;
-  text-align: center;
   color: var(--light-green);
 }
 
 .rightHiroSection p {
   max-width: 35ch;
-  text-align: center;
   font-size: 1.4rem;
-  line-height: 2em;
   color:var(--dark-orange);
 }
 
@@ -76,7 +73,8 @@
 
 
 .hiroAccent h2 {
-  font-weight: bold;
+  /* font-weight: bold; */
+  font-size: 2em;
   color: var(--dark-green);
   margin: 0;
   background: var(--lighter-green);
@@ -232,14 +230,6 @@ p.learnMorelink{
   .rightHiroSection h1,
   .rightHiroSection p {
     max-width: 100%;
-  }
-
-  .rightHiroSection h1 {
-    font-size: 2em;
-  }
-
-  .rightHiroSection p {
-    font-size: 1em;
   }
 
   .heroSmallImageContainer {

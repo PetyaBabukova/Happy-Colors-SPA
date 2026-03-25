@@ -118,6 +118,7 @@ export default function ContactForm() {
       ) : null}
 
       <form className={styles.registerForm} onSubmit={handleSubmit}>
+        <h2>Свържете се с нас</h2>
         <label htmlFor="name">
           Име<span className={styles.red}>*</span>
         </label>
