@@ -6,6 +6,10 @@ const EMAIL_SERVICE = process.env.EMAIL_SERVICE || 'gmail';
 
 let transporter = null;
 
+function isEmailDisabled() {
+  return String(process.env.EMAIL_ENABLED || '').toLowerCase() === 'false';
+}
+
 function getTransporter() {
   if (!EMAIL || !EMAIL_PASSWORD) {
     throw new Error('Липсват CONTACT_EMAIL / CONTACT_EMAIL_PASS в environment variables.');
@@ -25,6 +29,18 @@ function getTransporter() {
 }
 
 export async function sendEmail({ to, subject, text, html }) {
+  if (isEmailDisabled()) {
+    console.warn('Email sending is disabled by EMAIL_ENABLED=false.', {
+      to: to || EMAIL,
+      subject,
+    });
+
+    return {
+      skipped: true,
+      message: 'Email sending is disabled.',
+    };
+  }
+
   const activeTransporter = getTransporter();
 
   const mailOptions = {
