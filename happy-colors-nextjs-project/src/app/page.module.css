@@ -200,10 +200,12 @@ p.learnMorelink{
 }
 
 @media screen and (max-width: 768px) {
-  .heroSection {
+
+   .heroSection {
     flex-direction: column;
     gap: 2em;
     margin-bottom: 2em;
+    font-size: 0.8em;
   }
 
   .heroSection::after {
@@ -232,6 +234,14 @@ p.learnMorelink{
     max-width: 100%;
   }
 
+  .rightHiroSection h1 {
+    font-size: 2em;
+  }
+
+  .rightHiroSection p {
+    font-size: 1em;
+  }
+
   .heroSmallImageContainer {
     border: 5px solid var(--light-yellow);
     min-width: 40%;
@@ -244,7 +254,7 @@ p.learnMorelink{
   }
 
   .hiroAccent h2 {
-    font-size: 1.6em;
+    font-size: 1em;
     max-width: 40ch;
   }
 
