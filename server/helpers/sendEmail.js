@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
 
-const DEFAULT_TIMEOUT_MS = 10_000;
+const SMTP_HOST = 'smtp.gmail.com';
+const SMTP_PORT = 465;
+
+const DEFAULT_TIMEOUT_MS = 20_000;
 const MAX_RETRIES = 2;
 
 let cachedTransporter = null;
@@ -15,7 +18,7 @@ function getCredentials() {
   const pass = process.env.CONTACT_EMAIL_PASS;
 
   if (!fromEmail || !pass) {
-    throw new Error('Липсват CONTACT_EMAIL / CONTACT_EMAIL_PASS в .env');
+    throw new Error('Липсват CONTACT_EMAIL / CONTACT_EMAIL_PASS в environment variables.');
   }
 
   return { fromEmail, pass };
@@ -23,14 +26,21 @@ function getCredentials() {
 
 function createTransporter(fromEmail, pass) {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: true,
     auth: {
       user: fromEmail,
       pass,
     },
+    family: 4,
     connectionTimeout: DEFAULT_TIMEOUT_MS,
     greetingTimeout: DEFAULT_TIMEOUT_MS,
     socketTimeout: DEFAULT_TIMEOUT_MS,
+    tls: {
+      servername: SMTP_HOST,
+      rejectUnauthorized: true,
+    },
   });
 }
 
@@ -86,7 +96,7 @@ async function sendWithRetry(mailOptions) {
 
       cachedTransporter = null;
       cachedCredentialsKey = '';
-      await sleep(500 * attempt);
+      await sleep(750 * attempt);
     }
   }
 
