@@ -13,9 +13,9 @@ export async function handleContactForm({
     productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : null;
 
   const cleanProductUrl =
-    typeof productUrl === 'string' && productUrl.trim() ? productUrl.trim() : null;
+    typeof productUrl === 'string' && productUrl.trim() ? productUrl.trim() : '';
 
-  const finalProductUrl = cleanProductUrl || fallbackUrl || null;
+  const finalProductUrl = cleanProductUrl || fallbackUrl || '';
 
   const subject = finalProductUrl
     ? `Запитване относно продукт: ${finalProductUrl}`
@@ -25,17 +25,18 @@ export async function handleContactForm({
 Име: ${name}
 Имейл: ${email}
 Телефон: ${phone || '-'}
-${finalProductUrl ? `Продукт: ${finalProductUrl}\n` : ''}
+${finalProductUrl ? `Продукт: ${finalProductUrl}` : ''}
 Съобщение:
 ${message}
 `.trim();
 
   try {
-    await sendEmail({ subject, text });
+    await sendEmail({
+      subject,
+      text,
+    });
   } catch (error) {
     console.error('Грешка при контактна форма:', error);
-    throw new Error(
-      'Съобщението не можа да бъде изпратено в момента. Моля, опитайте отново по-късно.'
-    );
+    throw new Error('Грешка при изпращане на съобщението.');
   }
 }
