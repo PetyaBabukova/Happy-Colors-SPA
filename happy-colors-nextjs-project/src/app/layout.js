@@ -5,6 +5,11 @@ import ClientLayout from './ClientLayout';
 export const metadata = {
   title: 'Happy Colors',
   description: 'Онлайн магазин за ръчно изработени изделия',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-icon.png',
+    shortcut: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({ children }) {
