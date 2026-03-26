@@ -8,14 +8,13 @@ export async function handleContactForm({
   productId,
   productUrl,
 }) {
+  // ✅ Ако имаме директен URL (от клиента) – ползваме него.
+  // Иначе – опитваме да сглобим от CLIENT_URL (ако е сетнат).
   const baseClientUrl = process.env.CLIENT_URL || '';
   const fallbackUrl =
-    productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : '';
+    productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : null;
 
-  const cleanProductUrl =
-    typeof productUrl === 'string' && productUrl.trim() ? productUrl.trim() : '';
-
-  const finalProductUrl = cleanProductUrl || fallbackUrl || '';
+  const finalProductUrl = productUrl || fallbackUrl;
 
   const subject = finalProductUrl
     ? `Запитване относно продукт: ${finalProductUrl}`
@@ -25,18 +24,11 @@ export async function handleContactForm({
 Име: ${name}
 Имейл: ${email}
 Телефон: ${phone || '-'}
-${finalProductUrl ? `Продукт: ${finalProductUrl}` : ''}
+
+${finalProductUrl ? `Продукт: ${finalProductUrl}\n` : ''}
 Съобщение:
 ${message}
-`.trim();
+  `;
 
-  await sendEmail({
-    subject,
-    text,
-  });
-
-  return {
-    success: true,
-    emailSent: true,
-  };
+  await sendEmail({ subject, text });
 }
