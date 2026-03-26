@@ -30,24 +30,10 @@ ${finalProductUrl ? `Продукт: ${finalProductUrl}` : ''}
 ${message}
 `.trim();
 
-  try {
-    await sendEmail({
-      subject,
-      text,
-    });
-  } catch (error) {
-    console.error('Грешка при контактна форма:', {
-      code: error?.code || 'UNKNOWN',
-      message: error?.message || 'Unknown email error',
-    });
-
-    // Не чупим контактната форма на preview/free Render,
-    // ако SMTP-то е недостъпно.
-    return {
-      success: true,
-      emailSent: false,
-    };
-  }
+  await sendEmail({
+    subject,
+    text,
+  });
 
   return {
     success: true,
