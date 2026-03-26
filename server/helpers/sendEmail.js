@@ -13,11 +13,9 @@ function sleep(ms) {
 function getCredentials() {
   const fromEmail = process.env.CONTACT_EMAIL;
   const pass = process.env.CONTACT_EMAIL_PASS;
-
   if (!fromEmail || !pass) {
     throw new Error('Липсват CONTACT_EMAIL / CONTACT_EMAIL_PASS в .env');
   }
-
   return { fromEmail, pass };
 }
 
@@ -37,12 +35,10 @@ function createTransporter(fromEmail, pass) {
 function getTransporter() {
   const { fromEmail, pass } = getCredentials();
   const credentialsKey = `${fromEmail}:${pass}`;
-
   if (!cachedTransporter || cachedCredentialsKey !== credentialsKey) {
     cachedTransporter = createTransporter(fromEmail, pass);
     cachedCredentialsKey = credentialsKey;
   }
-
   return {
     transporter: cachedTransporter,
     fromEmail,
@@ -58,20 +54,17 @@ function isTransientEmailError(error) {
     'EAI_AGAIN',
     'EPROTOCOL',
   ]);
-
   return transientCodes.has(String(error?.code || '').trim());
 }
 
 async function sendWithRetry(mailOptions) {
   let lastError;
-
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
     try {
       const { transporter } = getTransporter();
       return await transporter.sendMail(mailOptions);
     } catch (error) {
       lastError = error;
-
       console.error('Email send attempt failed:', {
         attempt,
         to: mailOptions.to,
@@ -79,17 +72,14 @@ async function sendWithRetry(mailOptions) {
         code: error?.code || 'UNKNOWN',
         message: error?.message || 'Unknown email error',
       });
-
       if (!isTransientEmailError(error) || attempt === MAX_RETRIES) {
         break;
       }
-
       cachedTransporter = null;
       cachedCredentialsKey = '';
       await sleep(500 * attempt);
     }
   }
-
   throw lastError;
 }
 
@@ -100,13 +90,11 @@ async function sendWithRetry(mailOptions) {
  */
 export async function sendEmail({ to, subject, text }) {
   const { fromEmail } = getTransporter();
-
   const mailOptions = {
     from: fromEmail,
     to: to || fromEmail,
     subject,
     text,
   };
-
   return sendWithRetry(mailOptions);
 }

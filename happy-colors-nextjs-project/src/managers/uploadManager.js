@@ -1,17 +1,18 @@
 // src/managers/uploadManager.js
-const bucketName = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME;
+// Този мениджър съдържа функции за качване на изображения към Next API.
+// Логиката е разделена на две функции: една за качване на единичен файл и
+// една за последователно качване на множество файлове. Премахнати са
+// излишните console.log() съобщения, за да се избегне изтичане на
+// променливи в production.
 
 // Качва едно изображение към Next API /api/upload-image и връща публичния URL.
 export async function uploadImageToBucket(file) {
   if (!file) {
     throw new Error('Не е избран файл.');
   }
-
   const formData = new FormData();
   formData.append('file', file);
-
   let res;
-
   try {
     res = await fetch('/api/upload-image', {
       method: 'POST',
@@ -21,51 +22,41 @@ export async function uploadImageToBucket(file) {
     console.error('Network error when calling /api/upload-image:', err);
     throw new Error('Възникна грешка при качването на изображението.');
   }
-
   if (!res.ok) {
     let msg = 'Възникна грешка при качването на изображението.';
-
     try {
       const data = await res.json();
       if (data?.message) {
         msg = data.message;
       }
     } catch {
-      // ignore parse error
+      // ignore JSON parse error
     }
-
     throw new Error(msg);
   }
-
   let data;
-
   try {
     data = await res.json();
   } catch (err) {
     console.error('Invalid JSON from /api/upload-image:', err);
     throw new Error('Възникна грешка при качването на изображението.');
   }
-
   if (!data.imageUrl) {
     console.error('No imageUrl in /api/upload-image response:', data);
     throw new Error('Възникна грешка при качването на изображението.');
   }
-console.log("Bucket:", process.env.NEXT_PUBLIC_GCS_BUCKET_NAME);
   return data.imageUrl;
 }
 
-// Качва много изображения последователно през браузъра и връща масив от URL-и.
+// Качва много изображения последователно през браузъра и връща масив от URL‑и.
 export async function uploadImagesToBucket(files = []) {
   if (!Array.isArray(files) || files.length === 0) {
     return [];
   }
-
   const uploadedImageUrls = [];
-
   for (const file of files) {
     const imageUrl = await uploadImageToBucket(file);
     uploadedImageUrls.push(imageUrl);
   }
-console.log("Bucket:", process.env.NEXT_PUBLIC_GCS_BUCKET_NAME);
   return uploadedImageUrls;
 }
