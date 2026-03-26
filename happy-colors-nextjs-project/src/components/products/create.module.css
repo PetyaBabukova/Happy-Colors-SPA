@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 40%;
+    width: 40%;
     margin: 4em auto;
     color: var(--dark-green);
     border-radius: 0.5em;
@@ -10,7 +10,15 @@
     box-shadow: 0 0 0.4em var(--dark-green);
     /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
     background-color: var(--lightest-green);
-    padding: 4em;
+    padding: 3em;
+}
+
+.createWrapper{
+    display: flex;
+    flex-direction: column;
+
+justify-content: center;
+align-items: center;
 }
 
 .registerFormContainer legend {
@@ -97,7 +105,7 @@
 
   @media (max-width: 768px) {
     .registerFormContainer {
-        max-width: 100%;
+        width: 100%;
         padding: 2em;
         /* margin: 0; */
     }
