@@ -13,6 +13,7 @@
   display: grid;
   grid-template-columns: 2fr 1.3fr;
   gap: 2rem;
+  align-items: start;
 }
 
 .form {
@@ -39,11 +40,14 @@
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
+  width: 100%;
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 0.5rem 0.6rem;
   font: inherit;
+  background: #fff;
 }
 
 .error {
@@ -90,6 +94,7 @@
 .itemRow {
   display: flex;
   justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 0.75rem;
 }
 
@@ -104,6 +109,7 @@
 
 .itemTotal {
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .totalRow {
@@ -130,9 +136,8 @@
 }
 
 .infoMessage {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   font-size: 0.9rem;
-  color: #555;
 }
 
 .requiredStar {
@@ -151,16 +156,30 @@
   margin-top: 0.35rem;
 }
 
-.paymentOption {
+.paymentOption,
+.radioOption {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.65rem;
   font-size: 0.95rem;
+  margin-bottom: 0;
 }
 
-.infoMessage {
-  margin-top: 0.75rem;
-  font-size: 0.9rem;
+.paymentOption input[type='checkbox'],
+.radioOption input[type='radio'] {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.paymentOption span,
+.radioOption span {
+  flex: 1;
+  line-height: 1.45;
 }
 
 .infoSuccess {
@@ -171,8 +190,6 @@
   color: var(--dark-orange);
 }
 
-
-/* ---- Shipping radio UI ---- */
 .radioGroup {
   display: flex;
   flex-direction: column;
@@ -180,14 +197,6 @@
   margin-top: 0.35rem;
 }
 
-.radioOption {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-}
-
-/* ---- Modal (Step 2) ---- */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -202,6 +211,8 @@
 .modal {
   width: 100%;
   max-width: 560px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: #fff;
   border-radius: 10px;
   border: 1px solid #eee;
@@ -241,6 +252,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-wrap: wrap;
   padding-top: 10px;
   border-top: 1px solid #eee;
 }
@@ -273,9 +285,84 @@
   background: #fafafa;
 }
 
-/* Responsive */
+@media (max-width: 768px) {
+  .checkoutContainer {
+    padding: 1.25rem 0.75rem 2rem;
+  }
+
+  .heading {
+    margin-bottom: 1rem;
+    font-size: 1.55rem;
+    text-align: center;
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .summary {
+    order: -1;
+  }
+
+  .form,
+  .summary {
+    padding: 1.1rem;
+  }
+
+  .itemRow {
+    align-items: flex-start;
+  }
+
+  .itemTitle,
+  .itemMeta {
+    word-break: break-word;
+  }
+
+  .modalOverlay {
+    align-items: flex-start;
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .modal {
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    padding: 14px 14px 12px;
+    border-radius: 12px;
+  }
+
+  .modalTitle {
+    font-size: 1.05rem;
+    line-height: 1.35;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalBtnPrimary,
+  .modalBtnSecondary {
+    width: 100%;
+  }
+}
+
 @media (max-width: 520px) {
   .modalRow {
     grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .heading {
+    font-size: 1.4rem;
+  }
+
+  .itemRow {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .itemTotal {
+    white-space: normal;
   }
 }

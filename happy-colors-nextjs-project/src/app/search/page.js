@@ -1,15 +1,29 @@
 import Shop from '../products/Shop';
 import baseURL from '@/config';
 
+export const metadata = {
+  title: 'Търсене',
+  description: 'Резултати от търсене в Happy Colors.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function SearchPage({ searchParams }) {
-  const query = searchParams?.q?.trim();
+  const params = await searchParams;
+  const query = params?.q?.trim();
 
   let products = [];
+
   if (query) {
     try {
-      const res = await fetch(`${baseURL}/search?q=${encodeURIComponent(query)}`, {
-        cache: 'no-store',
-      });
+      const res = await fetch(
+        `${baseURL}/search?q=${encodeURIComponent(query)}`,
+        {
+          cache: 'no-store',
+        }
+      );
 
       if (res.ok) {
         products = await res.json();
@@ -20,10 +34,9 @@ export default async function SearchPage({ searchParams }) {
   }
 
   return (
-    <section>
-      {query && <h4 style={{ textAlign: 'center', marginTop: '2rem' }}>Резултати от търсенето на: <i>{query}</i></h4>}
+    <>
+      {query && <h1>Резултати от търсенето на: {query}</h1>}
       <Shop products={products} />
-    </section>
+    </>
   );
 }
-// Compare this snippet from server/routes/products.js:
