@@ -4,7 +4,7 @@ import { getProducts } from '@/managers/productsManager';
 import Shop from './Shop';
 
 export const metadata = {
-  title: 'Магазин | Happy Colors',
+  title: 'Магазин',
   description: 'Разгледайте нашите ръчно изработени продукти по категории.',
   alternates: {
     canonical: '/products',
@@ -19,5 +19,3 @@ export default async function ProductsPage(props) {
 
   return <Shop products={allProducts} />;
 }
-
-

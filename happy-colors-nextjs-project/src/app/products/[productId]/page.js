@@ -2,6 +2,7 @@
 
 import ProductDetails from './ProductDetails';
 import baseURL from '@/config';
+import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params: paramsPromise }) {
   const { productId } = await paramsPromise;
@@ -14,8 +15,9 @@ export async function generateMetadata({ params: paramsPromise }) {
     return {
       title: 'Продуктът не е намерен',
       description: 'Опитайте отново или изберете друг продукт.',
-      alternates: {
-        canonical: `/products/${productId}`,
+      robots: {
+        index: false,
+        follow: false,
       },
     };
   }
@@ -39,7 +41,7 @@ export default async function ProductDetailsPage({ params: paramsPromise }) {
   });
 
   if (!res.ok) {
-    return <div>Продуктът не беше намерен</div>;
+    notFound();
   }
 
   const product = await res.json();

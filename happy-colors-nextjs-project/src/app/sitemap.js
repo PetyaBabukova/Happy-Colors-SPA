@@ -1,16 +1,37 @@
 // src/app/sitemap.js
 
-import {
-  PROD_SITE_URL,
-  shouldIndexSite,
-} from '@/config/siteSeo';
+import { PROD_SITE_URL, shouldIndexSite } from '@/config/siteSeo';
+import baseURL from '@/config';
 
-export default function sitemap() {
+export const revalidate = 3600;
+
+export default async function sitemap() {
   if (!shouldIndexSite) {
     return [];
   }
 
   const now = new Date();
+
+  let productEntries = [];
+
+  try {
+    const res = await fetch(`${baseURL}/products`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (res.ok) {
+      const products = await res.json();
+
+      productEntries = products.map((product) => ({
+        url: `${PROD_SITE_URL}/products/${product._id}`,
+        lastModified: product.updatedAt || product.createdAt || now,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      }));
+    }
+  } catch (error) {
+    console.error('Грешка при генериране на sitemap за продуктите:', error);
+  }
 
   return [
     {
@@ -37,5 +58,6 @@ export default function sitemap() {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    ...productEntries,
   ];
 }
