@@ -4,7 +4,7 @@ import { getProducts } from '@/managers/productsManager';
 import Shop from './Shop';
 
 export const metadata = {
-  title: 'Магазин',
+  title: 'Каталог',
   description: 'Разгледайте нашите ръчно изработени продукти по категории.',
   alternates: {
     canonical: '/products',
