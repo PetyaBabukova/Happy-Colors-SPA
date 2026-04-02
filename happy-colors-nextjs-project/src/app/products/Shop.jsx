@@ -30,7 +30,7 @@ if (grouped['Други']) {
 
   return (
     <section className={styles.shopPage}>
-      <h1 className={styles.shopPageTitle}>Магазин</h1>
+      <h1 className={styles.shopPageTitle}>Каталог</h1>
 
       <section className={styles.categories}>
         {categories.map((category) => (

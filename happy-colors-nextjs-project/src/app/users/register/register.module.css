@@ -7,7 +7,7 @@
     color: var(--dark-green);
     border-radius: 0.5em;
     /* border: 1px solid var(--dark-green); */
-    box-shadow: 0 0 0.4em var(--dark-green);
+    /* box-shadow: 0 0 0.4em var(--dark-green); */
     /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
 
     padding: 4em;

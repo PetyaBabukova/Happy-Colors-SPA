@@ -1,7 +1,8 @@
-
 // happy-colors-nextjs-project/src/app/products/[productId]/page.js
+
 import ProductDetails from './ProductDetails';
 import baseURL from '@/config';
+import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params: paramsPromise }) {
   const { productId } = await paramsPromise;
@@ -12,16 +13,23 @@ export async function generateMetadata({ params: paramsPromise }) {
 
   if (!res.ok) {
     return {
-      title: 'Продуктът не е намерен | Happy Colors',
+      title: 'Продуктът не е намерен',
       description: 'Опитайте отново или изберете друг продукт.',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
   const product = await res.json();
 
   return {
-    title: `${product.title} | Happy Colors`,
+    title: product.title,
     description: product.description?.slice(0, 150) || '',
+    alternates: {
+      canonical: `/products/${productId}`,
+    },
   };
 }
 
@@ -33,7 +41,7 @@ export default async function ProductDetailsPage({ params: paramsPromise }) {
   });
 
   if (!res.ok) {
-    return <div>Продуктът не беше намерен</div>;
+    notFound();
   }
 
   const product = await res.json();
