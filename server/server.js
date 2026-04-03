@@ -13,16 +13,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const envCandidates = [
-  path.resolve(__dirname, '../../Happy-Colors-SECRETS/.env'),
   path.resolve(__dirname, '.env'),
+  path.resolve(__dirname, '../../Happy-Colors-SECRETS/.env'),
 ];
 
 const existingEnvPath = envCandidates.find((envPath) => fs.existsSync(envPath));
 
 if (existingEnvPath) {
   dotenv.config({ path: existingEnvPath });
+  console.log(`✅ ENV loaded from: ${existingEnvPath}`);
 } else {
   dotenv.config();
+  console.warn('⚠️ No explicit .env file found. Falling back to default dotenv lookup.');
 }
 
 const app = express();
