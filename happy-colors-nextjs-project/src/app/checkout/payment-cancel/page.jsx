@@ -4,11 +4,17 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { isCatalogMode } from '@/utils/catalogMode';
 import MessageBox from '@/components/ui/MessageBox';
 import styles from '../checkout.module.css';
 
 export default function PaymentCancelPage() {
   const router = useRouter();
+
+  if (isCatalogMode) {
+    router.push('/products');
+    return null;
+  }
 
   useEffect(() => {
     const t = setTimeout(() => {

@@ -3,6 +3,7 @@
 'use client';
 
 import Link from 'next/link';
+import { isCatalogMode } from '@/utils/catalogMode';
 import styles from './shop.module.css';
 
 export default function ProductCard({ product }) {
@@ -12,7 +13,7 @@ export default function ProductCard({ product }) {
                 <img src={product.imageUrl} alt={product.title} />
             </div>
             <h4>{product.title}</h4>
-            <p>Цена: {product.price} €</p>
+            <p>{isCatalogMode ? 'Цена при запитване' : `Цена: ${product.price} €`}</p>
         </Link>
     );
 }

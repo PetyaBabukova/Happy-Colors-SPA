@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { isCatalogMode } from '@/utils/catalogMode';
 import baseURL from '@/config';
 import MessageBox from '@/components/ui/MessageBox';
 import styles from '../checkout.module.css';
@@ -15,6 +16,12 @@ const PROCESSED_SESSIONS_KEY = 'hc_processed_stripe_sessions';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
+
+  if (isCatalogMode) {
+    router.push('/products');
+    return null;
+  }
+
   const searchParams = useSearchParams();
 
   const sessionId = useMemo(

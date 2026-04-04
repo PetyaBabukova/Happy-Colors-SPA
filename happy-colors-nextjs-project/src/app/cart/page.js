@@ -1,5 +1,7 @@
 // app/cart/page.js
 
+import { redirect } from 'next/navigation';
+import { isCatalogMode } from '@/utils/catalogMode';
 import CartPage from '@/components/cart/CartPage';
 
 export const metadata = {
@@ -12,5 +14,7 @@ export const metadata = {
 };
 
 export default function Cart() {
+  if (isCatalogMode) redirect('/products');
+
   return <CartPage />;
 }

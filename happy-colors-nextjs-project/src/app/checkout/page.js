@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+import { isCatalogMode } from '@/utils/catalogMode';
 import CheckoutClientPage from './CheckoutClientPage';
 
 export const metadata = {
@@ -10,5 +12,7 @@ export const metadata = {
 };
 
 export default function CheckoutPage() {
+  if (isCatalogMode) redirect('/products');
+
   return <CheckoutClientPage />;
 }

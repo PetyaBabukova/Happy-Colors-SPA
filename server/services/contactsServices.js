@@ -6,29 +6,44 @@ export async function handleContactForm({
   phone,
   message,
   productId,
+  productTitle,
   productUrl,
 }) {
-  // ✅ Ако имаме директен URL (от клиента) – ползваме него.
-  // Иначе – опитваме да сглобим от CLIENT_URL (ако е сетнат).
   const baseClientUrl = process.env.CLIENT_URL || '';
   const fallbackUrl =
     productId && baseClientUrl ? `${baseClientUrl}/products/${productId}` : null;
 
   const finalProductUrl = productUrl || fallbackUrl;
+  const hasProduct = productTitle || productId || finalProductUrl;
 
-  const subject = finalProductUrl
-    ? `Запитване относно продукт: ${finalProductUrl}`
-    : 'Ново съобщение от контактната форма на Happy Colors';
+  const subject = productTitle
+    ? `Запитване за: ${productTitle}`
+    : finalProductUrl
+      ? `Запитване относно продукт: ${finalProductUrl}`
+      : 'Ново съобщение от контактната форма на Happy Colors';
 
-  const text = `
-Име: ${name}
-Имейл: ${email}
-Телефон: ${phone || '-'}
+  const productBlock = hasProduct
+    ? [
+        productTitle && `Продукт: ${productTitle}`,
+        productId && `Product ID: ${productId}`,
+        finalProductUrl && `Линк: ${finalProductUrl}`,
+      ]
+        .filter(Boolean)
+        .join('\n')
+    : '';
 
-${finalProductUrl ? `Продукт: ${finalProductUrl}\n` : ''}
-Съобщение:
-${message}
-  `;
+  const text = [
+    `Име: ${name}`,
+    `Имейл: ${email}`,
+    `Телефон: ${phone || '-'}`,
+    '',
+    productBlock,
+    productBlock ? '' : null,
+    'Съобщение:',
+    message,
+  ]
+    .filter((line) => line !== null)
+    .join('\n');
 
   await sendEmail({ subject, text });
 }

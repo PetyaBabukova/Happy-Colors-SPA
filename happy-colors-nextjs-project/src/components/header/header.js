@@ -6,6 +6,7 @@ import { useProducts } from '@/context/ProductContext';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
+import { isCatalogMode } from '@/utils/catalogMode';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,12 +87,14 @@ export default function Header() {
             null
           )}
 
-          <Link href="/cart" className={styles.cartIconWrapper}>
-            <Image className={styles.basketGreen} src="/basket_green.svg" alt="Количка" width={32} height={32} />
-            {cartItemCount > 0 && (
-              <span className={styles.cartBadge}>{cartItemCount}</span>
-            )}
-          </Link>
+          {!isCatalogMode && (
+            <Link href="/cart" className={styles.cartIconWrapper}>
+              <Image className={styles.basketGreen} src="/basket_green.svg" alt="Количка" width={32} height={32} />
+              {cartItemCount > 0 && (
+                <span className={styles.cartBadge}>{cartItemCount}</span>
+              )}
+            </Link>
+          )}
         </nav>
       </header>
 

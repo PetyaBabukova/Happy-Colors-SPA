@@ -19,9 +19,9 @@ const initialValues = {
   message: '',
 };
 
-export default function ContactForm() {
+export default function ContactForm({ product }) {
   const searchParams = useSearchParams();
-  const productId = searchParams.get('productId'); // очакваме ?productId=...
+  const productId = product?._id || searchParams.get('productId');
 
   const {
     formValues,
@@ -85,10 +85,10 @@ export default function ContactForm() {
       return;
     }
 
-    // ✅ ако идва от продукт → пращаме и URL (по-надеждно от само ID)
     const payload = {
       ...sanitizedValues,
       productId: productId || null,
+      productTitle: product?.title || null,
       productUrl: productId ? `${window.location.origin}/products/${productId}` : null,
     };
 
@@ -96,13 +96,15 @@ export default function ContactForm() {
       await sendContactForm(payload);
 
       setSuccess(true);
-      setNotificationMessage('Благодарим! Ще се свържем с вас при първа възможност.');
+      setNotificationMessage(
+        product?.title
+          ? `Получихме запитването ви за продукт ${product.title}. Ще се свържем с вас при първа възможност.`
+          : 'Благодарим! Ще се свържем с вас при първа възможност.'
+      );
       setNotificationType('success');
       resetForm();
     } catch (err) {
-      setNotificationMessage(
-        'Възникна грешка, съобщението ви не е изпратено. Моля опитайте по-късно.'
-      );
+      setNotificationMessage('Проблеми със свързването, моля опитайте по-късно.');
       setNotificationType('error');
     }
   };
@@ -119,6 +121,9 @@ export default function ContactForm() {
 
       <form className={styles.registerForm} onSubmit={handleSubmit}>
         <h3>Свържете се с нас</h3>
+        {product?.title && (
+          <p><b>Изпращате запитване за: {product.title}</b></p>
+        )}
         <label htmlFor="name">
           Име<span className={styles.red}>*</span>
         </label>

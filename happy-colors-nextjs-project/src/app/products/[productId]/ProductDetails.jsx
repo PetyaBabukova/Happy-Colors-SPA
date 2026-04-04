@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { isOwner } from '@/utils/isOwner';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
+import { isCatalogMode } from '@/utils/catalogMode';
 import styles from './details.module.css';
 
 const deliveryContent = `
@@ -50,8 +51,8 @@ export default function ProductDetails({ product }) {
 	const isAvailable = product?.availability !== 'unavailable';
 
 	const availabilityLabel = isAvailable
-		? 'Продукта е наличен и можете да го поръчате'
-		: 'Продукта не е наличен, ако желаете пратете запитване';
+		? 'Продукта е наличен'
+		: 'Продукта не е наличен';
 
 	const mainImage = imageUrls[currentImageIndex] || product.imageUrl || '';
 	const hasMultipleImages = imageUrls.length > 1;
@@ -113,21 +114,23 @@ export default function ProductDetails({ product }) {
 						</a>
 					</li>
 
-					<li
-						className={`${styles.productDetailsBodyTab} ${
-							activeTab === 'delivery' ? styles.activeTab : ''
-						}`}
-					>
-						<a
-							href="#"
-							onClick={(e) => {
-								e.preventDefault();
-								setActiveTab('delivery');
-							}}
+					{!isCatalogMode && (
+						<li
+							className={`${styles.productDetailsBodyTab} ${
+								activeTab === 'delivery' ? styles.activeTab : ''
+							}`}
 						>
-							доставка и плащане
-						</a>
-					</li>
+							<a
+								href="#"
+								onClick={(e) => {
+									e.preventDefault();
+									setActiveTab('delivery');
+								}}
+							>
+								доставка и плащане
+							</a>
+						</li>
+					)}
 				</ul>
 
 				<div className={styles.productDescriptionBody}>
@@ -135,7 +138,7 @@ export default function ProductDetails({ product }) {
 						<p>{product.description}</p>
 					)}
 
-					{activeTab === 'delivery' && (
+					{!isCatalogMode && activeTab === 'delivery' && (
 						<p style={{ whiteSpace: 'pre-line' }}>{deliveryContent}</p>
 					)}
 				</div>
@@ -146,10 +149,14 @@ export default function ProductDetails({ product }) {
 							<b>Наличност:</b> {availabilityLabel}
 						</p>
 
-						<p><b>Цена:</b> {product.price} €</p>
+						<p><b>Цена:</b> {isCatalogMode ? 'Цена при запитване' : `${product.price} €`}</p>
 
 						<div className={styles.actionButtonsContainer}>
-							{isAvailable ? (
+							{isCatalogMode ? (
+								<button onClick={handleInquiry} className={styles.actionBtn}>
+									Попитай
+								</button>
+							) : isAvailable ? (
 								<button onClick={handleAddToCart} className={styles.actionBtn}>
 									Добави в количката
 								</button>

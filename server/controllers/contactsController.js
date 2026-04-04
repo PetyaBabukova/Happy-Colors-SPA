@@ -28,13 +28,13 @@ function isValidUrl(url) {
 
 router.post('/', async (req, res) => {
   try {
-    // ✅ добавяме productId и productUrl (опционални)
     const {
       name,
       email,
       phone = '',
       message,
       productId = '',
+      productTitle = '',
       productUrl = '',
     } = req.body;
 
@@ -69,8 +69,7 @@ router.post('/', async (req, res) => {
     // Забранени символи (HTML/code injection)
     const forbiddenPattern = /<[^>]*>/g;
 
-    // ✅ включваме productId/productUrl в проверката (за да не може да се инжектира)
-    const allFields = [name, email, phone, message, productId, productUrl];
+    const allFields = [name, email, phone, message, productId, productTitle, productUrl];
 
     if (allFields.some((val) => forbiddenPattern.test(String(val).trim()))) {
       return res.status(400).json({ message: 'Забранени символи в полетата!' });
@@ -81,15 +80,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Невалиден линк към продукт.' });
     }
 
-    // Санитизация на входа
     const cleanData = {
       name: sanitizeText(name),
       email: sanitizeText(email),
       phone: sanitizeText(phone),
       message: sanitizeText(message),
-
-      // ✅ добавяме ги към payload-а към service-а
       productId: sanitizeText(productId),
+      productTitle: sanitizeText(productTitle),
       productUrl: sanitizeText(productUrl),
     };
 

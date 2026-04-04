@@ -32,13 +32,22 @@ const paymentsLimiter = createRateLimiter({
   message: 'Твърде много опити за плащане. Моля, опитайте отново след малко.',
 });
 
+const isCatalogMode = process.env.CATALOG_MODE === 'true';
+
+function catalogModeGuard(req, res, next) {
+  if (isCatalogMode) {
+    return res.status(403).json({ message: 'Магазинът е в каталожен режим.' });
+  }
+  next();
+}
+
 router.use('/users', userController);
 router.use('/products', productsController);
 router.use('/categories', categoryController);
 router.use('/search', searchController);
 router.use('/contacts', contactsLimiter, contactsController);
-router.use('/orders', ordersLimiter, ordersController);
-router.use('/payments', paymentsLimiter, paymentsController);
-router.use('/delivery', deliveryController);
+router.use('/orders', catalogModeGuard, ordersLimiter, ordersController);
+router.use('/payments', catalogModeGuard, paymentsLimiter, paymentsController);
+router.use('/delivery', catalogModeGuard, deliveryController);
 
 export default router;
