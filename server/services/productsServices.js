@@ -64,7 +64,9 @@ export async function createProduct(data) {
 
 // 🟢 GET BY ID
 export async function getProductById(productId) {
-  const product = await Product.findById(productId).lean();
+  const product = await Product.findById(productId)
+    .populate('category', 'name')
+    .lean();
 
   if (!product) {
     return null;

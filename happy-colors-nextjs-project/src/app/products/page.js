@@ -4,8 +4,8 @@ import { getProducts } from '@/managers/productsManager';
 import Shop from './Shop';
 
 export const metadata = {
-  title: 'Каталог',
-  description: 'Разгледайте нашите ръчно изработени продукти по категории.',
+  title: 'Плетени играчки, аксесоари и декорация за дома – каталог',
+  description: 'Разгледай ръчно изработени плетени играчки, аксесоари и декорация за дома от Happy Colors – уникални модели за подарък, специални поводи и уютен интериор.',
   alternates: {
     canonical: '/products',
   },

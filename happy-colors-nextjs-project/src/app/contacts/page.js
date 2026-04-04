@@ -7,7 +7,7 @@ import baseURL from '@/config';
 export const metadata = {
   title: 'Контакти',
   description:
-    'Свържи се с Happy Colors за въпроси, поръчки и информация за ръчно изработените продукти.',
+    'Свържи се с Happy Colors за въпроси относно плетени играчки, аксесоари и декорация за дома.',
   alternates: {
     canonical: '/contacts',
   },

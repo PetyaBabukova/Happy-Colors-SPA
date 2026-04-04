@@ -1,9 +1,11 @@
 import styles from '../page.module.css';
 
 export const metadata = {
-  title: 'За мен',
+  title: {
+    absolute: 'За Happy Colors | Плетени играчки и декорация за дома',
+  },
   description:
-    'Научи повече за Happy Colors и за ръчно изработените плетени играчки, създадени с внимание към детайла, търпение и любов.',
+    'Научи повече за Happy Colors и за ръчно изработените плетени играчки, аксесоари и декорация за дома, създадени с внимание към детайла.',
   alternates: {
     canonical: '/aboutus',
   },

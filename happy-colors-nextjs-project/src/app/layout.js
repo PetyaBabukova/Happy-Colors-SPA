@@ -13,11 +13,11 @@ export const metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
-    default: 'Happy Colors',
+    default: 'Плетени играчки, аксесоари и декорация за дома | Happy Colors',
     template: '%s | Happy Colors',
   },
 
-  description: 'Онлайн магазин за ръчно изработени изделия',
+  description: 'Ръчно изработени плетени играчки, аксесоари и декорация за дома от Happy Colors – оригинални идеи за подарък, уют и красиви изделия с характер.',
 
   robots: {
     index: isProductionSite,

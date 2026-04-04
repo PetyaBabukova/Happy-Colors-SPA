@@ -24,9 +24,14 @@ export async function generateMetadata({ params: paramsPromise }) {
 
   const product = await res.json();
 
+  const categoryName = product.category?.name;
+  const titleParts = [product.title, categoryName].filter(Boolean);
+
   return {
-    title: product.title,
-    description: product.description?.slice(0, 150) || '',
+    title: titleParts.join(' | '),
+    description: categoryName
+      ? `${product.title} – ${categoryName.toLowerCase()} от Happy Colors. Ръчно изработено изделие с внимание към детайла, подходящо за подарък, декорация за дома или специален повод.`
+      : `${product.title} от Happy Colors. Ръчно изработено изделие с внимание към детайла, подходящо за подарък, декорация за дома или специален повод.`,
     alternates: {
       canonical: `/products/${productId}`,
     },
