@@ -1,6 +1,7 @@
 // src/app/layout.js
 
 import './globals.css';
+import styles from './page.module.css';
 import ClientLayout from './ClientLayout';
 
 const siteUrl =
@@ -40,7 +41,11 @@ export default function RootLayout({ children }) {
     <html lang="bg">
       <body>
         <ClientLayout>{children}</ClientLayout>
+              <footer className={styles.footer}>
+				<p>© 2026 Happy Colors. Всички права запазени.</p>
+			</footer>
       </body>
+
     </html>
   );
 }

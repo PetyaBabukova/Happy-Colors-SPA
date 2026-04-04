@@ -10,7 +10,7 @@
 }
 
 .leftHiroSection {
-  background-image: url('/woman-wrappes-presents-craft-paper-gifts-tied-with-white-red-threads-with-toy-train-as-decor.jpg');
+  background-image: url('/lovely-handicrafts-composition.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -54,12 +54,13 @@
 .rightHiroSection h1 {
   max-width: 15ch;
   color: var(--light-green);
+  margin: 0;
 }
 
 .rightHiroSection p {
   max-width: 35ch;
   font-size: 1.4rem;
-  color:var(--dark-orange);
+  color:var(--dark-green);
 }
 
 .hiroAccent {
@@ -70,7 +71,10 @@
   color: var(--dark-green);
 }
 
-
+.homeSubtitle{
+  color: var(--light-green);
+max-width: 30ch;
+margin: 0;}
 
 .hiroAccent h2 {
   /* font-weight: bold; */

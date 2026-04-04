@@ -29,8 +29,9 @@ if (grouped['Други']) {
 
 
   return (
+    <>
     <section className={styles.shopPage}>
-      <h1 className={styles.shopPageTitle}>Каталог</h1>
+      <h1 className={styles.shopPageTitle}>Плетени играчки, аксесоари и декорация за дома</h1>
 
       <section className={styles.categories}>
         {categories.map((category) => (
@@ -45,5 +46,8 @@ if (grouped['Други']) {
         ))}
       </section>
     </section>
+
+
+    </>
   );
 }
