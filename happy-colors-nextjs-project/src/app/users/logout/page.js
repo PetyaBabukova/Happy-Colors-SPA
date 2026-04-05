@@ -1,16 +1,15 @@
-'use client';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { logoutUser } from '@/managers/userManager';
+// happy-colors-nextjs-project/src/app/users/logout/page.js
+
+import LogoutClient from './LogoutClient';
+
+export const metadata = {
+  title: 'Изход',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function LogoutPage() {
-  const router = useRouter();
-  const { setUser } = useAuth();
-
-  useEffect(() => {
-    logoutUser(setUser, router);
-  }, [setUser, router]);
-
-  return <p>Излизате...</p>;
+  return <LogoutClient />;
 }

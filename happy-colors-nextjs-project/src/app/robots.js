@@ -10,7 +10,7 @@ export default function robots() {
   return {
     rules: {
       userAgent: '*',
-      allow: '/',
+      ...(shouldIndexSite ? { allow: '/' } : { disallow: '/' }),
     },
     host: shouldIndexSite ? PROD_SITE_URL : currentSiteUrl,
     ...(shouldIndexSite
