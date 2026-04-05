@@ -1,4 +1,4 @@
-import styles from '../page.module.css';
+import styles from './about.module.css';
 
 export const metadata = {
   title: {
@@ -14,29 +14,29 @@ export const metadata = {
 export default function AboutUs() {
   return (
     <>
-      <section className={styles.heroSection}>
+      <section className={styles.aboutSection}>
         <div
-          className={styles.leftHiroSection}
+          className={styles.aboutImage}
           style={{
             backgroundImage: "url('/aboutUs_Hero_banner.png')",
           }}
         ></div>
 
-        <div className={styles.rightHiroSection}>
+        <div className={styles.aboutText}>
           <h1>За Happy Colors и ръчно изработените плетени играчки</h1>
-					<h4 className={styles.homeSubtitle}>Изделия, създадени с търпение, любов и внимание към детайла.</h4>
+          <h4 className={styles.aboutSubtitle}>Изделия, създадени с търпение, любов и внимание към детайла.</h4>
 
           <p>
-  Happy Colors се роди преди няколко години, когато открих, че плетенето на малки играчки и аксесоари ми носи спокойствие и радост. Постепенно това хоби се превърна в свят от ръчно изработени плетени играчки, аксесоари и красиви изделия с характер.
-</p>
+            Happy Colors се роди преди няколко години, когато открих, че плетенето на малки играчки и аксесоари ми носи спокойствие и радост. Постепенно това хоби се превърна в свят от ръчно изработени плетени играчки, аксесоари и красиви изделия с характер.
+          </p>
 
-<p>
-  Всяко изделие създавам с внимание към детайла, търпение и любов. За мен Happy Colors не е просто галерия, а малък свят, в който влагам сърце, вдъхновение и частица от себе си.
-</p>
+          <p>
+            Всяко изделие създавам с внимание към детайла, търпение и любов. За мен Happy Colors не е просто галерия, а малък свят, в който влагам сърце, вдъхновение и частица от себе си.
+          </p>
 
-<p style={{ fontStyle: 'italic' }}>
-  Благодаря ти, че си тук и отдели време да се докоснеш до света на Happy Colors.
-</p>
+          <p style={{ fontStyle: 'italic' }}>
+            Благодаря ти, че си тук и отдели време да се докоснеш до света на Happy Colors.
+          </p>
         </div>
       </section>
 
