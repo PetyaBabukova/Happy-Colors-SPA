@@ -1,11 +1,19 @@
 // src/config.js
-const envApiUrl =
-  process.env.NEXT_PUBLIC_API_URL?.trim() ||
-  process.env.NEXT_PUBLIC_BASE_URL?.trim();
 
-const baseURL =
-  process.env.NODE_ENV === 'production'
-    ? envApiUrl || 'https://happycolors.eu'
-    : envApiUrl || 'http://localhost:3030';
+const isServer = typeof window === 'undefined';
+
+// Optional override — not part of the default path
+const explicitOverride = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+let baseURL;
+
+if (explicitOverride) {
+  baseURL = explicitOverride;
+} else if (isServer) {
+  const port = process.env.PORT || '3000';
+  baseURL = `http://localhost:${port}/api`;
+} else {
+  baseURL = '/api';
+}
 
 export default baseURL;

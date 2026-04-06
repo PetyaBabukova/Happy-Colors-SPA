@@ -1,0 +1,20 @@
+{
+  "name": "happy-colors-unified",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "postinstall": "cd server && npm install && cd ../happy-colors-nextjs-project && npm install",
+    "install:all": "npm install",
+    "build": "cd happy-colors-nextjs-project && npm run build",
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.14.1",
+    "next": "^15.5.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
