@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import baseURL from '@/config';
+
+function getApiBaseUrl() {
+  return String(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3030').replace(/\/+$/, '');
+}
 
 export async function GET(request) {
   try {
@@ -9,7 +12,8 @@ export async function GET(request) {
       return NextResponse.json({ offices: [] }, { status: 200 });
     }
 
-    const targetUrl = `${baseURL}/delivery/speedy/offices?city=${encodeURIComponent(city)}`;
+    const apiBaseUrl = getApiBaseUrl();
+    const targetUrl = `${apiBaseUrl}/delivery/speedy/offices?city=${encodeURIComponent(city)}`;
 
     const response = await fetch(targetUrl, {
       method: 'GET',
