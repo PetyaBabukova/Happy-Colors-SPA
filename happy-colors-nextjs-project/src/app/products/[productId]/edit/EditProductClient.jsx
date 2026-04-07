@@ -15,12 +15,13 @@ export default function EditProductClient({ params }) {
 
   const [product, setProduct] = useState(null);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user === undefined) return;
 
-    checkProductAccess(productId, user).then(({ product, unauthorized }) => {
+    checkProductAccess(productId, user).then(({ product, unauthorized, error: accessError }) => {
       // ✅ ако продуктът е стар и няма availability → default
       const normalizedProduct = product
         ? { availability: 'available', ...product, availability: product.availability || 'available' }
@@ -28,6 +29,9 @@ export default function EditProductClient({ params }) {
 
       setProduct(normalizedProduct);
       setUnauthorized(unauthorized);
+      if (accessError) {
+        setError('Грешка при зареждане на продукта.');
+      }
       setLoading(false);
     });
   }, [productId, user]);
@@ -36,6 +40,10 @@ export default function EditProductClient({ params }) {
 
   if (unauthorized) {
     return <MessageBox type="error" message="Нямате права да редактирате този продукт." />;
+  }
+
+  if (error) {
+    return <MessageBox type="error" message={error} />;
   }
 
   return (

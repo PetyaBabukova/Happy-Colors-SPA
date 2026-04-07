@@ -22,9 +22,12 @@ export default function DeleteProductClient({ params }) {
   useEffect(() => {
     if (loading || !productId) return;
 
-    checkProductAccess(productId, user).then(({ product, unauthorized }) => {
+    checkProductAccess(productId, user).then(({ product, unauthorized, error: accessError }) => {
       setProduct(product);
       setUnauthorized(unauthorized);
+      if (accessError) {
+        setError('Грешка при зареждане на продукта.');
+      }
     });
   }, [productId, user, loading]);
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import baseURL from '@/config';
+import { readResponseJsonSafely } from '@/utils/errorHandler';
 
 export default function CategoriesManagerPage() {
   const [categories, setCategories] = useState([]);
@@ -15,11 +16,15 @@ export default function CategoriesManagerPage() {
   async function fetchCategories() {
     try {
       const res = await fetch(`${baseURL}/categories`);
-      const data = await res.json();
 
-      setCategories(data);
+      if (!res.ok) {
+        throw new Error('Грешка при зареждане на категориите.');
+      }
+
+      const data = await readResponseJsonSafely(res);
+      setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Грешка при зареждане на категориите.');
+      setError(err.message || 'Грешка при зареждане на категориите.');
     }
   }
 
@@ -36,10 +41,13 @@ export default function CategoriesManagerPage() {
         credentials: 'include',
       });
 
-      const result = await res.json();
+      const result = await readResponseJsonSafely(res);
 
-      if (!res.ok) throw new Error(result.message);
-      alert(result.message);
+      if (!res.ok) {
+        throw new Error(result?.message || 'Неуспешно изтриване.');
+      }
+
+      alert(result?.message || 'Категорията е изтрита.');
 
       fetchCategories();
     } catch (err) {

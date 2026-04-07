@@ -1,5 +1,6 @@
 import baseURL from '@/config';
 import { isOwner } from './isOwner';
+import { readResponseJsonSafely } from './errorHandler';
 
 export async function checkProductAccess(productId, user) {
   try {
@@ -12,7 +13,11 @@ export async function checkProductAccess(productId, user) {
       return { product: null, unauthorized: true };
     }
 
-    const product = await res.json();
+    const product = await readResponseJsonSafely(res);
+
+    if (!product) {
+      return { product: null, unauthorized: false, error: true };
+    }
 
     if (!user || !isOwner(product, user)) {
       return { product, unauthorized: true };
@@ -20,6 +25,6 @@ export async function checkProductAccess(productId, user) {
 
     return { product, unauthorized: false };
   } catch {
-    return { product: null, unauthorized: true };
+    return { product: null, unauthorized: false, error: true };
   }
 }

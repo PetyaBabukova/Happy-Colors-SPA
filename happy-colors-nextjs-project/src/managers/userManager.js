@@ -1,4 +1,3 @@
-import { useAuth } from '@/context/AuthContext';
 import baseURL from '@/config';
 import { createResponseError, readResponseJsonSafely } from '@/utils/errorHandler';
 

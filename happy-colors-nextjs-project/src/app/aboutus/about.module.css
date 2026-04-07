@@ -33,6 +33,11 @@
   margin: 0;
 }
 
+.homePageIntro{
+    font-size: 1.4rem;
+
+}
+
 @media screen and (max-width: 768px) {
 
   .aboutSection {

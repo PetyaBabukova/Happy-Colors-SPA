@@ -1,4 +1,5 @@
 import baseURL from '@/config';
+import { createResponseError, readResponseJsonSafely } from '@/utils/errorHandler';
 
 export async function onCreateCategorySubmit(
   formValues,
@@ -6,7 +7,7 @@ export async function onCreateCategorySubmit(
   setError,
   setInvalidFields,
   router,
-  triggerCategoriesReload 
+  triggerCategoriesReload
 ) {
   try {
     const res = await fetch(`${baseURL}/categories`, {
@@ -16,10 +17,13 @@ export async function onCreateCategorySubmit(
       body: JSON.stringify(formValues),
     });
 
-    const result = await res.json();
+    const result = await readResponseJsonSafely(res);
 
     if (!res.ok) {
-      throw result;
+      throw createResponseError(
+        result?.message || 'Възникна грешка при създаване на категория.',
+        result
+      );
     }
 
     setSuccess(true);
