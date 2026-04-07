@@ -1,18 +1,18 @@
 import dotenv from 'dotenv';
-import next from 'next';
-import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import mongoose from './server/mongoose.js';
+
+import mongoose from './mongoose.js';
+import { createExpressApp } from './server.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const envCandidates = [
   path.resolve(__dirname, '.env'),
-  path.resolve(__dirname, 'server/.env'),
-  path.resolve(__dirname, '../Happy-Colors-SECRETS/.env'),
+  path.resolve(__dirname, '../.env'),
+  path.resolve(__dirname, '../../Happy-Colors-SECRETS/.env'),
 ];
 
 const envPath = envCandidates.find((candidatePath) => fs.existsSync(candidatePath));
@@ -25,8 +25,7 @@ if (envPath) {
   console.warn('⚠️ No .env file found. Using environment variables.');
 }
 
-const dev = process.env.NODE_ENV !== 'production';
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 3030;
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
@@ -44,31 +43,8 @@ try {
   process.exit(1);
 }
 
-const { createExpressApp } = await import('./server/server.js');
-const expressApp = createExpressApp();
-
-const nextApp = next({
-  dev,
-  dir: path.resolve(__dirname, 'happy-colors-nextjs-project'),
-});
-
-await nextApp.prepare();
-
-const nextHandler = nextApp.getRequestHandler();
-const app = express();
-
-app.use('/api', (req, res, nextMiddleware) => {
-  expressApp(req, res, (error) => {
-    if (res.headersSent) {
-      return;
-    }
-
-    nextMiddleware(error);
-  });
-});
-
-app.use((req, res) => nextHandler(req, res));
+const app = createExpressApp();
 
 app.listen(PORT, () => {
-  console.log(`✅ Unified server listening on port ${PORT}`);
+  console.log(`✅ Server listening on port ${PORT}`);
 });
