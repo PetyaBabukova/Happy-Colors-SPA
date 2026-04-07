@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import baseUrl from '@/config';
+import { readResponseJsonSafely } from '@/utils/errorHandler';
 
 const ProductContext = createContext();
 
@@ -16,15 +17,25 @@ export function ProductProvider({ children }) {
       try {
         setLoading(true);
 
-        // 🟢 1. Взимаме всички категории (обекти)
+        // 1. Взимаме всички категории (обекти)
         const allCatsRes = await fetch(`${baseUrl}/categories`);
-        const allCatsData = await allCatsRes.json();
-        setCategories(allCatsData);
 
-        // 🟢 2. Взимаме само видимите категории (обекти с поне 1 продукт)
+        if (!allCatsRes.ok) {
+          throw new Error('Грешка при зареждане на категориите.');
+        }
+
+        const allCatsData = await readResponseJsonSafely(allCatsRes);
+        setCategories(Array.isArray(allCatsData) ? allCatsData : []);
+
+        // 2. Взимаме само видимите категории (обекти с поне 1 продукт)
         const visibleRes = await fetch(`${baseUrl}/categories/visible`);
-        const visibleData = await visibleRes.json();
-        setVisibleCategories(visibleData); // 🔴 махаме .map(cat => cat.name)
+
+        if (!visibleRes.ok) {
+          throw new Error('Грешка при зареждане на видимите категории.');
+        }
+
+        const visibleData = await readResponseJsonSafely(visibleRes);
+        setVisibleCategories(Array.isArray(visibleData) ? visibleData : []);
       } catch (err) {
         console.error('Грешка при зареждане на категориите:', err);
       } finally {
@@ -44,9 +55,9 @@ export function ProductProvider({ children }) {
   return (
     <ProductContext.Provider
       value={{
-        categories,          // всички – за форми
-        visibleCategories,   // само с продукти – за хедъра и shop
-        products,            // future
+        categories,
+        visibleCategories,
+        products,
         triggerCategoriesReload,
       }}
     >

@@ -9,6 +9,7 @@ import {
   useMemo,
 } from 'react';
 import baseUrl from '@/config';
+import { createResponseError, readResponseJsonSafely } from '@/utils/errorHandler';
 
 const AuthContext = createContext(null);
 
@@ -28,10 +29,19 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (!res.ok) {
-        throw new Error('Failed to fetch authenticated user');
+        const data = await readResponseJsonSafely(res);
+        throw createResponseError(
+          data?.message || 'Failed to fetch authenticated user',
+          data
+        );
       }
 
-      const userData = await res.json();
+      const userData = await readResponseJsonSafely(res);
+
+      if (!userData) {
+        throw new Error('Invalid authenticated user response');
+      }
+
       setUser(userData);
     } catch (err) {
       console.error('Auth refresh error:', err);

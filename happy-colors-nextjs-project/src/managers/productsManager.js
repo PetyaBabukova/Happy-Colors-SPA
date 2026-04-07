@@ -1,6 +1,7 @@
 // happy-colors-nextjs-project/src/managers/productsManager.js
 
 import baseURL from '@/config';
+import { createResponseError, readResponseJsonSafely } from '@/utils/errorHandler';
 
 export async function onCreateProductSubmit(
   formValues,
@@ -35,10 +36,17 @@ export async function onCreateProductSubmit(
       body: JSON.stringify(payload),
     });
 
-    const result = await res.json();
+    const result = await readResponseJsonSafely(res);
 
     if (!res.ok) {
-      throw result;
+      throw createResponseError(
+        result?.message || 'Възникна грешка при създаване на продукта.',
+        result
+      );
+    }
+
+    if (!result?._id) {
+      throw new Error('Неочакван отговор от сървъра.');
     }
 
     setSuccess(true);
@@ -50,7 +58,7 @@ export async function onCreateProductSubmit(
     router.push(`/products/${result._id}`);
   } catch (err) {
     setSuccess(false);
-    setError(err.message || 'Възникна грешка при създаване на продукт.');
+    setError(err.message || 'Възникна грешка при създаване на продукта.');
 
     if (err.field) {
       setInvalidFields([err.field]);
@@ -92,10 +100,13 @@ export async function onEditProductSubmit(
       body: JSON.stringify(payload),
     });
 
-    const result = await res.json();
+    const result = await readResponseJsonSafely(res);
 
     if (!res.ok) {
-      throw result;
+      throw createResponseError(
+        result?.message || 'Възникна грешка при редакция на продукта.',
+        result
+      );
     }
 
     setSuccess(true);
@@ -128,13 +139,18 @@ export async function getProducts(categoryName) {
       throw new Error('Неуспешно зареждане на продуктите');
     }
 
-    return await res.json();
+    const data = await readResponseJsonSafely(res);
+
+    if (!Array.isArray(data)) {
+      throw new Error('Неочакван отговор при зареждане на продуктите');
+    }
+
+    return data;
   } catch (err) {
     console.error(err.message);
     return [];
   }
 }
-
 
 export async function deleteProductImage(productId, imageUrl) {
   const res = await fetch(`${baseURL}/products/${productId}/image`, {
@@ -146,10 +162,10 @@ export async function deleteProductImage(productId, imageUrl) {
     body: JSON.stringify({ imageUrl }),
   });
 
-  const result = await res.json();
+  const result = await readResponseJsonSafely(res);
 
   if (!res.ok) {
-    throw new Error(result.message || 'Грешка при изтриване на изображение');
+    throw new Error(result?.message || 'Грешка при изтриване на изображение');
   }
 
   return result;

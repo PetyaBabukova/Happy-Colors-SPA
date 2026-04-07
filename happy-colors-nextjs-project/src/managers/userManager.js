@@ -1,5 +1,6 @@
 import { useAuth } from '@/context/AuthContext';
 import baseURL from '@/config';
+import { createResponseError, readResponseJsonSafely } from '@/utils/errorHandler';
 
 export const onRegisterSubmit = async (
   formValues,
@@ -15,10 +16,10 @@ export const onRegisterSubmit = async (
       body: JSON.stringify(formValues),
     });
 
-    const result = await res.json();
+    const result = await readResponseJsonSafely(res);
 
     if (!res.ok) {
-      throw result;
+      throw createResponseError(result?.message || 'Възникна грешка.', result);
     }
 
     setError('');
@@ -52,10 +53,14 @@ export const onLoginSubmit = async (formValues, setSuccess, setError, setUser) =
       body: JSON.stringify(formValues),
     });
 
-    const result = await res.json();
+    const result = await readResponseJsonSafely(res);
 
     if (!res.ok) {
-      throw new Error(result.message);
+      throw new Error(result?.message || 'Невалиден e-mail или парола');
+    }
+
+    if (!result) {
+      throw new Error('Неочакван отговор от сървъра.');
     }
 
     if (typeof setUser === 'function') {

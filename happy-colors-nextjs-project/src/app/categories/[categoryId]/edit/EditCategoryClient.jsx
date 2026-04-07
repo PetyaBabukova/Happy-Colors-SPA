@@ -5,7 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { sanitizeText } from '@/utils/formValidations';
 import { handleSubmit } from '@/utils/formSubmitHelper';
 import useForm from '@/hooks/useForm';
-import { extractErrorMessage } from '@/utils/errorHandler';
+import {
+  createResponseError,
+  extractErrorMessage,
+  readResponseJsonSafely,
+} from '@/utils/errorHandler';
 import MessageBox from '@/components/ui/MessageBox';
 import baseURL from '@/config';
 import styles from '@/components/products/create.module.css';
@@ -36,9 +40,17 @@ export default function EditCategoryClient() {
         const res = await fetch(`${baseURL}/categories/${categoryId}`, {
           credentials: 'include',
         });
-        if (!res.ok) throw await res.json();
-        const data = await res.json();
-        setFormValues({ name: data.name });
+
+        const data = await readResponseJsonSafely(res);
+
+        if (!res.ok) {
+          throw createResponseError(
+            data?.message || 'Грешка при зареждане на категорията.',
+            data
+          );
+        }
+
+        setFormValues({ name: data?.name || '' });
       } catch (err) {
         setError(extractErrorMessage(err));
       } finally {
@@ -58,9 +70,14 @@ export default function EditCategoryClient() {
         body: JSON.stringify(values),
       });
 
-      const result = await res.json();
+      const result = await readResponseJsonSafely(res);
 
-      if (!res.ok) throw result;
+      if (!res.ok) {
+        throw createResponseError(
+          result?.message || 'Грешка при редакция на категория.',
+          result
+        );
+      }
 
       setSuccess(true);
       setError('');
