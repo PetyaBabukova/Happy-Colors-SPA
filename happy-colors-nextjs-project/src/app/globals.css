@@ -113,7 +113,7 @@ main {
 }
 
 footer {
-  background-color: var(--lighter-green);
+  background-color: var(--light-green-transparent);
   color: var(--dark-green);
   padding: 2em 3em;
   display: flex;

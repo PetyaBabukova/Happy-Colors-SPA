@@ -43,6 +43,7 @@ export default function RootLayout({ children }) {
         <ClientLayout>{children}</ClientLayout>
               <footer className={styles.footer}>
 				<p>© 2026 Happy Colors. Всички права запазени.</p>
+				<p><a href="https://webcreativeteam.com" target="_blank" rel="noopener noreferrer">Онлайн каталог от <b>webcreativeteam.com</b></a></p>
 			</footer>
       </body>
 
